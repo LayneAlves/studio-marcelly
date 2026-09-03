@@ -1,0 +1,42 @@
+<svg viewBox="0 0 480 600" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="t-about">
+<title id="t-about">Ilustração assinatura do Studio Marcelly Freitas — olhar com extensão de cílios</title>
+<defs>
+<linearGradient id="bg-about" x1="0" y1="0" x2="1" y2="1">
+<stop offset="0" stop-color="#2a2a2d"/>
+<stop offset="1" stop-color="#121213"/>
+</linearGradient>
+</defs>
+<rect width="480" height="600" fill="url(#bg-about)"/>
+<path d="M120.39999999999999,145.2 Q240,70.39999999999998 359.6,154.0" stroke="#eceae7" stroke-width="4" fill="none" stroke-linecap="round" opacity="0.35"/>
+<path d="M110.0,330 Q240,242 370.0,330 Q240,378.4 110.0,330 Z" fill="none" stroke="#eceae7" stroke-width="3.5" opacity="0.8"/>
+<path d="M110.0,330 Q240,435.6 370.0,330" fill="none" stroke="#eceae7" stroke-width="2" opacity="0.4"/>
+<circle cx="240" cy="339" r="46" fill="none" stroke="#eceae7" stroke-width="2.5" opacity="0.5"/>
+<circle cx="240" cy="339" r="16" fill="#eceae7" opacity="0.3"/>
+<path d="M110.0,330.0 Q64.4,302.4 22.4,274.8" stroke="#eceae7" stroke-width="1.7" fill="none" stroke-linecap="round" opacity="0.85"/>
+<path d="M120.0,323.5 Q76.2,293.6 35.7,263.6" stroke="#eceae7" stroke-width="1.7" fill="none" stroke-linecap="round" opacity="0.85"/>
+<path d="M130.0,317.5 Q88.2,285.1 49.5,252.8" stroke="#eceae7" stroke-width="1.7" fill="none" stroke-linecap="round" opacity="0.85"/>
+<path d="M140.0,312.0 Q100.5,277.2 63.8,242.4" stroke="#eceae7" stroke-width="1.7" fill="none" stroke-linecap="round" opacity="0.85"/>
+<path d="M150.0,307.1 Q113.1,269.8 78.6,232.6" stroke="#eceae7" stroke-width="1.7" fill="none" stroke-linecap="round" opacity="0.85"/>
+<path d="M160.0,302.7 Q126.0,263.0 94.2,223.4" stroke="#eceae7" stroke-width="1.7" fill="none" stroke-linecap="round" opacity="0.85"/>
+<path d="M170.0,298.8 Q139.2,256.8 110.3,214.9" stroke="#eceae7" stroke-width="1.7" fill="none" stroke-linecap="round" opacity="0.85"/>
+<path d="M180.0,295.4 Q152.7,251.3 127.2,207.2" stroke="#eceae7" stroke-width="1.7" fill="none" stroke-linecap="round" opacity="0.85"/>
+<path d="M190.0,292.5 Q166.6,246.5 144.6,200.5" stroke="#eceae7" stroke-width="1.7" fill="none" stroke-linecap="round" opacity="0.85"/>
+<path d="M200.0,290.2 Q180.8,242.5 162.7,194.7" stroke="#eceae7" stroke-width="1.7" fill="none" stroke-linecap="round" opacity="0.85"/>
+<path d="M210.0,288.3 Q195.3,239.2 181.4,190.2" stroke="#eceae7" stroke-width="1.7" fill="none" stroke-linecap="round" opacity="0.85"/>
+<path d="M220.0,287.0 Q210.0,236.9 200.5,186.8" stroke="#eceae7" stroke-width="1.7" fill="none" stroke-linecap="round" opacity="0.85"/>
+<path d="M230.0,286.3 Q224.9,235.5 220.1,184.7" stroke="#eceae7" stroke-width="1.7" fill="none" stroke-linecap="round" opacity="0.85"/>
+<path d="M240.0,286.0 Q240.0,235.0 240.0,184.0" stroke="#eceae7" stroke-width="1.7" fill="none" stroke-linecap="round" opacity="0.85"/>
+<path d="M250.0,286.3 Q255.1,235.5 259.9,184.7" stroke="#eceae7" stroke-width="1.7" fill="none" stroke-linecap="round" opacity="0.85"/>
+<path d="M260.0,287.0 Q270.0,236.9 279.5,186.8" stroke="#eceae7" stroke-width="1.7" fill="none" stroke-linecap="round" opacity="0.85"/>
+<path d="M270.0,288.3 Q284.7,239.2 298.6,190.2" stroke="#eceae7" stroke-width="1.7" fill="none" stroke-linecap="round" opacity="0.85"/>
+<path d="M280.0,290.2 Q299.2,242.5 317.3,194.7" stroke="#eceae7" stroke-width="1.7" fill="none" stroke-linecap="round" opacity="0.85"/>
+<path d="M290.0,292.5 Q313.4,246.5 335.4,200.5" stroke="#eceae7" stroke-width="1.7" fill="none" stroke-linecap="round" opacity="0.85"/>
+<path d="M300.0,295.4 Q327.3,251.3 352.8,207.2" stroke="#eceae7" stroke-width="1.7" fill="none" stroke-linecap="round" opacity="0.85"/>
+<path d="M310.0,298.8 Q340.8,256.8 369.7,214.9" stroke="#eceae7" stroke-width="1.7" fill="none" stroke-linecap="round" opacity="0.85"/>
+<path d="M320.0,302.7 Q354.0,263.0 385.8,223.4" stroke="#eceae7" stroke-width="1.7" fill="none" stroke-linecap="round" opacity="0.85"/>
+<path d="M330.0,307.1 Q366.9,269.8 401.4,232.6" stroke="#eceae7" stroke-width="1.7" fill="none" stroke-linecap="round" opacity="0.85"/>
+<path d="M340.0,312.0 Q379.5,277.2 416.2,242.4" stroke="#eceae7" stroke-width="1.7" fill="none" stroke-linecap="round" opacity="0.85"/>
+<path d="M350.0,317.5 Q391.8,285.1 430.5,252.8" stroke="#eceae7" stroke-width="1.7" fill="none" stroke-linecap="round" opacity="0.85"/>
+<path d="M360.0,323.5 Q403.8,293.6 444.3,263.6" stroke="#eceae7" stroke-width="1.7" fill="none" stroke-linecap="round" opacity="0.85"/>
+<path d="M370.0,330.0 Q415.6,302.4 457.6,274.8" stroke="#eceae7" stroke-width="1.7" fill="none" stroke-linecap="round" opacity="0.85"/>
+</svg>

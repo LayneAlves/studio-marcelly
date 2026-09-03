@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Studio Marcelly Freitas — Extensão de Cílios</title>
+<meta name="description" content="Studio Marcelly Freitas — estúdio especializado em extensão de cílios: Volume Russo, Fio a Fio, Híbrido, Egípcio, Boneca e Lash Lifting. Agende seu horário.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script>
+    // aplica o tema salvo (ou a preferência do sistema) antes da pintura, evitando flash
+    (function () {
+        var saved = localStorage.getItem('smf-theme');
+        var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+    })();
+</script>
+</head>
+<body>
+
+<header id="siteHeader">
+    <nav>
+        <div class="logo">Studio<span> Marcelly Freitas</span></div>
+        <ul class="nav-menu" id="navMenu">
+            <li><a href="#home">Início</a></li>
+            <li><a href="#sobre">Sobre</a></li>
+            <li><a href="#galeria">Galeria</a></li>
+            <li><a href="#agendamento">Agendamento</a></li>
+            <li><a href="#contato">Contato</a></li>
+        </ul>
+        <button class="theme-toggle" id="themeToggle" type="button" aria-label="Alternar modo claro/escuro">
+            <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"></circle><line x1="12" y1="2" x2="12" y2="4"></line><line x1="12" y1="20" x2="12" y2="22"></line><line x1="4.2" y1="4.2" x2="5.6" y2="5.6"></line><line x1="18.4" y1="18.4" x2="19.8" y2="19.8"></line><line x1="2" y1="12" x2="4" y2="12"></line><line x1="20" y1="12" x2="22" y2="12"></line><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"></line><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"></line></svg>
+            <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"></path></svg>
+        </button>
+        <button class="nav-toggle" id="navToggle" aria-label="Abrir menu">
+            <span></span><span></span><span></span>
+        </button>
+    </nav>
+</header>
+
+<main>
+
+    <section id="home" class="hero">
+        <!-- <img class="hero-lash-art" src="cilios-imagens/hero.jpg" alt="" aria-hidden="true"> -->
+        <div class="container hero-content reveal in-view">
+            <span class="eyebrow" style="color:var(--on-ink-soft)">Studio de extensão de cílios</span>
+            <h2>Seu olhar, <em>a sua</em> assinatura</h2>
+            <p>Volume Russo, Fio a Fio, Híbrido, Egípcio e Boneca aplicados fio a fio, com técnica, cuidado com a saúde do cílio natural e respeito pelo seu tempo.</p>
+            <div class="hero-actions">
+                <a href="#agendamento" class="btn btn-primary">Agendar horário</a>
+                <a href="#galeria" class="btn btn-outline">Ver galeria</a>
+            </div>
+            <div class="hero-stats">
+                <div><strong>6</strong><span>técnicas de cílios</span></div>
+                <div><strong>+500</strong><span>clientes atendidas</span></div>
+                <div><strong>4.9</strong><span>avaliação média</span></div>
+            </div>
+        </div>
+    </section>
+
+    <section id="sobre" class="about">
+        <div class="container about-grid">
+            <div class="about-portrait reveal">
+                <img src="cilios-imagens/foto-perfil.jpg" alt="Ilustração assinatura do Studio Marcelly Freitas — olhar com extensão de cílios">
+            </div>
+            <div class="reveal">
+                <span class="eyebrow">Sobre o estúdio</span>
+                <h2 class="section-title">Um espaço feito para valorizar o seu olhar</h2>
+                <p class="lead">O Studio Marcelly Freitas nasceu para oferecer um atendimento especializado em extensão de cílios, unindo técnica apurada, produtos de qualidade e um ambiente acolhedor. Cada aplicação é pensada para o formato do seu olho, a curvatura ideal e o efeito que você quer expressar.</p>
+                <div class="features">
+                    <div class="feature">
+                        <h3>✦ Técnica especializada</h3>
+                        <p>Aplicação isolada fio a fio, treinada em diferentes técnicas, do clássico ao volume russo.</p>
+                    </div>
+                    <div class="feature">
+                        <h3>✦ Cuidado com o cílio natural</h3>
+                        <p>Aplicação que preserva a saúde do fio natural, sem peso excessivo na raiz.</p>
+                    </div>
+                    <div class="feature">
+                        <h3>✦ Atendimento acolhedor</h3>
+                        <p>Um espaço pensado para você relaxar do início ao fim do atendimento.</p>
+                    </div>
+                    <div class="feature">
+                        <h3>✦ Efeito sob medida</h3>
+                        <p>Consultoria de estilo antes de cada aplicação, alinhando referência e formato do olho.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="sobrancelhas" class="brows">
+        <div class="container brows-grid">
+            <div class="brows-content reveal">
+                <span class="eyebrow">Sobrancelha</span>
+                <h2>Design de <em>Sobrancelhas</em></h2>
+                <p class="brows-subtitle">Quer realçar ainda mais o <em>seu olhar?</em></p>
+                <p>Nosso design de sobrancelhas com henna alinha fios, corrige falhas e define o formato ideal para o seu rosto, com uma coloração natural que dura semanas. Uma técnica precisa que emoldura o olhar com elegância, sem perder a naturalidade dos fios.</p>
+                <div class="hero-actions">
+                    <a href="#agendamento" class="btn btn-primary">Agendar horário</a>
+                </div>
+            </div>
+            <div class="brows-image reveal">
+                <img src="cilios-imagens/sobrancelha.png" width="543" height="667.5" alt="Design de sobrancelhas com henna no Studio Marcelly Freitas">
+            </div>
+        </div>
+    </section>
+
+    <section id="galeria" class="gallery">
+        <div class="container">
+            <div class="section-head reveal">
+                <span class="eyebrow">Trabalhos</span>
+                <h2 class="section-title">Galeria por técnica</h2>
+                <p class="section-desc">Conheça as técnicas que fazemos e escolha o efeito que mais combina com você.</p>
+            </div>
+
+            <div class="gallery-tabs reveal">
+                <button class="tab-btn active" data-filter="todas">Todas</button>
+                <button class="tab-btn" data-filter="mega-brasileiro">Mega Brasileiro</button>
+                <button class="tab-btn" data-filter="volume-4D">Volume 4D</button>
+                <button class="tab-btn" data-filter="volume-6D">Volume 6D</button>
+                <button class="tab-btn" data-filter="volume-brasileiro">Volume Brasileiro</button>
+                <button class="tab-btn" data-filter="volume-fox">Volume Fox</button>
+                <button class="tab-btn" data-filter="volume-hibrido">Volume Hibrido</button>
+                <button class="tab-btn" data-filter="volume-princesa">Volume Princesa</button>
+                <button class="tab-btn" data-filter="volume-russo">Volume Russo</button>
+            </div>
+
+            <div class="gallery-grid" id="galleryGrid"></div>
+        </div>
+    </section>
+
+    <section id="agendamento" class="booking">
+        <div class="container">
+            <div class="section-head reveal">
+                <span class="eyebrow">Agende seu horário</span>
+                <h2 class="section-title">Escolha a data e o horário</h2>
+                <p class="section-desc">Datas riscadas já estão ocupadas. Selecione um dia livre, um horário e preencha seus dados.</p>
+            </div>
+
+            <div class="booking-grid">
+                <div class="calendar-card reveal">
+                    <div class="calendar-head">
+                        <div class="cal-nav"><button id="prevMonth" type="button" aria-label="Mês anterior">‹</button></div>
+                        <h4 id="calMonthLabel"></h4>
+                        <div class="cal-nav"><button id="nextMonth" type="button" aria-label="Próximo mês">›</button></div>
+                    </div>
+                    <div class="cal-weekdays">
+                        <span>D</span><span>S</span><span>T</span><span>Q</span><span>Q</span><span>S</span><span>S</span>
+                    </div>
+                    <div class="cal-days" id="calDays"></div>
+                    <div class="calendar-legend">
+                        <span><i class="legend-dot livre"></i>Livre</span>
+                        <span><i class="legend-dot ocupado"></i>Ocupado</span>
+                        <span><i class="legend-dot selecionado"></i>Selecionado</span>
+                    </div>
+
+                    <div class="time-slots">
+                        <h5 id="slotsLabel">Selecione uma data para ver os horários</h5>
+                        <div class="slots-grid" id="slotsGrid"></div>
+                    </div>
+                </div>
+
+                <form class="booking-form reveal" id="bookingForm">
+                    <h4>Seus dados</h4>
+                    <p>Vamos confirmar tudo com você pelo WhatsApp.</p>
+
+                    <div class="selected-summary" id="bookingSummary">Nenhuma data selecionada ainda.</div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="nome">Nome completo</label>
+                            <input type="text" id="nome" required placeholder="Seu nome">
+                        </div>
+                        <div class="form-group">
+                            <label for="telefone">WhatsApp</label>
+                            <input type="tel" id="telefone" required placeholder="(11) 90000-0000">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="servico">Técnica desejada</label>
+                        <select id="servico" required>
+                            <option value="">Selecione uma técnica</option>
+                            <option value="Volume Russo">Volume Russo</option>
+                            <option value="Fio a Fio (Clássico)">Fio a Fio (Clássico)</option>
+                            <option value="Volume Híbrido">Volume Híbrido</option>
+                            <option value="Volume Egípcio">Volume Egípcio</option>
+                            <option value="Boneca">Boneca</option>
+                            <option value="Lash Lifting">Lash Lifting</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="obs">Observações (opcional)</label>
+                        <textarea id="obs" rows="3" placeholder="Curvatura, espessura, referência, etc."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">Confirmar agendamento no WhatsApp</button>
+                    <p class="form-msg" id="formMsg"></p>
+                    <p class="form-note">Ao confirmar, você será redirecionada ao WhatsApp com os dados preenchidos para finalizar o agendamento.</p>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <section id="contato" class="contact">
+        <div class="container contact-grid">
+            <div class="reveal">
+                <span class="eyebrow">Fale com a gente</span>
+                <h2 class="section-title" style="margin-bottom: 2rem;">Contato e localização</h2>
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <h3>WhatsApp</h3>
+                        <p><a href="https://wa.me/5511940469798" target="_blank" rel="noopener">(11) 94046-9798</a></p>
+                    </div>
+                    <div class="contact-item">
+                        <h3>E-mail</h3>
+                        <p>contato@studiomarcellyfreitas.com</p>
+                    </div>
+                    <div class="contact-item">
+                        <h3>Endereço</h3>
+                        <p>Rua Roberto Fernandes, 185<br>Vila Silva Ribeiro, Carapicuíba/SP<br>06321-240</p>
+                    </div>
+                    <div class="contact-item">
+                        <h3>Instagram</h3>
+                        <p><a href="https://www.instagram.com/studio_marcellyfreitas" target="_blank" rel="noopener">@studio_marcellyfreitas</a></p>
+                    </div>
+                </div>
+            </div>
+            <div class="map-frame reveal">
+                <iframe src="https://www.google.com/maps?q=Rua+Roberto+Fernandes,+185,+Vila+Silva+Ribeiro,+Carapicu%C3%ADba+-+SP,+06321-240&output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Mapa de localização"></iframe>
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<footer>
+    <div class="container">
+        <p>&copy; 2026 <span>Studio Marcelly Freitas</span> — Todos os direitos reservados</p>
+    </div>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
