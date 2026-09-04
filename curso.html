@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Curso de Lash Design Iniciante — Studio Marcelly Freitas</title>
+<meta name="description" content="Curso de Lash Design Iniciante do Studio Marcelly Freitas: do zero ao alongamento com técnica, segurança e confiança. Apostila, certificado e suporte vitalício.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="curso.css">
+<script>
+    // aplica o tema salvo (ou a preferência do sistema) antes da pintura, evitando flash
+    (function () {
+        var saved = localStorage.getItem('smf-theme');
+        var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+    })();
+</script>
+</head>
+<body>
+
+<header id="siteHeader">
+    <nav>
+        <div class="logo">Studio<span> Marcelly Freitas</span></div>
+        <ul class="nav-menu" id="navMenu">
+            <li><a href="index.html#home">Início</a></li>
+            <li><a href="index.html#sobre">Sobre</a></li>
+            <li><a href="index.html#galeria">Galeria</a></li>
+            <li><a href="index.html#agendamento">Agendamento</a></li>
+            <li><a href="curso.html">Curso</a></li>
+            <li><a href="index.html#contato">Contato</a></li>
+        </ul>
+        <button class="theme-toggle" id="themeToggle" type="button" aria-label="Alternar modo claro/escuro">
+            <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"></circle><line x1="12" y1="2" x2="12" y2="4"></line><line x1="12" y1="20" x2="12" y2="22"></line><line x1="4.2" y1="4.2" x2="5.6" y2="5.6"></line><line x1="18.4" y1="18.4" x2="19.8" y2="19.8"></line><line x1="2" y1="12" x2="4" y2="12"></line><line x1="20" y1="12" x2="22" y2="12"></line><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"></line><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"></line></svg>
+            <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"></path></svg>
+        </button>
+        <button class="nav-toggle" id="navToggle" aria-label="Abrir menu">
+            <span></span><span></span><span></span>
+        </button>
+    </nav>
+</header>
+
+<main>
+
+    <!-- 1. Hero -->
+    <section id="curso-hero" class="curso-hero">
+        <span class="curso-watermark" aria-hidden="true">LASH</span>
+
+        <div class="container curso-hero-grid">
+            <div class="curso-hero-content reveal in-view">
+                <span class="eyebrow">Marcelly Freitas</span>
+                <h1 class="curso-hero-title"><span class="curso-heavy">Lash</span> <em>Design</em></h1>
+                <p class="curso-hero-text">Técnica, segurança e confiança em cada aplicação. Agora você também pode aprender a profissão que transforma olhares.</p>
+
+                <div class="curso-hero-actions">
+                    <a href="#curso-aprender" class="btn btn-primary">
+                        <svg viewBox="0 0 24 24"><path d="M12 4 2 9l10 5 10-5-10-5Z"></path><path d="M6 11.5v5c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5v-5"></path><path d="M20 9v6"></path></svg>
+                        Conhecer o curso
+                    </a>
+                    <a href="https://wa.me/5511940469798?text=Ol%C3%A1!%20Quero%20garantir%20a%20minha%20vaga%20no%20pr%C3%B3ximo%20Curso%20de%20Extens%C3%A3o%20de%20C%C3%ADlios" target="_blank" rel="noopener" class="btn btn-outline-ink">
+                        Falar comigo <span aria-hidden="true">→</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="curso-hero-media reveal in-view">
+                <div class="curso-hero-photo">
+                    <img src="cilios-imagens/foto-perfil.jpg" alt="Marcelly Freitas, especialista em extensão de cílios">
+                    <div class="curso-hero-badge">
+                        <svg viewBox="0 0 24 24"><path d="M12 3c.6 3.4 2.6 5.4 6 6-3.4.6-5.4 2.6-6 6-.6-3.4-2.6-5.4-6-6 3.4-.6 5.4-2.6 6-6Z"></path><path d="M19 3.5c.2 1.2.9 1.9 2.1 2.1-1.2.2-1.9.9-2.1 2.1-.2-1.2-.9-1.9-2.1-2.1 1.2-.2 1.9-.9 2.1-2.1Z"></path></svg>
+                        <span>Curso Lash Design Iniciante</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 2. Formação -->
+    <section id="curso-formacao" class="curso-formacao">
+        <div class="container curso-formacao-inner reveal">
+            <span class="eyebrow">Formação</span>
+            <h2 class="curso-formacao-title">
+                <span class="curso-heavy curso-formacao-line">Do zero ao alongamento com</span>
+                <span class="curso-formacao-line"><em>técnica</em> <span class="curso-heavy">&</span> <em>segurança</em></span>
+            </h2>
+            <p class="curso-formacao-subtitle">Um dia de imersão, prática com modelo real, apostila completa, certificado e suporte vitalício.</p>
+            <p class="curso-formacao-highlight">Seja uma lash designer em 24h.</p>
+            <a href="#curso-aprender" class="btn btn-accent">Ver detalhes do curso ↓</a>
+        </div>
+    </section>
+
+    <!-- 3. O que você vai aprender -->
+    <section id="curso-aprender" class="curso-topics">
+        <span class="curso-watermark" aria-hidden="true">CURSO</span>
+
+        <div class="container">
+            <div class="section-head center reveal">
+                <h2 class="curso-topics-title"><span class="curso-heavy">O que você vai</span> <em>aprender</em></h2>
+            </div>
+
+            <div class="curso-topics-grid">
+                <div class="topic-card reveal">
+                    <svg viewBox="0 0 24 24"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12Z"></path><circle cx="12" cy="12" r="2.6"></circle></svg>
+                    <h3>Anatomia dos fios naturais</h3>
+                </div>
+                <div class="topic-card reveal">
+                    <svg viewBox="0 0 24 24"><path d="M9 4 3.5 6v14L9 18l6 2 5.5-2V4L15 6 9 4Z"></path><line x1="9" y1="4" x2="9" y2="18"></line><line x1="15" y1="6" x2="15" y2="20"></line></svg>
+                    <h3>Mapeamentos</h3>
+                </div>
+                <div class="topic-card reveal">
+                    <svg viewBox="0 0 24 24"><path d="m12 3 9 5-9 5-9-5 9-5Z"></path><path d="m3 13 9 5 9-5"></path></svg>
+                    <h3>Técnicas de aplicação de diferentes modelos</h3>
+                </div>
+                <div class="topic-card reveal">
+                    <svg viewBox="0 0 24 24"><path d="M12 3 4.5 6v6c0 5 3.2 7.9 7.5 9 4.3-1.1 7.5-4 7.5-9V6L12 3Z"></path><path d="m9 12 2.2 2.2L15.5 10"></path></svg>
+                    <h3>Higienização e biossegurança</h3>
+                </div>
+                <div class="topic-card reveal">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"></circle><circle cx="12" cy="12" r="4.5"></circle><circle cx="12" cy="12" r="0.8"></circle></svg>
+                    <h3>Isolamento perfeito</h3>
+                </div>
+                <div class="topic-card reveal">
+                    <svg viewBox="0 0 24 24"><circle cx="5" cy="6" r="1.3"></circle><line x1="9.5" y1="6" x2="21" y2="6"></line><circle cx="5" cy="12" r="1.3"></circle><line x1="9.5" y1="12" x2="21" y2="12"></line><circle cx="5" cy="18" r="1.3"></circle><line x1="9.5" y1="18" x2="21" y2="18"></line></svg>
+                    <h3>Aplicação passo a passo</h3>
+                </div>
+                <div class="topic-card reveal">
+                    <svg viewBox="0 0 24 24"><path d="M9 3c.5 2.6 2 4.1 4.6 4.6C11 8.1 9.5 9.6 9 12.2 8.5 9.6 7 8.1 4.4 7.6 7 7.1 8.5 5.6 9 3Z"></path><path d="M17.5 12c.35 1.7 1.3 2.65 3 3-1.7.35-2.65 1.3-3 3-.35-1.7-1.3-2.65-3-3 1.7-.35 2.65-1.3 3-3Z"></path></svg>
+                    <h3>Cuidados e manutenção</h3>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 4. Incluso no curso -->
+    <section id="curso-incluso" class="curso-included-section">
+        <span class="curso-watermark" aria-hidden="true">INCLUSO</span>
+
+        <div class="container">
+            <div class="section-head center reveal">
+                <h2 class="curso-included-title"><span class="curso-heavy">Incluso no</span> <em>curso</em></h2>
+            </div>
+
+            <div class="curso-included-grid reveal">
+                <div class="curso-included-photo">
+                    <img src="cilios-imagens/foto-perfil.jpg" alt="Ambiente do Studio Marcelly Freitas preparado para o curso">
+                    <div class="curso-included-photo-caption">
+                        <span class="curso-heavy">Tudo pronto para você</span>
+                        <p>Comece sem <em>investir</em> em<br>nada além do curso</p>
+                    </div>
+                </div>
+
+                <div class="curso-included-cards">
+                    <div class="included-card">
+                        <span class="icon-circle">
+                            <svg viewBox="0 0 24 24"><path d="M4 5.5c2.4-1.2 5.2-1.2 8 0 2.8-1.2 5.6-1.2 8 0v13c-2.4-1.2-5.2-1.2-8 0-2.8-1.2-5.6-1.2-8 0Z"></path><line x1="12" y1="5.5" x2="12" y2="18.5"></line></svg>
+                        </span>
+                        <h3>Apostila completa</h3>
+                        <p>Material didático exclusivo com passo a passo ilustrado para consultar sempre.</p>
+                    </div>
+                    <div class="included-card">
+                        <span class="icon-circle">
+                            <svg viewBox="0 0 24 24"><path d="M3 5h11v7H9l-2.6 2.3V12H3V5Z"></path><path d="M12.5 9.5H21v7h-3.4v2.6L14.8 16.5h-2.3"></path></svg>
+                        </span>
+                        <h3>Suporte vitalício</h3>
+                        <p>Tire dúvidas diretamente comigo mesmo depois de formada.</p>
+                    </div>
+                    <div class="included-card">
+                        <span class="icon-circle">
+                            <svg viewBox="0 0 24 24"><circle cx="8.5" cy="7.5" r="2.6"></circle><path d="M3.5 19.5c0-3 2.2-5 5-5s5 2 5 5"></path><circle cx="17" cy="8.5" r="2.1"></circle><path d="M14.8 12.2c2.3.2 4.2 2 4.2 4.6"></path></svg>
+                        </span>
+                        <h3>Modelo real</h3>
+                        <p>Pratique em modelo humana com acompanhamento individualizado.</p>
+                    </div>
+                    <div class="included-card">
+                        <span class="icon-circle">
+                            <svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="5"></circle><path d="m8.5 12.8-1.8 7.7L12 18l5.3 2.5-1.8-7.7"></path></svg>
+                        </span>
+                        <h3>Certificado de conclusão</h3>
+                        <p>Certificado digital reconhecido para você comprovar sua qualificação.</p>
+                    </div>
+                    <div class="included-card">
+                        <span class="icon-circle">
+                            <svg viewBox="0 0 24 24"><rect x="2.8" y="8" width="18.4" height="12" rx="2"></rect><path d="M8 8V6.2A2.2 2.2 0 0 1 10.2 4h3.6A2.2 2.2 0 0 1 16 6.2V8"></path><line x1="2.8" y1="13" x2="21.2" y2="13"></line></svg>
+                        </span>
+                        <h3>Materiais para uso no dia</h3>
+                        <p>Tudo o que precisa para praticar durante o curso sem preocupações.</p>
+                    </div>
+                    <div class="included-card">
+                        <span class="icon-circle">
+                            <svg viewBox="0 0 24 24"><circle cx="7" cy="8" r="2.3"></circle><circle cx="17" cy="8" r="2.3"></circle><path d="M3 18c0-2.6 1.8-4.4 4-4.4s4 1.8 4 4.4"></path><path d="M13 18c0-2.6 1.8-4.4 4-4.4s4 1.8 4 4.4"></path></svg>
+                        </span>
+                        <h3>Grupo exclusivo de alunas</h3>
+                        <p>Acesso a comunidade fechada para trocar experiências e dicas.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 5. Investimento e CTA -->
+    <section id="curso-cta" class="curso-cta">
+        <span class="curso-watermark" aria-hidden="true">Inscrição</span>
+
+        <div class="container curso-cta-inner reveal">
+            <span class="eyebrow">Investimento</span>
+            <div class="curso-price-old">R$ 1.200</div>
+            <span class="curso-price-label">Por apenas</span>
+            <div class="curso-price">
+                <span class="curso-price-currency">R$</span>
+                <span class="curso-price-value">800</span>
+            </div>
+            <p class="curso-cta-desc">Vagas limitadas para garantir acompanhamento próximo de cada aluna durante a prática.</p>
+            <a href="https://wa.me/5511940469798?text=Ol%C3%A1!%20Quero%20garantir%20a%20minha%20vaga%20no%20pr%C3%B3ximo%20Curso%20de%20Extens%C3%A3o%20de%20C%C3%ADlios" target="_blank" rel="noopener" class="btn btn-primary">Garanta sua vaga!</a>
+        </div>
+    </section>
+
+</main>
+
+<footer>
+    <div class="container">
+        <p>&copy; 2026 <span>Studio Marcelly Freitas</span> — Todos os direitos reservados</p>
+    </div>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>

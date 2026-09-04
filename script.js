@@ -74,15 +74,17 @@ function renderGallery(filter) {
     });
 }
 
-renderGallery('todas');
+if (galleryGrid) {
+    renderGallery('todas');
 
-document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        renderGallery(btn.dataset.filter);
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderGallery(btn.dataset.filter);
+        });
     });
-});
+}
 
 /*CALENDÁRIO E AGENDAMENTO */
 const BLOCKED_DATES = {
@@ -219,17 +221,19 @@ function updateSummary() {
     }
 }
 
-document.getElementById('prevMonth').addEventListener('click', () => {
-    calDate.setMonth(calDate.getMonth() - 1);
-    renderCalendar();
-});
+if (calDaysEl) {
+    document.getElementById('prevMonth').addEventListener('click', () => {
+        calDate.setMonth(calDate.getMonth() - 1);
+        renderCalendar();
+    });
 
-document.getElementById('nextMonth').addEventListener('click', () => {
-    calDate.setMonth(calDate.getMonth() + 1);
-    renderCalendar();
-});
+    document.getElementById('nextMonth').addEventListener('click', () => {
+        calDate.setMonth(calDate.getMonth() + 1);
+        renderCalendar();
+    });
 
-renderCalendar();
+    renderCalendar();
+}
 
 
 /*ENVIO PARA O WHATSAPP */
@@ -238,20 +242,21 @@ const formMsg = document.getElementById('formMsg');
 // const NUMERO_WHATSAPP = '5511940469798';
 const NUMERO_WHATSAPP = '5511980942679';
 
-bookingForm.addEventListener('submit', (e) => {
-    e.preventDefault();
+if (bookingForm) {
+    bookingForm.addEventListener('submit', (e) => {
+        e.preventDefault();
 
-    if (!selectedDate || !selectedTime) {
-        formMsg.textContent = 'Selecione uma data e um horário no calendário antes de continuar.';
-        return;
-    }
+        if (!selectedDate || !selectedTime) {
+            formMsg.textContent = 'Selecione uma data e um horário no calendário antes de continuar.';
+            return;
+        }
 
-    const nome = document.getElementById('nome').value.trim();
+        const nome = document.getElementById('nome').value.trim();
 
-    const dataFmt = selectedDate.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-    const dataHora = `${dataFmt} às ${selectedTime}`;
+        const dataFmt = selectedDate.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        const dataHora = `${dataFmt} às ${selectedTime}`;
 
-    const mensagem =
+        const mensagem =
 `Olá ${nome}, tudo bem?
 
 Seu horário ${dataHora}.
@@ -275,8 +280,9 @@ Tolerância de atraso: 10 minutos.
 
 Com mais de 10 minutos de atraso, não haverá atendimento e o valor não será reembolsado.`;
 
-    const link = `https://wa.me/${NUMERO_WHATSAPP}?text=${encodeURIComponent(mensagem)}`;
+        const link = `https://wa.me/${NUMERO_WHATSAPP}?text=${encodeURIComponent(mensagem)}`;
 
-    formMsg.textContent = 'Abrindo o WhatsApp para confirmar seu agendamento...';
-    window.open(link, '_blank');
-});
+        formMsg.textContent = 'Abrindo o WhatsApp para confirmar seu agendamento...';
+        window.open(link, '_blank');
+    });
+}
