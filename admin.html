@@ -49,6 +49,10 @@
                     <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="6.5" height="6.5" rx="1"></rect><rect x="14" y="3.5" width="6.5" height="6.5" rx="1"></rect><rect x="3.5" y="14" width="6.5" height="6.5" rx="1"></rect><rect x="14" y="14" width="6.5" height="6.5" rx="1"></rect></svg>
                     <span>Dashboard</span>
                 </a>
+                <a class="admin-menu-link" href="#agendamentos">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="1.5"></rect><path d="M7.5 3v4M16.5 3v4M3.5 10h17"></path></svg>
+                    <span>Agendamentos</span>
+                </a>
                 <a class="admin-menu-link" href="#faturamento">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"></path></svg>
                     <span>Faturamento</span>
@@ -83,6 +87,27 @@
         <main class="admin-content" id="dashboard">
             <section class="admin-dashboard-view" id="dashboardView">
                 <h1>Painel Administrativo</h1>
+            </section>
+
+            <section class="admin-appointments" id="agendamentos" hidden aria-labelledby="appointmentsTitle">
+                <div class="admin-page-heading">
+                    <div><p class="admin-eyebrow">Agenda do studio</p><h1 id="appointmentsTitle">Agendamentos</h1><p>Visualize e gerencie os atendimentos cadastrados.</p></div>
+                    <button class="admin-button" id="newAppointmentButton" type="button">Novo agendamento</button>
+                </div>
+                <div class="appointment-filters">
+                    <div class="appointment-quick-filters" aria-label="Filtros rápidos">
+                        <button type="button" data-quick="today">Hoje</button><button type="button" data-quick="tomorrow">Amanhã</button><button type="button" data-quick="week">Esta semana</button><button type="button" data-quick="upcoming">Próximos</button><button type="button" data-quick="completed">Concluídos</button><button type="button" data-quick="cancelled">Cancelados</button>
+                    </div>
+                    <div class="appointment-filter-fields">
+                        <input id="appointmentSearch" type="search" placeholder="Buscar cliente, telefone ou e-mail">
+                        <input id="appointmentDateFilter" type="date">
+                        <select id="appointmentServiceFilter"><option value="">Todos os serviços</option></select>
+                        <select id="appointmentStatusFilter"><option value="">Todos os status</option><option value="pending">Pendente</option><option value="confirmed">Confirmado</option><option value="in_progress">Em atendimento</option><option value="completed">Concluído</option><option value="cancelled">Cancelado</option><option value="no_show">Não compareceu</option></select>
+                    </div>
+                </div>
+                <div class="appointment-view-controls"><button class="is-active" type="button" data-appointment-view="list">Lista</button><button type="button" data-appointment-view="calendar">Calendário</button></div>
+                <div class="appointment-list-panel" id="appointmentsListView"><div class="appointment-table-wrap"><table class="appointment-table"><thead><tr><th>Cliente</th><th>Serviço</th><th>Data e horário</th><th>Status</th><th>Ações</th></tr></thead><tbody id="appointmentList"></tbody></table></div><p class="service-empty-state" id="appointmentEmptyState">Nenhum agendamento encontrado.</p></div>
+                <div class="appointment-calendar" id="appointmentsCalendarView" hidden></div>
             </section>
 
             <section class="admin-services" id="servicos" hidden aria-labelledby="servicesTitle">
@@ -159,6 +184,10 @@
             </section>
         </main>
     </div>
+
+    <dialog class="appointment-dialog" id="appointmentDialog">
+        <div class="appointment-dialog-inner"><button class="dialog-close" id="appointmentDialogClose" type="button" aria-label="Fechar">×</button><div id="appointmentDialogContent"></div></div>
+    </dialog>
 
     <script src="admin.js"></script>
 </body>

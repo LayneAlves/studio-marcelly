@@ -84,7 +84,7 @@ function findActiveService(PDO $pdo, int $id, bool $lock = false): array
 
 function appointmentsForDate(PDO $pdo, string $date, bool $lock = false): array
 {
-    $statement = $pdo->prepare("SELECT start_time, end_time FROM appointments WHERE booking_date = ? AND status = 'confirmed'" . ($lock ? ' FOR UPDATE' : ''));
+    $statement = $pdo->prepare("SELECT start_time, end_time FROM appointments WHERE booking_date = ? AND status NOT IN ('cancelled', 'no_show')" . ($lock ? ' FOR UPDATE' : ''));
     $statement->execute([$date]);
     return $statement->fetchAll();
 }
@@ -143,6 +143,14 @@ try {
 
         $pdo->beginTransaction();
         $service = findActiveService($pdo, serviceId($data['service_id'] ?? null), true);
+        $clientStatement = $pdo->prepare('SELECT id FROM clients WHERE phone = ? LIMIT 1');
+        $clientStatement->execute([$phone]);
+        $clientId = $clientStatement->fetchColumn();
+        if (!$clientId) {
+            $clientStatement = $pdo->prepare('INSERT INTO clients (name, phone) VALUES (?, ?)');
+            $clientStatement->execute([$name, $phone]);
+            $clientId = $pdo->lastInsertId();
+        }
         $end = $start + $service['duration_minutes'];
 
         if ($start < OPENING_MINUTES || $end > CLOSING_MINUTES) {
@@ -156,8 +164,9 @@ try {
             respond(['error' => 'Este horário acabou de ficar indisponível. Escolha outro horário.'], 409);
         }
 
-        $statement = $pdo->prepare("INSERT INTO appointments (client_name, client_phone, service_id, service_name, booking_date, start_time, end_time, duration_minutes, service_price, deposit_amount, notes, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'confirmed')");
+        $statement = $pdo->prepare("INSERT INTO appointments (client_id, client_name, client_phone, service_id, service_name, booking_date, start_time, end_time, duration_minutes, service_price, deposit_amount, notes, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'confirmed')");
         $statement->execute([
+            $clientId,
             $name,
             $phone,
             $service['id'],
