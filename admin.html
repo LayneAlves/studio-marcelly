@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Administrativo | Studio Marcelly Freitas</title>
+    <meta name="description" content="Painel administrativo do Studio Marcelly Freitas.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="admin.css">
+    <script>
+        (function () {
+            var saved = localStorage.getItem('smf-theme');
+            var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
+</head>
+<body class="admin-body">
+    <div class="admin-panel">
+        <header class="admin-mobile-bar">
+            <a class="admin-mobile-brand" href="index.html" aria-label="Voltar para o site Studio Marcelly Freitas">Studio <span>Marcelly Freitas</span></a>
+            <div class="admin-mobile-actions">
+                <button class="admin-theme-toggle" id="adminThemeToggle" type="button" aria-label="Alternar modo claro e escuro">
+                    <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path></svg>
+                    <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 14.6A8.9 8.9 0 0 1 9.4 3.2 9 9 0 1 0 20.8 14.6Z"></path></svg>
+                </button>
+                <button class="admin-menu-toggle" id="adminMenuToggle" type="button" aria-label="Abrir menu administrativo" aria-controls="adminSidebar" aria-expanded="false">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
+        </header>
+
+        <button class="admin-sidebar-backdrop" id="adminSidebarBackdrop" type="button" aria-label="Fechar menu"></button>
+
+        <aside class="admin-sidebar" id="adminSidebar" aria-label="Navegação administrativa">
+            <div class="admin-sidebar-top">
+                <a class="admin-brand" href="index.html" aria-label="Voltar para o site Studio Marcelly Freitas">
+                    <span class="admin-brand-mark" aria-hidden="true">SM</span>
+                    <span>Studio <em>Marcelly Freitas</em></span>
+                </a>
+                <p class="admin-brand-label">Área administrativa</p>
+            </div>
+
+            <nav class="admin-menu" aria-label="Módulos do painel">
+                <a class="admin-menu-link is-active" href="#dashboard" aria-current="page">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="6.5" height="6.5" rx="1"></rect><rect x="14" y="3.5" width="6.5" height="6.5" rx="1"></rect><rect x="3.5" y="14" width="6.5" height="6.5" rx="1"></rect><rect x="14" y="14" width="6.5" height="6.5" rx="1"></rect></svg>
+                    <span>Dashboard</span>
+                </a>
+                <a class="admin-menu-link" href="#faturamento">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"></path></svg>
+                    <span>Faturamento</span>
+                </a>
+                <a class="admin-menu-link" href="#clientes">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"></circle><path d="M3.5 20c.4-3.6 2.4-5.5 5.5-5.5s5.1 1.9 5.5 5.5M16 5.5a3 3 0 0 1 0 5.8M17.2 14.7c2 .7 3.1 2.4 3.3 5.3"></path></svg>
+                    <span>Clientes</span>
+                </a>
+                <a class="admin-menu-link" href="#servicos">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4.5h11l5 5v10H4z"></path><circle cx="9" cy="10" r="1.2"></circle><path d="M15 4.5v5h5"></path></svg>
+                    <span>Serviços</span>
+                </a>
+                <a class="admin-menu-link" href="#relatorios">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h9l3 3V20.5H6z"></path><path d="M15 3.5v3h3M9 11h6M9 15h6"></path></svg>
+                    <span>Relatórios</span>
+                </a>
+            </nav>
+
+            <div class="admin-sidebar-footer">
+                <button class="admin-theme-toggle" id="adminThemeToggleDesktop" type="button" aria-label="Alternar modo claro e escuro">
+                    <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path></svg>
+                    <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 14.6A8.9 8.9 0 0 1 9.4 3.2 9 9 0 1 0 20.8 14.6Z"></path></svg>
+                    <span>Alternar tema</span>
+                </button>
+                <a class="admin-menu-link admin-logout" href="#sair">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 5H5v14h5M14 8l4 4-4 4M18 12H9"></path></svg>
+                    <span>Sair</span>
+                </a>
+            </div>
+        </aside>
+
+        <main class="admin-content" id="dashboard">
+            <section class="admin-dashboard-view" id="dashboardView">
+                <h1>Painel Administrativo</h1>
+            </section>
+
+            <section class="admin-services" id="servicos" hidden aria-labelledby="servicesTitle">
+                <div class="admin-page-heading">
+                    <div>
+                        <p class="admin-eyebrow">Catálogo do studio</p>
+                        <h1 id="servicesTitle">Serviços</h1>
+                        <p>Cadastre e gerencie os serviços disponíveis para agendamento.</p>
+                    </div>
+                </div>
+
+                <div class="service-form-panel">
+                    <h2 id="serviceFormTitle">Cadastrar serviço</h2>
+                    <form class="service-form" id="serviceForm">
+                        <input type="hidden" id="serviceId">
+                        <div class="service-field service-field-wide">
+                            <label for="serviceName">Nome do serviço <span aria-hidden="true">*</span></label>
+                            <input id="serviceName" name="name" type="text" required maxlength="80" autocomplete="off" placeholder="Ex.: Volume Brasileiro">
+                        </div>
+                        <div class="service-field">
+                            <label for="serviceValue">Valor <span aria-hidden="true">*</span></label>
+                            <input id="serviceValue" name="value" type="text" inputmode="decimal" required autocomplete="off" placeholder="R$ 0,00">
+                        </div>
+                        <div class="service-field">
+                            <label for="serviceDuration">Duração do serviço <span aria-hidden="true">*</span></label>
+                            <select id="serviceDuration" name="duration" required>
+                                <option value="" selected disabled>Selecione a duração</option>
+                                <option value="15 minutos">15 minutos</option>
+                                <option value="30 minutos">30 minutos</option>
+                                <option value="45 minutos">45 minutos</option>
+                                <option value="1 hora">1 hora</option>
+                                <option value="1 hora e 15 minutos">1 hora e 15 minutos</option>
+                                <option value="1 hora e 30 minutos">1 hora e 30 minutos</option>
+                                <option value="1 hora e 45 minutos">1 hora e 45 minutos</option>
+                                <option value="2 horas">2 horas</option>
+                                <option value="2 horas e 30 minutos">2 horas e 30 minutos</option>
+                                <option value="3 horas">3 horas</option>
+                            </select>
+                        </div>
+                        <div class="service-field">
+                            <label for="serviceDeposit">Valor do sinal</label>
+                            <input id="serviceDeposit" name="deposit" type="text" inputmode="decimal" autocomplete="off" placeholder="R$ 0,00">
+                        </div>
+                        <div class="service-form-actions">
+                            <button class="admin-button" id="serviceSubmitButton" type="submit">Cadastrar serviço</button>
+                            <button class="admin-button admin-button-secondary" id="serviceCancelEdit" type="button" hidden>Cancelar edição</button>
+                        </div>
+                    </form>
+                    <p class="service-feedback" id="serviceFeedback" role="status" aria-live="polite"></p>
+                </div>
+
+                <div class="service-list-panel">
+                    <div class="service-list-heading">
+                        <h2>Serviços cadastrados</h2>
+                        <span class="service-count" id="serviceCount">0 serviços</span>
+                    </div>
+                    <div class="service-table-wrap">
+                        <table class="service-table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Nome do serviço</th>
+                                    <th scope="col">Valor</th>
+                                    <th scope="col">Duração</th>
+                                    <th scope="col">Valor do sinal</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="serviceList"></tbody>
+                        </table>
+                    </div>
+                    <p class="service-empty-state" id="serviceEmptyState">Nenhum serviço cadastrado ainda.</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html>

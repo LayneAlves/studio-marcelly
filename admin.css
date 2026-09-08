@@ -1,0 +1,684 @@
+/* Estrutura exclusiva do painel administrativo. Os tokens visuais vêm de style.css. */
+.admin-body {
+    min-width: 0;
+}
+
+.admin-panel {
+    min-height: 100vh;
+}
+
+.admin-sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    width: 272px;
+    padding: 2rem 1.15rem 1.15rem;
+    overflow-y: auto;
+    color: var(--on-ink);
+    background:
+        radial-gradient(circle at 12% 93%, rgba(242, 241, 239, 0.12), transparent 30%),
+        linear-gradient(165deg, var(--ink-soft), var(--ink) 52%, var(--ink));
+    border-right: 1px solid var(--ink-line);
+}
+
+.admin-sidebar-top {
+    padding: 0 0.75rem;
+}
+
+.admin-brand,
+.admin-mobile-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.08rem;
+    line-height: 1.2;
+    color: var(--on-ink);
+}
+
+.admin-brand em,
+.admin-mobile-brand span {
+    color: var(--on-ink-soft);
+    font-style: italic;
+}
+
+.admin-brand-mark {
+    display: grid;
+    width: 36px;
+    height: 36px;
+    place-items: center;
+    flex: 0 0 auto;
+    border: 1px solid var(--ink-line);
+    border-radius: 50%;
+    font-family: 'Jost', sans-serif;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+}
+
+.admin-brand-label {
+    margin: 1.6rem 0 0;
+    color: var(--on-ink-faint);
+    font-size: 0.68rem;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+}
+
+.admin-menu {
+    display: grid;
+    gap: 0.35rem;
+    margin-top: 1.25rem;
+}
+
+.admin-menu-link {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    min-height: 48px;
+    padding: 0.75rem;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    color: var(--on-ink-soft);
+    font-size: 0.96rem;
+    font-weight: 400;
+    letter-spacing: 0.01em;
+    transition: color var(--transicao), background var(--transicao), border-color var(--transicao), transform var(--transicao);
+}
+
+.admin-menu-link svg,
+.admin-theme-toggle svg {
+    width: 20px;
+    height: 20px;
+    flex: 0 0 auto;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.65;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.admin-menu-link:hover,
+.admin-menu-link:focus-visible {
+    color: var(--on-ink);
+    background: rgba(242, 241, 239, 0.08);
+    border-color: rgba(242, 241, 239, 0.1);
+    outline: none;
+}
+
+.admin-menu-link.is-active {
+    color: var(--on-ink);
+    background: rgba(242, 241, 239, 0.14);
+    border-color: rgba(242, 241, 239, 0.14);
+    box-shadow: inset 3px 0 0 var(--on-ink);
+}
+
+.admin-sidebar-footer {
+    display: grid;
+    gap: 0.35rem;
+    margin-top: auto;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--ink-line);
+}
+
+.admin-theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.9rem;
+    min-height: 48px;
+    padding: 0.75rem;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--on-ink-soft);
+    font: 400 0.92rem 'Jost', sans-serif;
+    cursor: pointer;
+    transition: color var(--transicao), background var(--transicao), border-color var(--transicao);
+}
+
+.admin-theme-toggle:hover,
+.admin-theme-toggle:focus-visible {
+    color: var(--on-ink);
+    background: rgba(242, 241, 239, 0.08);
+    border-color: rgba(242, 241, 239, 0.1);
+    outline: none;
+}
+
+.admin-theme-toggle .icon-sun { display: none; }
+.admin-theme-toggle .icon-moon { display: block; }
+[data-theme="dark"] .admin-theme-toggle .icon-sun { display: block; }
+[data-theme="dark"] .admin-theme-toggle .icon-moon { display: none; }
+
+.admin-logout {
+    color: var(--on-ink-faint);
+}
+
+.admin-content {
+    display: flex;
+    align-items: center;
+    min-height: 100vh;
+    margin-left: 272px;
+    padding: clamp(2rem, 6vw, 5.5rem);
+    background: var(--bg);
+}
+
+.admin-content h1 {
+    font-size: clamp(2rem, 4vw, 3.25rem);
+    color: var(--text);
+}
+
+.admin-dashboard-view {
+    width: 100%;
+}
+
+.admin-content.is-services-view {
+    display: block;
+}
+
+.admin-services {
+    width: min(100%, 1080px);
+    padding: clamp(2rem, 5vw, 4.5rem) 0;
+}
+
+.admin-page-heading {
+    display: flex;
+    justify-content: space-between;
+    gap: 1.5rem;
+    margin-bottom: 2.4rem;
+}
+
+.admin-eyebrow {
+    margin-bottom: 0.5rem;
+    color: var(--text-soft);
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+}
+
+.admin-page-heading h1 {
+    margin-bottom: 0.55rem;
+}
+
+.admin-page-heading p:last-child {
+    max-width: 550px;
+    color: var(--text-soft);
+}
+
+.service-form-panel,
+.service-list-panel {
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    box-shadow: var(--sombra);
+}
+
+.service-form-panel {
+    padding: clamp(1.25rem, 3vw, 2rem);
+}
+
+.service-form-panel h2,
+.service-list-heading h2 {
+    font-family: 'Jost', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 500;
+}
+
+.service-form {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.1rem;
+    margin-top: 1.35rem;
+}
+
+.service-field {
+    min-width: 0;
+}
+
+.service-field-wide {
+    grid-column: span 3;
+}
+
+.service-field label {
+    display: block;
+    margin-bottom: 0.45rem;
+    color: var(--text-soft);
+    font-size: 0.82rem;
+}
+
+.service-field label span {
+    color: var(--text);
+}
+
+.service-field input,
+.service-field select {
+    width: 100%;
+    min-height: 46px;
+    padding: 0.7rem 0.85rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    outline: none;
+    background: var(--bg);
+    color: var(--text);
+    font: 400 0.94rem 'Jost', sans-serif;
+    transition: border-color var(--transicao), box-shadow var(--transicao), background var(--transicao);
+}
+
+.service-field input::placeholder {
+    color: var(--text-faint);
+}
+
+.service-field input:focus,
+.service-field select:focus {
+    border-color: var(--text-soft);
+    box-shadow: 0 0 0 3px var(--ring);
+    background: var(--surface);
+}
+
+.service-form-actions {
+    display: flex;
+    align-items: end;
+    gap: 0.7rem;
+    grid-column: span 3;
+    padding-top: 0.25rem;
+}
+
+.service-feedback {
+    min-height: 1.4rem;
+    margin-top: 0.9rem;
+    color: var(--text-soft);
+    font-size: 0.84rem;
+}
+
+.service-feedback.is-error {
+    color: #a14747;
+}
+
+.admin-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0.7rem 1.1rem;
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-sm);
+    background: var(--accent);
+    color: var(--accent-contrast);
+    font: 500 0.9rem 'Jost', sans-serif;
+    cursor: pointer;
+    transition: transform var(--transicao), opacity var(--transicao), background var(--transicao);
+}
+
+.admin-button:hover,
+.admin-button:focus-visible {
+    opacity: 0.82;
+    outline: none;
+    transform: translateY(-1px);
+}
+
+.admin-button-secondary {
+    border-color: var(--line);
+    background: transparent;
+    color: var(--text);
+}
+
+.service-list-panel {
+    margin-top: 1.4rem;
+    overflow: hidden;
+}
+
+.service-list-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.25rem clamp(1.25rem, 3vw, 2rem);
+    border-bottom: 1px solid var(--line);
+}
+
+.service-count {
+    color: var(--text-soft);
+    font-size: 0.8rem;
+}
+
+.service-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.service-table th,
+.service-table td {
+    padding: 1rem clamp(0.85rem, 1.6vw, 1.25rem);
+    border-bottom: 1px solid var(--line);
+    vertical-align: middle;
+}
+
+.service-table th {
+    color: var(--text-soft);
+    font-size: 0.68rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.service-table td {
+    color: var(--text-soft);
+    font-size: 0.88rem;
+}
+
+.service-table td:first-child {
+    color: var(--text);
+    font-weight: 500;
+}
+
+.service-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.service-table tbody tr.is-inactive td {
+    color: var(--text-faint);
+}
+
+.service-table tbody tr.is-inactive td:first-child {
+    color: var(--text-soft);
+}
+
+.service-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    color: var(--text-soft);
+    font-size: 0.8rem;
+    white-space: nowrap;
+}
+
+.service-switch {
+    position: relative;
+    display: inline-flex;
+    width: 34px;
+    height: 20px;
+    flex: 0 0 auto;
+}
+
+.service-switch input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+}
+
+.service-switch-track {
+    width: 100%;
+    height: 100%;
+    border-radius: var(--radius-pill);
+    background: var(--surface-2);
+    box-shadow: inset 0 0 0 1px var(--line);
+    cursor: pointer;
+    transition: background var(--transicao);
+}
+
+.service-switch-track::after {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--text-soft);
+    content: '';
+    transition: transform var(--transicao), background var(--transicao);
+}
+
+.service-switch input:checked + .service-switch-track {
+    background: var(--accent);
+}
+
+.service-switch input:checked + .service-switch-track::after {
+    background: var(--accent-contrast);
+    transform: translateX(14px);
+}
+
+.service-switch input:focus-visible + .service-switch-track {
+    outline: 2px solid var(--ring);
+    outline-offset: 3px;
+}
+
+.service-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+}
+
+.service-action-button {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--text-soft);
+    font: 500 0.82rem 'Jost', sans-serif;
+    cursor: pointer;
+    transition: color var(--transicao);
+}
+
+.service-action-button:hover,
+.service-action-button:focus-visible {
+    color: var(--text);
+    outline: none;
+}
+
+.service-action-button-delete:hover,
+.service-action-button-delete:focus-visible {
+    color: #a14747;
+}
+
+.service-empty-state {
+    padding: 2rem 1.25rem;
+    color: var(--text-soft);
+    text-align: center;
+}
+
+.admin-mobile-bar,
+.admin-sidebar-backdrop,
+.admin-menu-toggle {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .admin-mobile-bar {
+        position: fixed;
+        inset: 0 0 auto;
+        z-index: 15;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 64px;
+        padding: 0.75rem 1rem;
+        color: var(--on-ink);
+        background: var(--ink);
+        border-bottom: 1px solid var(--ink-line);
+    }
+
+    .admin-mobile-brand {
+        font-size: 0.95rem;
+        white-space: nowrap;
+    }
+
+    .admin-mobile-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .admin-mobile-actions .admin-theme-toggle {
+        justify-content: center;
+        width: 40px;
+        min-height: 40px;
+        padding: 0;
+        border-radius: 50%;
+    }
+
+    .admin-mobile-actions .admin-theme-toggle svg {
+        width: 19px;
+    }
+
+    .admin-menu-toggle {
+        display: inline-flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 5px;
+        width: 40px;
+        height: 40px;
+        padding: 0 8px;
+        border: 1px solid transparent;
+        border-radius: 50%;
+        background: transparent;
+        color: var(--on-ink);
+        cursor: pointer;
+    }
+
+    .admin-menu-toggle span {
+        display: block;
+        width: 100%;
+        height: 1.5px;
+        background: currentColor;
+        transition: transform var(--transicao), opacity var(--transicao);
+    }
+
+    .admin-menu-toggle.is-open span:nth-child(1) { transform: translateY(6.5px) rotate(45deg); }
+    .admin-menu-toggle.is-open span:nth-child(2) { opacity: 0; }
+    .admin-menu-toggle.is-open span:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
+
+    .admin-sidebar {
+        width: min(82vw, 300px);
+        padding-top: 1.5rem;
+        transform: translateX(-100%);
+        transition: transform var(--transicao);
+        box-shadow: none;
+    }
+
+    .admin-sidebar.is-open {
+        transform: translateX(0);
+        box-shadow: 18px 0 45px rgba(0, 0, 0, 0.28);
+    }
+
+    .admin-sidebar-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 18;
+        width: 100%;
+        height: 100%;
+        border: 0;
+        background: rgba(0, 0, 0, 0.42);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity var(--transicao);
+    }
+
+    .admin-sidebar-backdrop.is-visible {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .admin-sidebar-footer .admin-theme-toggle {
+        display: none;
+    }
+
+    .admin-content {
+        min-height: 100svh;
+        margin-left: 0;
+        padding: 64px 1.25rem 1.25rem;
+    }
+
+    .admin-services {
+        padding: 2rem 0;
+    }
+
+    .service-form {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .service-field-wide,
+    .service-form-actions {
+        grid-column: span 2;
+    }
+}
+
+@media (max-width: 380px) {
+    .admin-mobile-brand span {
+        display: none;
+    }
+}
+
+@media (max-width: 560px) {
+    .admin-page-heading {
+        margin-bottom: 1.5rem;
+    }
+
+    .service-form,
+    .service-field-wide,
+    .service-form-actions {
+        grid-template-columns: 1fr;
+        grid-column: auto;
+    }
+
+    .service-form-actions {
+        align-items: stretch;
+    }
+
+    .admin-button {
+        width: 100%;
+    }
+
+    .service-table thead {
+        display: none;
+    }
+
+    .service-table,
+    .service-table tbody,
+    .service-table tr,
+    .service-table td {
+        display: block;
+        width: 100%;
+    }
+
+    .service-table tbody {
+        display: grid;
+        gap: 0.8rem;
+        padding: 0.8rem;
+    }
+
+    .service-table tr {
+        padding: 0.25rem 0.85rem;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-sm);
+    }
+
+    .service-table th,
+    .service-table td {
+        display: grid;
+        grid-template-columns: minmax(98px, 0.9fr) minmax(0, 1.1fr);
+        gap: 0.8rem;
+        padding: 0.68rem 0;
+        border-bottom: 1px solid var(--line);
+    }
+
+    .service-table td::before {
+        color: var(--text-faint);
+        font-size: 0.64rem;
+        font-weight: 500;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        content: attr(data-label);
+    }
+
+    .service-table tbody tr:last-child td:last-child {
+        border-bottom: 0;
+    }
+
+    .service-status,
+    .service-actions {
+        justify-content: flex-start;
+    }
+}

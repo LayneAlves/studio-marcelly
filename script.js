@@ -1,21 +1,18 @@
 const header = document.getElementById('siteHeader');
 window.addEventListener('scroll', () => {
-    header.classList.toggle('scrolled', window.scrollY > 40);
+    if (header) header.classList.toggle('scrolled', window.scrollY > 40);
 });
-
 
 const navToggle = document.getElementById('navToggle');
 const navMenu = document.getElementById('navMenu');
 
-navToggle.addEventListener('click', () => {
-    navMenu.classList.toggle('open');
-});
+if (navToggle && navMenu) {
+    navToggle.addEventListener('click', () => navMenu.classList.toggle('open'));
+    navMenu.querySelectorAll('a').forEach((link) => {
+        link.addEventListener('click', () => navMenu.classList.remove('open'));
+    });
+}
 
-navMenu.querySelectorAll('a').forEach(link => {
-    link.addEventListener('click', () => navMenu.classList.remove('open'));
-});
-
-/*MODO CLARO / ESCURO */
 const themeToggle = document.getElementById('themeToggle');
 const htmlEl = document.documentElement;
 
@@ -24,14 +21,16 @@ function applyTheme(theme) {
     localStorage.setItem('smf-theme', theme);
 }
 
-themeToggle.addEventListener('click', () => {
-    const current = htmlEl.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
-    applyTheme(current === 'dark' ? 'light' : 'dark');
-});
+if (themeToggle) {
+    themeToggle.addEventListener('click', () => {
+        const current = htmlEl.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+        applyTheme(current === 'dark' ? 'light' : 'dark');
+    });
+}
 
 const revealEls = document.querySelectorAll('.reveal');
 const revealObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
+    entries.forEach((entry) => {
         if (entry.isIntersecting) {
             entry.target.classList.add('in-view');
             revealObserver.unobserve(entry.target);
@@ -39,16 +38,15 @@ const revealObserver = new IntersectionObserver((entries) => {
     });
 }, { threshold: 0.15 });
 
-revealEls.forEach(el => revealObserver.observe(el));
+revealEls.forEach((element) => revealObserver.observe(element));
 
-/*GALERIA */
 const galleryItems = [
     { cat: 'mega-brasileiro', label: 'Mega Brasileiro', img: 'cilios-imagens/mega-brasileiro.png' },
     { cat: 'volume-4D', label: 'Volume 4D', img: 'cilios-imagens/volume-4D.png' },
     { cat: 'volume-6D', label: 'Volume 6D', img: 'cilios-imagens/volume-6D.png' },
     { cat: 'volume-brasileiro', label: 'Volume Brasileiro', img: 'cilios-imagens/volume-brasileiro.png' },
     { cat: 'volume-fox', label: 'Volume Fox', img: 'cilios-imagens/volume-fox.png' },
-    { cat: 'volume-hibrido', label: 'Volume Hibrido', img: 'cilios-imagens/volume-hibrido.png' },
+    { cat: 'volume-hibrido', label: 'Volume Híbrido', img: 'cilios-imagens/volume-hibrido.png' },
     { cat: 'volume-princesa', label: 'Volume Princesa', img: 'cilios-imagens/volume-princesa.png' },
     { cat: 'volume-russo', label: 'Volume Russo', img: 'cilios-imagens/volume-russo.png' },
 ];
@@ -56,19 +54,14 @@ const galleryItems = [
 const galleryGrid = document.getElementById('galleryGrid');
 
 function renderGallery(filter) {
+    if (!galleryGrid) return;
     galleryGrid.innerHTML = '';
-    const items = filter === 'todas' ? galleryItems : galleryItems.filter(i => i.cat === filter);
-    items.forEach((item, i) => {
+    const items = filter === 'todas' ? galleryItems : galleryItems.filter((item) => item.cat === filter);
+    items.forEach((item, index) => {
         const card = document.createElement('div');
         card.className = 'gallery-card';
-        card.style.animationDelay = `${i * 0.05}s`;
-        card.innerHTML = `
-            <div class="gallery-thumb">
-                <img src="${item.img}" alt="${item.label}">
-            </div>
-            <div class="gallery-info">
-                <h4>${item.label}</h4>
-            </div>`;
+        card.style.animationDelay = `${index * 0.05}s`;
+        card.innerHTML = `<div class="gallery-thumb"><img src="${item.img}" alt="${item.label}"></div><div class="gallery-info"><h4>${item.label}</h4></div>`;
         galleryGrid.appendChild(card);
         requestAnimationFrame(() => card.classList.add('show'));
     });
@@ -76,48 +69,35 @@ function renderGallery(filter) {
 
 if (galleryGrid) {
     renderGallery('todas');
-
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            renderGallery(btn.dataset.filter);
+    document.querySelectorAll('.tab-btn').forEach((button) => {
+        button.addEventListener('click', () => {
+            document.querySelectorAll('.tab-btn').forEach((tab) => tab.classList.remove('active'));
+            button.classList.add('active');
+            renderGallery(button.dataset.filter);
         });
     });
 }
 
-/*CALENDÁRIO E AGENDAMENTO */
-const BLOCKED_DATES = {
-};
-
-const HORARIOS_PADRAO = ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
-
-function seedExampleBookings() {
-    const today = new Date();
-    for (let i = 1; i <= 20; i++) {
-        const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() + i);
-        if (d.getDay() === 1) continue; // estúdio fechado às segundas
-        const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-        if (i % 4 === 0) {
-            BLOCKED_DATES[key] = [...HORARIOS_PADRAO]; // dia totalmente cheio
-        } else if (i % 3 === 0) {
-            BLOCKED_DATES[key] = ['09:00', '10:00', '14:00']; // parcialmente ocupado
-        }
-    }
-}
-seedExampleBookings();
-
-let calDate = new Date();
-let selectedDate = null;
-let selectedTime = null;
+const SERVICES_API_URL = 'api/services.php?active=1';
+const APPOINTMENTS_API_URL = 'api/appointments.php';
+const NUMERO_WHATSAPP = '5511980942679';
+const MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
 
 const calDaysEl = document.getElementById('calDays');
 const calMonthLabel = document.getElementById('calMonthLabel');
 const slotsGrid = document.getElementById('slotsGrid');
 const slotsLabel = document.getElementById('slotsLabel');
 const bookingSummary = document.getElementById('bookingSummary');
+const bookingForm = document.getElementById('bookingForm');
+const formMsg = document.getElementById('formMsg');
+const serviceSelect = document.getElementById('servico');
 
-const MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+let calDate = new Date();
+let selectedDate = null;
+let selectedTime = null;
+let selectedService = null;
+let activeServices = [];
+let slotsRequestVersion = 0;
 
 function isPast(date) {
     const today = new Date();
@@ -125,164 +105,210 @@ function isPast(date) {
     return date < today;
 }
 
+function dateKey(date) {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
+function formatCurrency(value) {
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+}
+
+async function appointmentRequest(path = '', options = {}) {
+    const response = await fetch(`${APPOINTMENTS_API_URL}${path}`, {
+        headers: { 'Content-Type': 'application/json' },
+        ...options,
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || 'Não foi possível consultar os horários.');
+    return data;
+}
+
+async function loadActiveServices() {
+    try {
+        const response = await fetch(SERVICES_API_URL, { cache: 'no-store' });
+        const services = await response.json().catch(() => ({}));
+        if (!response.ok || !Array.isArray(services)) {
+            throw new Error(services.error || 'Não foi possível carregar os serviços.');
+        }
+
+        activeServices = services;
+        serviceSelect.replaceChildren(new Option('Selecione um serviço', ''));
+        activeServices.forEach((service) => {
+            serviceSelect.add(new Option(`${service.name} — ${formatCurrency(service.value)}`, service.id));
+        });
+        serviceSelect.disabled = activeServices.length === 0;
+        if (activeServices.length === 0) {
+            serviceSelect.options[0].textContent = 'Nenhum serviço disponível';
+            formMsg.textContent = 'Não há serviços ativos disponíveis para agendamento.';
+        }
+    } catch (error) {
+        serviceSelect.replaceChildren(new Option('Não foi possível carregar os serviços', ''));
+        serviceSelect.disabled = true;
+        formMsg.textContent = error.message;
+    }
+}
+
 function renderCalendar() {
     const year = calDate.getFullYear();
     const month = calDate.getMonth();
     calMonthLabel.textContent = `${MESES[month]} de ${year}`;
-
     const firstDay = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
+    calDaysEl.replaceChildren();
 
-    calDaysEl.innerHTML = '';
-
-    for (let i = 0; i < firstDay; i++) {
+    for (let index = 0; index < firstDay; index++) {
         const empty = document.createElement('div');
         empty.className = 'cal-day empty';
         calDaysEl.appendChild(empty);
     }
 
-    for (let d = 1; d <= daysInMonth; d++) {
-        const date = new Date(year, month, d);
-        const key = `${year}-${month}-${d}`;
-        const dayEl = document.createElement('div');
-        dayEl.className = 'cal-day';
-        dayEl.textContent = d;
-
-        const fullyBooked = BLOCKED_DATES[key] && BLOCKED_DATES[key].length >= HORARIOS_PADRAO.length;
-        const isMonday = date.getDay() === 1;
+    for (let day = 1; day <= daysInMonth; day++) {
+        const date = new Date(year, month, day);
+        const dayElement = document.createElement('div');
+        dayElement.className = 'cal-day';
+        dayElement.textContent = day;
 
         if (isPast(date)) {
-            dayEl.classList.add('past');
-        } else if (fullyBooked || isMonday) {
-            dayEl.classList.add('blocked');
+            dayElement.classList.add('past');
+        } else if (date.getDay() === 1) {
+            dayElement.classList.add('blocked');
+            dayElement.title = 'O studio não atende às segundas-feiras';
         } else {
-            dayEl.addEventListener('click', () => selectDate(date, dayEl));
+            dayElement.addEventListener('click', () => selectDate(date, dayElement));
         }
 
         if (selectedDate && selectedDate.getTime() === date.getTime()) {
-            dayEl.classList.add('selected');
+            dayElement.classList.add('selected');
         }
-
-        calDaysEl.appendChild(dayEl);
+        calDaysEl.appendChild(dayElement);
     }
 }
 
-function selectDate(date, el) {
-    document.querySelectorAll('.cal-day.selected').forEach(e => e.classList.remove('selected'));
-    el.classList.add('selected');
+function selectDate(date, element) {
+    document.querySelectorAll('.cal-day.selected').forEach((day) => day.classList.remove('selected'));
+    element.classList.add('selected');
     selectedDate = date;
     selectedTime = null;
     renderSlots();
     updateSummary();
 }
 
-function renderSlots() {
-    slotsGrid.innerHTML = '';
+async function renderSlots() {
+    const requestVersion = ++slotsRequestVersion;
+    slotsGrid.replaceChildren();
+
+    if (!selectedService) {
+        slotsLabel.textContent = 'Selecione um serviço para ver os horários';
+        return;
+    }
     if (!selectedDate) {
         slotsLabel.textContent = 'Selecione uma data para ver os horários';
         return;
     }
-    const key = `${selectedDate.getFullYear()}-${selectedDate.getMonth()}-${selectedDate.getDate()}`;
-    const taken = BLOCKED_DATES[key] || [];
-    slotsLabel.textContent = 'Horários disponíveis';
 
-    HORARIOS_PADRAO.forEach(hora => {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'slot-btn';
-        btn.textContent = hora;
-        if (taken.includes(hora)) {
-            btn.classList.add('taken');
-            btn.disabled = true;
-        } else {
-            if (selectedTime === hora) {
-                btn.classList.add('selected');
-            }
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.slot-btn.selected').forEach(b => b.classList.remove('selected'));
-                btn.classList.add('selected');
-                selectedTime = hora;
+    slotsLabel.textContent = 'Consultando horários disponíveis...';
+    try {
+        const availability = await appointmentRequest(`?date=${dateKey(selectedDate)}&service_id=${encodeURIComponent(selectedService.id)}`);
+        if (requestVersion !== slotsRequestVersion) return;
+
+        slotsLabel.textContent = 'Horários disponíveis';
+        if (!availability.slots.length) {
+            const empty = document.createElement('p');
+            empty.className = 'slots-empty';
+            empty.textContent = 'Não há horários disponíveis nesta data para este serviço.';
+            slotsGrid.appendChild(empty);
+            return;
+        }
+
+        availability.slots.forEach((time) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'slot-btn';
+            button.textContent = time;
+            button.addEventListener('click', () => {
+                document.querySelectorAll('.slot-btn.selected').forEach((slot) => slot.classList.remove('selected'));
+                button.classList.add('selected');
+                selectedTime = time;
                 updateSummary();
             });
-        }
-        slotsGrid.appendChild(btn);
-    });
-}
-
-function updateSummary() {
-    if (selectedDate && selectedTime) {
-        const dataFmt = selectedDate.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
-        bookingSummary.textContent = `Selecionado: ${dataFmt} às ${selectedTime}`;
-    } else if (selectedDate) {
-        const dataFmt = selectedDate.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
-        bookingSummary.textContent = `Data: ${dataFmt} — escolha um horário`;
-    } else {
-        bookingSummary.textContent = 'Nenhuma data selecionada ainda.';
+            slotsGrid.appendChild(button);
+        });
+    } catch (error) {
+        if (requestVersion !== slotsRequestVersion) return;
+        slotsLabel.textContent = error.message;
     }
 }
 
-if (calDaysEl) {
+function updateSummary() {
+    if (!selectedService) {
+        bookingSummary.textContent = 'Selecione um serviço para iniciar o agendamento.';
+    } else if (selectedDate && selectedTime) {
+        const date = selectedDate.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+        bookingSummary.textContent = `${selectedService.name}: ${date} às ${selectedTime}`;
+    } else if (selectedDate) {
+        const date = selectedDate.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+        bookingSummary.textContent = `${selectedService.name}: ${date} — escolha um horário`;
+    } else {
+        bookingSummary.textContent = `${selectedService.name}: escolha uma data.`;
+    }
+}
+
+if (bookingForm && calDaysEl && calMonthLabel && slotsGrid && slotsLabel && bookingSummary && serviceSelect) {
     document.getElementById('prevMonth').addEventListener('click', () => {
         calDate.setMonth(calDate.getMonth() - 1);
         renderCalendar();
     });
-
     document.getElementById('nextMonth').addEventListener('click', () => {
         calDate.setMonth(calDate.getMonth() + 1);
         renderCalendar();
     });
+    serviceSelect.addEventListener('change', () => {
+        selectedService = activeServices.find((service) => service.id === serviceSelect.value) || null;
+        selectedTime = null;
+        formMsg.textContent = '';
+        renderCalendar();
+        renderSlots();
+        updateSummary();
+    });
 
-    renderCalendar();
-}
-
-
-/*ENVIO PARA O WHATSAPP */
-const bookingForm = document.getElementById('bookingForm');
-const formMsg = document.getElementById('formMsg');
-// const NUMERO_WHATSAPP = '5511940469798';
-const NUMERO_WHATSAPP = '5511980942679';
-
-if (bookingForm) {
-    bookingForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-
-        if (!selectedDate || !selectedTime) {
-            formMsg.textContent = 'Selecione uma data e um horário no calendário antes de continuar.';
+    bookingForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        if (!selectedService || !selectedDate || !selectedTime) {
+            formMsg.textContent = 'Selecione um serviço, uma data e um horário antes de continuar.';
             return;
         }
 
-        const nome = document.getElementById('nome').value.trim();
+        const name = document.getElementById('nome').value.trim();
+        const phone = document.getElementById('telefone').value.trim();
+        const notes = document.getElementById('obs').value.trim();
+        const submitButton = bookingForm.querySelector('[type="submit"]');
+        submitButton.disabled = true;
+        formMsg.textContent = 'Confirmando disponibilidade...';
 
-        const dataFmt = selectedDate.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-        const dataHora = `${dataFmt} às ${selectedTime}`;
+        try {
+            const appointment = await appointmentRequest('', {
+                method: 'POST',
+                body: JSON.stringify({ name, phone, notes, service_id: selectedService.id, date: dateKey(selectedDate), start_time: selectedTime }),
+            });
+            const date = selectedDate.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            const deposit = appointment.deposit === null ? '' : `\nValor do sinal: ${formatCurrency(appointment.deposit)}.`;
+            const message = `Olá ${name}, tudo bem?\n\nSeu agendamento para ${appointment.service_name} foi registrado para ${date}, às ${appointment.start_time}.\nValor do serviço: ${formatCurrency(appointment.price)}.${deposit}\n\nVamos confirmar os próximos passos por aqui.`;
 
-        const mensagem =
-`Olá ${nome}, tudo bem?
-
-Seu horário ${dataHora}.
-
-Será confirmado mediante o pagamento do sinal de 30$, descontado do valor final.
-
-Chave do PIX: (11) 94046-9798
-Telefone (Banco Nubank)
-
-• Contrato de agendamento.
-
-Caso de desistência da cliente com máximo de 72 horas (3 dias), o valor do sinal é reembolsado 50%.
-
-• Regulamento do estabelecimento:
-
-Não trazer acompanhante.
-
-Caso desista no dia do atendimento, o valor não será reembolsado.
-
-Tolerância de atraso: 10 minutos.
-
-Com mais de 10 minutos de atraso, não haverá atendimento e o valor não será reembolsado.`;
-
-        const link = `https://wa.me/${NUMERO_WHATSAPP}?text=${encodeURIComponent(mensagem)}`;
-
-        formMsg.textContent = 'Abrindo o WhatsApp para confirmar seu agendamento...';
-        window.open(link, '_blank');
+            formMsg.textContent = 'Agendamento salvo. Abrindo o WhatsApp...';
+            window.open(`https://wa.me/${NUMERO_WHATSAPP}?text=${encodeURIComponent(message)}`, '_blank');
+            document.getElementById('nome').value = '';
+            document.getElementById('telefone').value = '';
+            document.getElementById('obs').value = '';
+            selectedTime = null;
+            renderSlots();
+            updateSummary();
+        } catch (error) {
+            formMsg.textContent = error.message;
+        } finally {
+            submitButton.disabled = false;
+        }
     });
+
+    renderCalendar();
+    loadActiveServices();
 }

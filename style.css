@@ -790,7 +790,13 @@ nav {
     background: transparent;
 }
 
-.cal-day:not(.blocked):not(.past):not(.empty):hover {
+.cal-day.requires-service {
+    color: var(--text-faint);
+    cursor: not-allowed;
+    background: transparent;
+}
+
+.cal-day:not(.blocked):not(.past):not(.empty):not(.requires-service):hover {
     border-color: var(--accent);
 }
 
@@ -884,6 +890,14 @@ nav {
     text-decoration: line-through;
     cursor: not-allowed;
     background: transparent;
+}
+
+.slots-grid .slots-empty {
+    grid-column: 1 / -1;
+    padding: 0.85rem 0;
+    color: var(--text-soft);
+    font-size: 0.85rem;
+    text-align: center;
 }
 
 .booking-form {
