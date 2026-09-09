@@ -10,6 +10,7 @@ function send(response, status, data) { response.writeHead(status, { 'Content-Ty
 function fail(status, error) { const result = new Error(error); result.status = status; throw result; }
 function minutes(time) { if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) fail(422, 'Horário inválido.'); const [hour, minute] = time.split(':').map(Number); return hour * 60 + minute; }
 function time(value) { return `${String(Math.floor(value / 60)).padStart(2, '0')}:${String(value % 60).padStart(2, '0')}`; }
+function phoneKey(value) { return String(value || '').replace(/\D/g, ''); }
 function duration(value) { const hours = Number((value.match(/(\d+)\s*hora/i) || [])[1] || 0); const mins = Number((value.match(/(\d+)\s*minuto/i) || [])[1] || 0); const total = hours * 60 + mins; if (!total) fail(422, 'A duração do serviço é inválida.'); return total; }
 function date(value) { if (!/^\d{4}-\d{2}-\d{2}$/.test(value) || Number.isNaN(new Date(`${value}T12:00:00`).valueOf())) fail(422, 'Data inválida.'); return value; }
 function overlap(start, end, periods) { return periods.some((item) => start < minutes(item.end_time.slice(0, 5)) && end > minutes(item.start_time.slice(0, 5))); }
@@ -26,9 +27,32 @@ async function handler(request, response) {
     const url = new URL(request.url, `http://${request.headers.host}`); const path = url.pathname; const query = url.searchParams;
     if (request.method === 'GET' && path === '/') return send(response, 200, { message: 'API administrativa ativa. Abra o painel em http://localhost/studio-marcelly/admin.html#agendamentos' });
     if (request.method === 'GET' && path === '/api/services') { const [rows] = await pool.query('SELECT id,name,price AS value,duration,deposit,active FROM services WHERE active=1 ORDER BY name'); return send(response, 200, rows.map((row) => ({ ...row, id: String(row.id), value: Number(row.value), deposit: row.deposit == null ? null : Number(row.deposit), active: Boolean(row.active) }))); }
-    if (path === '/api/clients') {
-        if (request.method === 'GET') { const q = `%${query.get('q') || ''}%`; const [rows] = await pool.execute('SELECT id,name,phone,email FROM clients WHERE name LIKE ? OR phone LIKE ? OR email LIKE ? ORDER BY name LIMIT 30', [q,q,q]); return send(response, 200, rows.map((row) => ({ ...row, id: String(row.id) }))); }
-        if (request.method === 'POST') { const data = await body(request); if (!data.name?.trim() || !data.phone?.trim()) fail(422, 'Informe nome e telefone válidos.'); const [result] = await pool.execute('INSERT INTO clients (name,phone,email) VALUES (?,?,?)',[data.name.trim(),data.phone.trim(),data.email?.trim() || null]); return send(response,201,{id:String(result.insertId),name:data.name.trim(),phone:data.phone.trim(),email:data.email?.trim() || null}); }
+    if (path === '/api/clients' || /^\/api\/clients\/\d+$/.test(path)) {
+        const clientId = path === '/api/clients' ? null : Number(path.split('/').pop());
+        if (request.method === 'GET' && clientId) {
+            const [clients] = await pool.execute('SELECT id,name,phone,email,created_at FROM clients WHERE id=?', [clientId]); if (!clients[0]) fail(404, 'Cliente não encontrada.');
+            const [appointments] = await pool.execute("SELECT id,service_name,DATE_FORMAT(booking_date,'%Y-%m-%d') AS date,TIME_FORMAT(start_time,'%H:%i') AS start_time,TIME_FORMAT(end_time,'%H:%i') AS end_time,status,service_price AS price,deposit_amount AS deposit FROM appointments WHERE client_id=? ORDER BY booking_date DESC,start_time DESC", [clientId]);
+            const client = { ...clients[0], id: String(clients[0].id), appointments: appointments.map((item) => ({ ...item, id: String(item.id), price: Number(item.price), deposit: item.deposit == null ? null : Number(item.deposit) })) };
+            client.next_appointment = client.appointments.find((item) => item.date >= new Date().toISOString().slice(0,10) && !['cancelled','completed','no_show'].includes(item.status)) || null;
+            client.cancellations = client.appointments.filter((item) => item.status === 'cancelled').length; client.no_shows = client.appointments.filter((item) => item.status === 'no_show').length;
+            return send(response, 200, client);
+        }
+        if (request.method === 'GET') {
+            const q = `%${query.get('q') || ''}%`;
+            const [rows] = await pool.execute(`SELECT c.id,c.name,c.phone,c.email,
+                (SELECT CONCAT(DATE_FORMAT(a.booking_date,'%Y-%m-%d'),'|',TIME_FORMAT(a.start_time,'%H:%i'),'|',a.service_name) FROM appointments a WHERE a.client_id=c.id AND a.booking_date>=CURDATE() AND a.status NOT IN ('cancelled','completed','no_show') ORDER BY a.booking_date,a.start_time LIMIT 1) AS next_appointment,
+                (SELECT COUNT(*) FROM appointments a WHERE a.client_id=c.id AND a.status='cancelled') AS cancellations,
+                (SELECT COUNT(*) FROM appointments a WHERE a.client_id=c.id AND a.status='no_show') AS no_shows
+                FROM clients c WHERE c.name LIKE ? OR c.phone LIKE ? OR c.email LIKE ? ORDER BY c.name LIMIT 100`, [q,q,q]);
+            return send(response, 200, rows.map((row) => ({ ...row, id: String(row.id), cancellations: Number(row.cancellations), no_shows: Number(row.no_shows) })));
+        }
+        if (request.method === 'POST') {
+            const data = await body(request); const name = data.name?.trim(); const phone = phoneKey(data.phone); const email = data.email?.trim().toLowerCase() || null;
+            if (!name || !phone) fail(422, 'Informe nome e telefone válidos.'); if (email && !/^\S+@\S+\.\S+$/.test(email)) fail(422, 'Informe um e-mail válido.');
+            const [duplicates] = await pool.execute("SELECT id FROM clients WHERE REPLACE(REPLACE(REPLACE(REPLACE(phone,' ',''),'-',''),'(',''),')','')=? OR (? IS NOT NULL AND LOWER(email)=?) LIMIT 1", [phone,email,email]);
+            if (duplicates[0]) fail(409, 'Já existe uma cliente cadastrada com este telefone ou e-mail.');
+            const [result] = await pool.execute('INSERT INTO clients (name,phone,email) VALUES (?,?,?)',[name,phone,email]); return send(response,201,{id:String(result.insertId),name,phone,email});
+        }
     }
     if (path !== '/api/appointments') return fail(404, 'Rota não encontrada.');
     if (request.method === 'GET' && query.has('availability')) { const bookingDate=date(query.get('date')); const selectedService=await service(pool,query.get('service_id')); const config=await settings(pool); const monday=config.monday_closed && new Date(`${bookingDate}T12:00:00`).getDay()===1; const used=await periods(pool,bookingDate,query.get('exclude_id') || 0); const slots=[]; if (!monday) for(let start=Number(config.opening_minutes);start+selectedService.minutes<=Number(config.closing_minutes);start+=30) if(!overlap(start,start+selectedService.minutes,used)) slots.push(time(start)); return send(response,200,{slots,duration_minutes:selectedService.minutes}); }
