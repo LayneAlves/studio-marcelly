@@ -18,9 +18,8 @@
     color-scheme: light;
 }
 
-/* Modo Claro */
-:root,
-[data-theme="light"] {
+/* Tokens visuais fixos */
+:root {
     --bg: #f6f6f5;
     --surface: #ffffff;
     --surface-2: #ececea;
@@ -34,21 +33,6 @@
     --sombra: 0 20px 50px rgba(23, 23, 26, 0.10);
 }
 
-/* Modo Escuro */
-[data-theme="dark"] {
-    color-scheme: dark;
-    --bg: #0f0f11;
-    --surface: #1a1a1c;
-    --surface-2: #202023;
-    --text: #f2f1ef;
-    --text-soft: rgba(242, 241, 239, 0.62);
-    --text-faint: rgba(242, 241, 239, 0.32);
-    --line: rgba(242, 241, 239, 0.14);
-    --accent: #f2f1ef;
-    --accent-contrast: #101012;
-    --ring: rgba(242, 241, 239, 0.3);
-    --sombra: 0 20px 50px rgba(0, 0, 0, 0.5);
-}
 
 * {
     margin: 0;
@@ -279,41 +263,6 @@ nav {
 }
 
 /* Botão de alternância de tema */
-.theme-toggle {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    border: 1px solid var(--ink-line);
-    background: rgba(242, 241, 239, 0.06);
-    color: var(--on-ink);
-    cursor: pointer;
-    flex-shrink: 0;
-    transition: background var(--transicao), transform var(--transicao), border-color var(--transicao);
-}
-
-.theme-toggle:hover {
-    background: rgba(242, 241, 239, 0.14);
-    transform: translateY(-1px);
-}
-
-.theme-toggle svg {
-    width: 18px;
-    height: 18px;
-    stroke: currentColor;
-    fill: none;
-    stroke-width: 1.8;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-}
-
-.theme-toggle .icon-sun { display: none; }
-.theme-toggle .icon-moon { display: block; }
-[data-theme="dark"] .theme-toggle .icon-sun { display: block; }
-[data-theme="dark"] .theme-toggle .icon-moon { display: none; }
-
 .nav-toggle {
     display: none;
     flex-direction: column;
@@ -327,6 +276,107 @@ nav {
     cursor: pointer;
     padding: 4px;
     flex-shrink: 0;
+}
+
+/* Autenticação exigida para concluir o agendamento */
+.booking-auth-dialog {
+    position: fixed;
+    inset: 0;
+    width: min(440px, calc(100vw - 2rem));
+    max-height: min(620px, calc(100dvh - 2rem));
+    margin: auto;
+    box-sizing: border-box;
+    overflow: auto;
+    padding: clamp(1.5rem, 5vw, 2.25rem);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: var(--sombra);
+}
+
+.booking-auth-dialog::backdrop {
+    background: rgba(0, 0, 0, 0.55);
+}
+
+.booking-auth-dialog h2 {
+    margin-bottom: 0.4rem;
+}
+
+.booking-auth-description,
+.booking-auth-client {
+    color: var(--text-soft);
+    font-size: 0.9rem;
+}
+
+.booking-auth-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin: 1.5rem 0 1rem;
+}
+
+.booking-auth-tabs button {
+    padding: 0.45rem 0;
+    border: 0;
+    border-bottom: 1px solid transparent;
+    background: transparent;
+    color: var(--text-soft);
+    font: 500 0.9rem 'Jost', sans-serif;
+    cursor: pointer;
+}
+
+.booking-auth-tabs button.is-active {
+    border-color: var(--text);
+    color: var(--text);
+}
+
+.booking-auth-form {
+    display: grid;
+    gap: 0.55rem;
+}
+
+.booking-auth-form[hidden] {
+    display: none !important;
+}
+
+.booking-auth-form label {
+    margin-top: 0.45rem;
+    color: var(--text-soft);
+    font-size: 0.85rem;
+}
+
+.booking-auth-form input {
+    min-height: 44px;
+    padding: 0.65rem 0.75rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    color: var(--text);
+    font: inherit;
+}
+
+.booking-auth-form .btn {
+    width: 100%;
+    margin-top: 0.7rem;
+    justify-content: center;
+}
+
+.booking-auth-close {
+    position: absolute;
+    top: 0.65rem;
+    right: 0.8rem;
+    border: 0;
+    background: transparent;
+    color: var(--text);
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+@media (max-width: 480px) {
+    .booking-auth-dialog {
+        width: calc(100vw - 1.5rem);
+        max-height: calc(100dvh - 1.5rem);
+    }
 }
 
 .nav-toggle span {
@@ -1144,12 +1194,8 @@ footer span {
         transform: translateX(0);
     }
 
-    .theme-toggle {
-        order: 2;
-    }
-
     .nav-toggle {
-        order: 3;
+        order: 2;
     }
 
     .features,

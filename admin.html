@@ -10,23 +10,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="admin.css">
-    <script>
-        (function () {
-            var saved = localStorage.getItem('smf-theme');
-            var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-            document.documentElement.setAttribute('data-theme', theme);
-        })();
-    </script>
 </head>
 <body class="admin-body">
     <div class="admin-panel">
         <header class="admin-mobile-bar">
             <a class="admin-mobile-brand" href="index.html" aria-label="Voltar para o site Studio Marcelly Freitas">Studio <span>Marcelly Freitas</span></a>
             <div class="admin-mobile-actions">
-                <button class="admin-theme-toggle" id="adminThemeToggle" type="button" aria-label="Alternar modo claro e escuro">
-                    <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path></svg>
-                    <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 14.6A8.9 8.9 0 0 1 9.4 3.2 9 9 0 1 0 20.8 14.6Z"></path></svg>
-                </button>
                 <button class="admin-menu-toggle" id="adminMenuToggle" type="button" aria-label="Abrir menu administrativo" aria-controls="adminSidebar" aria-expanded="false">
                     <span></span><span></span><span></span>
                 </button>
@@ -72,12 +61,7 @@
             </nav>
 
             <div class="admin-sidebar-footer">
-                <button class="admin-theme-toggle" id="adminThemeToggleDesktop" type="button" aria-label="Alternar modo claro e escuro">
-                    <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path></svg>
-                    <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 14.6A8.9 8.9 0 0 1 9.4 3.2 9 9 0 1 0 20.8 14.6Z"></path></svg>
-                    <span>Alternar tema</span>
-                </button>
-                <a class="admin-menu-link admin-logout" href="#sair">
+                <a class="admin-menu-link admin-logout" href="index.html">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 5H5v14h5M14 8l4 4-4 4M18 12H9"></path></svg>
                     <span>Sair</span>
                 </a>
@@ -189,6 +173,7 @@
         <div class="appointment-dialog-inner"><button class="dialog-close" id="appointmentDialogClose" type="button" aria-label="Fechar">×</button><div id="appointmentDialogContent"></div></div>
     </dialog>
 
+    <script src="phone-mask.js"></script>
     <script src="admin.js"></script>
 </body>
 </html>

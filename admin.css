@@ -88,8 +88,7 @@
     transition: color var(--transicao), background var(--transicao), border-color var(--transicao), transform var(--transicao);
 }
 
-.admin-menu-link svg,
-.admin-theme-toggle svg {
+.admin-menu-link svg {
     width: 20px;
     height: 20px;
     flex: 0 0 auto;
@@ -121,45 +120,6 @@
     margin-top: auto;
     padding-top: 1.5rem;
     border-top: 1px solid var(--ink-line);
-}
-
-.admin-theme-toggle {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.9rem;
-    min-height: 48px;
-    padding: 0.75rem;
-    border: 1px solid transparent;
-    border-radius: var(--radius-sm);
-    background: transparent;
-    color: var(--on-ink-soft);
-    font: 400 0.92rem 'Jost', sans-serif;
-    cursor: pointer;
-    transition: color var(--transicao), background var(--transicao), border-color var(--transicao);
-}
-
-.admin-theme-toggle:hover,
-.admin-theme-toggle:focus-visible {
-    color: var(--on-ink);
-    background: rgba(242, 241, 239, 0.08);
-    border-color: rgba(242, 241, 239, 0.1);
-    outline: none;
-}
-
-.admin-theme-toggle .icon-sun {
-    display: none;
-}
-
-.admin-theme-toggle .icon-moon {
-    display: block;
-}
-
-[data-theme="dark"] .admin-theme-toggle .icon-sun {
-    display: block;
-}
-
-[data-theme="dark"] .admin-theme-toggle .icon-moon {
-    display: none;
 }
 
 .admin-logout {
@@ -857,18 +817,6 @@
         gap: 0.25rem;
     }
 
-    .admin-mobile-actions .admin-theme-toggle {
-        justify-content: center;
-        width: 40px;
-        min-height: 40px;
-        padding: 0;
-        border-radius: 50%;
-    }
-
-    .admin-mobile-actions .admin-theme-toggle svg {
-        width: 19px;
-    }
-
     .admin-menu-toggle {
         display: inline-flex;
         flex-direction: column;
@@ -933,10 +881,6 @@
     .admin-sidebar-backdrop.is-visible {
         opacity: 1;
         pointer-events: auto;
-    }
-
-    .admin-sidebar-footer .admin-theme-toggle {
-        display: none;
     }
 
     .admin-content {

@@ -13,20 +13,13 @@ if (navToggle && navMenu) {
     });
 }
 
-const themeToggle = document.getElementById('themeToggle');
-const htmlEl = document.documentElement;
-
-function applyTheme(theme) {
-    htmlEl.setAttribute('data-theme', theme);
-    localStorage.setItem('smf-theme', theme);
+const accountHeaderLink = document.getElementById('accountHeaderLink');
+function updateAccountHeader() {
+    const savedAccount = JSON.parse(localStorage.getItem('smf-account') || 'null');
+    if (accountHeaderLink) accountHeaderLink.textContent = savedAccount?.client?.name ? `Olá, ${savedAccount.client.name}` : 'Minha Conta';
 }
-
-if (themeToggle) {
-    themeToggle.addEventListener('click', () => {
-        const current = htmlEl.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
-        applyTheme(current === 'dark' ? 'light' : 'dark');
-    });
-}
+updateAccountHeader();
+window.addEventListener('pageshow', updateAccountHeader);
 
 const revealEls = document.querySelectorAll('.reveal');
 const revealObserver = new IntersectionObserver((entries) => {
@@ -79,8 +72,8 @@ if (galleryGrid) {
 }
 
 const SERVICES_API_URL = 'api/services.php?active=1';
-const APPOINTMENTS_API_URL = 'api/appointments.php';
-const NUMERO_WHATSAPP = '5511980942679';
+const APPOINTMENTS_API_URL = `http://${window.location.hostname || '127.0.0.1'}:3000/api/appointments`;
+const ACCOUNT_API_URL = `http://${window.location.hostname || '127.0.0.1'}:3000/api/account`;
 const MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
 
 const calDaysEl = document.getElementById('calDays');
@@ -120,6 +113,25 @@ async function appointmentRequest(path = '', options = {}) {
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(data.error || 'Não foi possível consultar os horários.');
+    return data;
+}
+
+async function accountRequest(path = '', options = {}) {
+    const session = JSON.parse(localStorage.getItem('smf-account') || 'null');
+    const response = await fetch(`${ACCOUNT_API_URL}${path}`, {
+        headers: { 'Content-Type': 'application/json', ...(session?.token ? { Authorization: `Bearer ${session.token}` } : {}) },
+        ...options,
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+        if (response.status === 401) {
+            localStorage.removeItem('smf-account');
+            updateAccountHeader();
+        }
+        const error = new Error(data.error || 'Não foi possível concluir esta ação.');
+        error.status = response.status;
+        throw error;
+    }
     return data;
 }
 
@@ -208,7 +220,7 @@ async function renderSlots() {
 
     slotsLabel.textContent = 'Consultando horários disponíveis...';
     try {
-        const availability = await appointmentRequest(`?date=${dateKey(selectedDate)}&service_id=${encodeURIComponent(selectedService.id)}`);
+        const availability = await appointmentRequest(`?availability=1&date=${dateKey(selectedDate)}&service_id=${encodeURIComponent(selectedService.id)}`);
         if (requestVersion !== slotsRequestVersion) return;
 
         slotsLabel.textContent = 'Horários disponíveis';
@@ -271,7 +283,7 @@ if (bookingForm && calDaysEl && calMonthLabel && slotsGrid && slotsLabel && book
         updateSummary();
     });
 
-    bookingForm.addEventListener('submit', async (event) => {
+    bookingForm.addEventListener('legacy-submit', async (event) => {
         event.preventDefault();
         if (!selectedService || !selectedDate || !selectedTime) {
             formMsg.textContent = 'Selecione um serviço, uma data e um horário antes de continuar.';
@@ -294,8 +306,7 @@ if (bookingForm && calDaysEl && calMonthLabel && slotsGrid && slotsLabel && book
             const deposit = appointment.deposit === null ? '' : `\nValor do sinal: ${formatCurrency(appointment.deposit)}.`;
             const message = `Olá ${name}, tudo bem?\n\nSeu agendamento para ${appointment.service_name} foi registrado para ${date}, às ${appointment.start_time}.\nValor do serviço: ${formatCurrency(appointment.price)}.${deposit}\n\nVamos confirmar os próximos passos por aqui.`;
 
-            formMsg.textContent = 'Agendamento salvo. Abrindo o WhatsApp...';
-            window.open(`https://wa.me/${NUMERO_WHATSAPP}?text=${encodeURIComponent(message)}`, '_blank');
+            formMsg.textContent = 'Agendamento realizado com sucesso.';
             document.getElementById('nome').value = '';
             document.getElementById('telefone').value = '';
             document.getElementById('obs').value = '';
@@ -311,4 +322,105 @@ if (bookingForm && calDaysEl && calMonthLabel && slotsGrid && slotsLabel && book
 
     renderCalendar();
     loadActiveServices();
+}
+
+function currentSession() {
+    return JSON.parse(localStorage.getItem('smf-account') || 'null');
+}
+
+function storeSession(session) {
+    localStorage.setItem('smf-account', JSON.stringify(session));
+    updateAccountHeader();
+}
+
+async function finishBooking() {
+    const submitButton = bookingForm.querySelector('[type="submit"]');
+    const notes = document.getElementById('obs').value.trim();
+    submitButton.disabled = true;
+    formMsg.textContent = 'Confirmando disponibilidade...';
+    try {
+        const appointment = await accountRequest('/bookings', {
+            method: 'POST',
+            body: JSON.stringify({ notes, service_id: selectedService.id, date: dateKey(selectedDate), start_time: selectedTime }),
+        });
+        const session = currentSession();
+        const bookingDate = selectedDate.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        const deposit = appointment.deposit === null ? '' : `\nValor do sinal: ${formatCurrency(appointment.deposit)}.`;
+        const message = `Olá ${session.client.name}, tudo bem?\n\nSeu agendamento para ${appointment.service_name} foi registrado para ${bookingDate}, às ${appointment.start_time}.\nValor do serviço: ${formatCurrency(appointment.price)}.${deposit}\n\nVamos confirmar os próximos passos por aqui.`;
+        formMsg.textContent = 'Agendamento realizado com sucesso!';
+        document.getElementById('obs').value = '';
+        selectedTime = null;
+        renderSlots();
+        updateSummary();
+    } catch (error) {
+        if (error.status === 401) {
+            formMsg.textContent = 'Entre ou cadastre-se para finalizar o agendamento.';
+            openBookingAuthDialog();
+        } else {
+            formMsg.textContent = error.message;
+        }
+    } finally {
+        submitButton.disabled = false;
+    }
+}
+
+function openBookingAuthDialog() {
+    const dialog = document.getElementById('bookingAuthDialog');
+    const name = document.getElementById('nome').value.trim();
+    const phone = document.getElementById('telefone').value.trim();
+    document.getElementById('bookingRegisterName').value = name;
+    document.getElementById('bookingRegisterPhone').value = formatBrazilianPhone(phone);
+    document.getElementById('bookingLoginIdentifier').value = phone;
+    setBookingAuthView('login');
+    dialog.showModal();
+}
+
+function setBookingAuthView(view) {
+    document.getElementById('bookingLoginForm').hidden = view !== 'login';
+    document.getElementById('bookingRegisterForm').hidden = view !== 'register';
+    document.querySelectorAll('[data-booking-auth-view]').forEach((button) => button.classList.toggle('is-active', button.dataset.bookingAuthView === view));
+    document.getElementById('bookingAuthMsg').textContent = '';
+}
+
+async function authenticateBooking(response) {
+    storeSession(response);
+    document.getElementById('nome').value = response.client.name;
+    document.getElementById('telefone').value = response.client.phone;
+    document.getElementById('bookingAuthDialog').close();
+    await finishBooking();
+}
+
+if (bookingForm && document.getElementById('bookingAuthDialog')) {
+    bookingForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        if (!selectedService || !selectedDate || !selectedTime) {
+            formMsg.textContent = 'Selecione um serviço, uma data e um horário antes de continuar.';
+        } else if (currentSession()) {
+            finishBooking();
+        } else {
+            openBookingAuthDialog();
+        }
+    });
+
+    document.querySelectorAll('[data-booking-auth-view]').forEach((button) => button.addEventListener('click', () => setBookingAuthView(button.dataset.bookingAuthView)));
+    document.getElementById('bookingAuthClose').addEventListener('click', () => document.getElementById('bookingAuthDialog').close());
+    document.getElementById('bookingLoginForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const message = document.getElementById('bookingAuthMsg');
+        try {
+            await authenticateBooking(await accountRequest('/login', { method: 'POST', body: JSON.stringify({ identifier: document.getElementById('bookingLoginIdentifier').value, password: document.getElementById('bookingLoginPassword').value }) }));
+        } catch (error) { message.textContent = error.message; }
+    });
+    document.getElementById('bookingRegisterForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const message = document.getElementById('bookingAuthMsg');
+        const password = document.getElementById('bookingRegisterPassword').value;
+        if (password !== document.getElementById('bookingRegisterPasswordConfirm').value) {
+            message.textContent = 'As senhas não coincidem.';
+            return;
+        }
+        try {
+            await authenticateBooking(await accountRequest('/register', { method: 'POST', body: JSON.stringify({ name: document.getElementById('bookingRegisterName').value.trim(), phone: document.getElementById('bookingRegisterPhone').value.trim(), email: document.getElementById('bookingRegisterEmail').value.trim(), password }) }));
+        } catch (error) { message.textContent = error.message; }
+    });
 }

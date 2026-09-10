@@ -2,7 +2,8 @@
   "dependencies": {
     "@tanstack/react-router": "^1.170.32",
     "lucide-react": "^1.41.0",
-    "mysql2": "^3.24.4"
+    "mysql2": "^3.24.4",
+    "nodemailer": "^10.0.2"
   },
   "scripts": {
     "admin-api": "node server.js"

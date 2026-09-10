@@ -13,20 +13,13 @@
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="admin.css">
     <link rel="stylesheet" href="clientes.css">
-    <script>(function () { var saved = localStorage.getItem('smf-theme'); document.documentElement.setAttribute('data-theme', saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')); })();</script>
 </head>
 
 <body class="admin-body">
     <div class="admin-panel">
         <header class="admin-mobile-bar"><a class="admin-mobile-brand" href="index.html">Studio <span>Marcelly
                     Freitas</span></a>
-            <div class="admin-mobile-actions"><button class="admin-theme-toggle" type="button" data-theme-toggle
-                    aria-label="Alternar tema"><svg class="icon-sun" viewBox="0 0 24 24">
-                        <circle cx="12" cy="12" r="4" />
-                        <path d="M12 2v2M12 20v2M2 12h2M20 12h2" />
-                    </svg><svg class="icon-moon" viewBox="0 0 24 24">
-                        <path d="M20.8 14.6A8.9 8.9 0 0 1 9.4 3.2 9 9 0 1 0 20.8 14.6Z" />
-                    </svg></button><button class="admin-menu-toggle" id="clientsMenuToggle" type="button"
+            <div class="admin-mobile-actions"><button class="admin-menu-toggle" id="clientsMenuToggle" type="button"
                     aria-label="Abrir menu"><span></span><span></span><span></span></button></div>
         </header>
         <button class="admin-sidebar-backdrop" id="clientsBackdrop" type="button" aria-label="Fechar menu"></button>
@@ -41,8 +34,7 @@
                     href="clientes.html" aria-current="page">Clientes</a><a class="admin-menu-link"
                     href="admin.html#servicos">Serviços</a><a class="admin-menu-link"
                     href="admin.html#relatorios">Relatórios</a></nav>
-            <div class="admin-sidebar-footer"><button class="admin-theme-toggle" type="button"
-                    data-theme-toggle><span>Alternar tema</span></button><a class="admin-menu-link admin-logout"
+            <div class="admin-sidebar-footer"><a class="admin-menu-link admin-logout"
                     href="admin.html#sair">Sair</a></div>
         </aside>
         <main class="admin-content is-admin-view">
@@ -84,6 +76,7 @@
             <div id="clientDialogContent"></div>
         </div>
     </dialog>
+    <script src="phone-mask.js"></script>
     <script src="clientes.js"></script>
 </body>
 
