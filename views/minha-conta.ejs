@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="pt-BR">
+
+<head>
+    <%- include('../includes/head') %>
+</head>
+
+<body>
+    <%- include('../includes/header') %>
+    <main class="account-page"><a class="account-brand"></a>
+        <!-- <section class="account-auth" id="accountAuth">
+            <h1>Minha Conta</h1>
+            <p>Para acessar sua conta, inicie ou confirme um agendamento pela página inicial.</p><a
+                class="account-button account-login-link" href="index.html#agendamento">Ir para agendamento</a>
+        </section> -->
+        <section class="account-panel" id="accountPanel" hidden>
+            <aside class="account-menu">
+                <h1 id="accountGreeting">Olá</h1><button class="is-active" data-section="personal">Informações
+                    pessoais</button><button data-section="upcoming">Próximos agendamentos</button><button
+                    data-section="history">Histórico</button><button
+                    data-section="manage">Remarcar/Cancelar</button><button data-section="logout">Sair</button>
+            </aside>
+            <div class="account-content" id="accountContent"></div>
+        </section>
+    </main>
+    <dialog id="accountDialog" class="account-dialog"><button id="accountDialogClose" class="account-close">×</button>
+        <div id="accountDialogContent"></div>
+    </dialog>
+    <script src="phone-mask.js"></script>
+    <script src="minha-conta.js"></script>
+
+    <%- include('../includes/footer') %>
+</body>
+
+</html>

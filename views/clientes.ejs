@@ -2,26 +2,12 @@
 <html lang="pt-BR">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clientes | Studio Marcelly Freitas</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Jost:wght@300;400;500;600&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="admin.css">
-    <link rel="stylesheet" href="clientes.css">
+    <%- include('../includes/head') %>
 </head>
 
 <body class="admin-body">
     <div class="admin-panel">
-        <header class="admin-mobile-bar"><a class="admin-mobile-brand" href="index.html">Studio <span>Marcelly
-                    Freitas</span></a>
-            <div class="admin-mobile-actions"><button class="admin-menu-toggle" id="clientsMenuToggle" type="button"
-                    aria-label="Abrir menu"><span></span><span></span><span></span></button></div>
-        </header>
+        <%- include('../includes/header') %>
         <button class="admin-sidebar-backdrop" id="clientsBackdrop" type="button" aria-label="Fechar menu"></button>
         <aside class="admin-sidebar" id="clientsSidebar">
             <div class="admin-sidebar-top"><a class="admin-brand" href="index.html"><span
@@ -33,6 +19,7 @@
                     href="admin.html#faturamento">Faturamento</a><a class="admin-menu-link is-active"
                     href="clientes.html" aria-current="page">Clientes</a><a class="admin-menu-link"
                     href="admin.html#servicos">Serviços</a><a class="admin-menu-link"
+                    href="admin.html#manutencoes">Manutenções</a><a class="admin-menu-link"
                     href="admin.html#relatorios">Relatórios</a></nav>
             <div class="admin-sidebar-footer"><a class="admin-menu-link admin-logout"
                     href="admin.html#sair">Sair</a></div>
@@ -76,6 +63,7 @@
             <div id="clientDialogContent"></div>
         </div>
     </dialog>
+    <%- include('../includes/footer') %>
     <script src="phone-mask.js"></script>
     <script src="clientes.js"></script>
 </body>

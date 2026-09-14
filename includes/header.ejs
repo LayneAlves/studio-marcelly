@@ -1,0 +1,35 @@
+<% if (layout === 'admin') { const clientsPage = adminPage === 'clients'; %>
+<header class="admin-mobile-bar">
+    <a class="admin-mobile-brand" href="/index.html" aria-label="Voltar para o site Studio Marcelly Freitas">Studio <span>Marcelly Freitas</span></a>
+    <div class="admin-mobile-actions">
+        <button class="admin-menu-toggle" id="<%= clientsPage ? 'clientsMenuToggle' : 'adminMenuToggle' %>" type="button" aria-label="Abrir menu administrativo" aria-controls="<%= clientsPage ? 'clientsSidebar' : 'adminSidebar' %>" aria-expanded="false">
+            <span></span><span></span><span></span>
+        </button>
+    </div>
+</header>
+<% } else { %>
+<header id="siteHeader">
+    <nav>
+        <div class="logo">
+            <a href="/index.html#index"><img src="/cilios-imagens/logos/logotipo.png" alt="Studio Marcelly Freitas"></a>
+        </div>
+        <ul class="nav-menu" id="navMenu">
+            <li><a href="/index.html#index">Início</a></li>
+            <li><a href="/index.html#sobre">Sobre</a></li>
+            <li><a href="/index.html#galeria">Galeria</a></li>
+            <li><a href="/index.html#agendamento">Agendamento</a></li>
+            <li><a href="/curso.html">Curso</a></li>
+            <li><a href="/index.html#contato">Contato</a></li>
+            <li>
+                <a href="/minha-conta.html" id="accountHeaderLink" aria-label="Minha Conta">
+                    <i class="fa-regular fa-user" aria-hidden="true"></i>
+                    <span id="accountHeaderName" hidden></span>
+                </a>
+            </li>
+        </ul>
+        <button class="nav-toggle" id="navToggle" type="button" aria-label="Abrir menu">
+            <span></span><span></span><span></span>
+        </button>
+    </nav>
+</header>
+<% } %>

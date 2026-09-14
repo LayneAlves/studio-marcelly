@@ -1,41 +1,17 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Curso de Lash Design Iniciante — Studio Marcelly Freitas</title>
-<meta name="description" content="Curso de Lash Design Iniciante do Studio Marcelly Freitas: do zero ao alongamento com técnica, segurança e confiança. Apostila, certificado e suporte vitalício.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="curso.css">
+<%- include('../includes/head') %>
 </head>
 <body>
 
-<header id="siteHeader">
-    <nav>
-        <div class="logo">Studio<span> Marcelly Freitas</span></div>
-        <ul class="nav-menu" id="navMenu">
-            <li><a href="index.html#home">Início</a></li>
-            <li><a href="index.html#sobre">Sobre</a></li>
-            <li><a href="index.html#galeria">Galeria</a></li>
-            <li><a href="index.html#agendamento">Agendamento</a></li>
-            <li><a href="curso.html">Curso</a></li>
-            <li><a href="index.html#contato">Contato</a></li>
-            <li><a href="minha-conta.html" id="accountHeaderLink">Minha Conta</a></li>
-        </ul>
-        <button class="nav-toggle" id="navToggle" aria-label="Abrir menu">
-            <span></span><span></span><span></span>
-        </button>
-    </nav>
-</header>
+<%- include('../includes/header') %>
 
 <main>
 
     <!-- 1. Hero -->
     <section id="curso-hero" class="curso-hero">
-        <span class="curso-watermark" aria-hidden="true">LASH</span>
+        <span class="curso-watermark" aria-hidden="true">MARCELLY FREITAS</span>
 
         <div class="container curso-hero-grid">
             <div class="curso-hero-content reveal in-view">
@@ -207,11 +183,7 @@
 
 </main>
 
-<footer>
-    <div class="container">
-        <p>&copy; 2026 <span>Studio Marcelly Freitas</span> — Todos os direitos reservados</p>
-    </div>
-</footer>
+<%- include('../includes/footer') %>
 
 <script src="script.js"></script>
 </body>

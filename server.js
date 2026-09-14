@@ -6,95 +6,886 @@ const fs = require('node:fs');
 const path = require('node:path');
 const mysql = require('mysql2/promise');
 const nodemailer = require('nodemailer');
+const ejs = require('ejs');
 
-try { for (const line of fs.readFileSync(path.join(__dirname, '.env'), 'utf8').split(/\r?\n/)) { const match=line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/); if(match&&!process.env[match[1]]) process.env[match[1]]=match[2].replace(/^['"]|['"]$/g,''); } } catch {}
+try {
+    for (const line of fs.readFileSync(path.join(__dirname, '.env'), 'utf8').split(/\r?\n/)) {
+        const match = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/);
+        if (match && !process.env[match[1]]) process.env[match[1]] = match[2].replace(/^['"]|['"]$/g, '');
+    }
+} catch {}
 
 const port = Number(process.env.PORT || 3000);
-const pool = mysql.createPool({ host: '127.0.0.1', user: 'root', password: '', database: 'studio_marcelly', waitForConnections: true, connectionLimit: 10, timezone: '-03:00' });
+const pool = mysql.createPool({
+    host: '127.0.0.1',
+    user: 'root',
+    password: '',
+    database: 'studio_marcelly',
+    waitForConnections: true,
+    connectionLimit: 10,
+    timezone: '-03:00',
+});
 const statuses = new Set(['pending', 'confirmed', 'in_progress', 'completed', 'cancelled', 'no_show']);
 const scrypt = promisify(crypto.scrypt);
 let smtpTransport;
 
-function send(response, status, data) { response.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Content-Type, Authorization', 'Access-Control-Allow-Methods': 'GET,POST,PUT,PATCH,OPTIONS' }); response.end(JSON.stringify(data)); }
-function fail(status, error) { const result = new Error(error); result.status = status; throw result; }
-function minutes(time) { if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) fail(422, 'Horário inválido.'); const [hour, minute] = time.split(':').map(Number); return hour * 60 + minute; }
-function time(value) { return `${String(Math.floor(value / 60)).padStart(2, '0')}:${String(value % 60).padStart(2, '0')}`; }
-function phoneKey(value) { return String(value || '').replace(/\D/g, ''); }
-async function passwordHash(password) { const salt = crypto.randomBytes(16).toString('hex'); const key = await scrypt(password, salt, 64); return `${salt}:${key.toString('hex')}`; }
-async function passwordMatches(password, stored) { const [salt, hash] = String(stored || '').split(':'); if (!salt || !hash) return false; const key = await scrypt(password, salt, 64); return crypto.timingSafeEqual(key, Buffer.from(hash, 'hex')); }
-async function createSession(clientId) { const token = crypto.randomBytes(32).toString('hex'); const tokenHash = crypto.createHash('sha256').update(token).digest('hex'); await pool.execute('INSERT INTO client_sessions (client_id,token_hash,expires_at) VALUES (?,?,DATE_ADD(NOW(), INTERVAL 30 DAY))',[clientId,tokenHash]); return token; }
-async function authenticatedClient(request) { const token = String(request.headers.authorization || '').replace(/^Bearer\s+/i,''); if (!token) fail(401,'Faça login para acessar sua conta.'); const tokenHash = crypto.createHash('sha256').update(token).digest('hex'); const [rows] = await pool.execute('SELECT c.id,c.name,c.phone,c.email FROM client_sessions s JOIN clients c ON c.id=s.client_id WHERE s.token_hash=? AND s.expires_at>NOW()',[tokenHash]); if (!rows[0]) fail(401,'Sua sessão expirou. Faça login novamente.'); return rows[0]; }
-function duration(value) { const hours = Number((value.match(/(\d+)\s*hora/i) || [])[1] || 0); const mins = Number((value.match(/(\d+)\s*minuto/i) || [])[1] || 0); const total = hours * 60 + mins; if (!total) fail(422, 'A duração do serviço é inválida.'); return total; }
-function date(value) { if (!/^\d{4}-\d{2}-\d{2}$/.test(value) || Number.isNaN(new Date(`${value}T12:00:00`).valueOf())) fail(422, 'Data inválida.'); return value; }
-function overlap(start, end, periods) { return periods.some((item) => start < minutes(item.end_time.slice(0, 5)) && end > minutes(item.start_time.slice(0, 5))); }
-async function body(request) { let raw = ''; for await (const chunk of request) raw += chunk; try { return JSON.parse(raw || '{}'); } catch { fail(400, 'Dados inválidos.'); } }
-async function service(connection, id, lock = false) { const [rows] = await connection.execute(`SELECT id, name, price, duration, deposit FROM services WHERE id = ? AND active = 1${lock ? ' FOR UPDATE' : ''}`, [Number(id)]); if (!rows[0]) fail(422, 'O serviço selecionado está desativado ou não existe.'); return { ...rows[0], minutes: duration(rows[0].duration) }; }
-async function settings(connection) { const [rows] = await connection.query('SELECT opening_minutes, closing_minutes, monday_closed FROM business_settings WHERE id = 1'); return rows[0] || { opening_minutes: 420, closing_minutes: 1200, monday_closed: 1 }; }
-async function periods(connection, bookingDate, excludeId = 0, lock = false) { const [appointments] = await connection.execute(`SELECT start_time, end_time FROM appointments WHERE booking_date = ? AND status NOT IN ('cancelled','no_show') AND id <> ?${lock ? ' FOR UPDATE' : ''}`, [bookingDate, Number(excludeId)]); const [blocks] = await connection.execute('SELECT start_time, end_time FROM schedule_blocks WHERE block_date = ?', [bookingDate]); return [...appointments, ...blocks]; }
-async function validateSlot(connection, bookingDate, start, durationMinutes, excludeId = 0, override = false, lock = false) { const config = await settings(connection); const day = new Date(`${bookingDate}T12:00:00`).getDay(); const end = start + durationMinutes; if (!override && config.monday_closed && day === 1) fail(422, 'O studio não atende às segundas-feiras.'); if (!override && (start < config.opening_minutes || end > config.closing_minutes)) fail(422, 'Este horário está fora do período de atendimento.'); if (overlap(start, end, await periods(connection, bookingDate, excludeId, lock))) fail(409, 'Este horário acabou de ficar indisponível. Escolha outro horário.'); return end; }
-function format(row) { return { ...row, id: String(row.id), client_id: row.client_id == null ? null : String(row.client_id), service_id: String(row.service_id), duration_minutes: Number(row.duration_minutes), price: Number(row.price), deposit: row.deposit == null ? null : Number(row.deposit) }; }
-async function appointment(connection, id) { const [rows] = await connection.execute(`SELECT a.id,a.client_id,a.client_name,a.client_phone AS phone,c.email,a.service_id,a.service_name,DATE_FORMAT(a.booking_date,'%Y-%m-%d') AS date,TIME_FORMAT(a.start_time,'%H:%i') AS start_time,TIME_FORMAT(a.end_time,'%H:%i') AS end_time,a.duration_minutes,a.service_price AS price,a.deposit_amount AS deposit,a.notes,a.status,a.cancellation_reason,a.completed_at,a.created_at FROM appointments a LEFT JOIN clients c ON c.id=a.client_id WHERE a.id=?`, [Number(id)]); if (!rows[0]) fail(404, 'Agendamento não encontrado.'); return format(rows[0]); }
-function smtpIsConfigured() { return Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS && process.env.SMTP_FROM && process.env.ADMIN_EMAIL); }
-function getSmtpTransport() { if (!smtpTransport) smtpTransport = nodemailer.createTransport({ host: process.env.SMTP_HOST, port: Number(process.env.SMTP_PORT || 587), secure: process.env.SMTP_SECURE === 'true' || Number(process.env.SMTP_PORT) === 465, auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS } }); return smtpTransport; }
-async function sendSmtpEmail(subject, text) { return getSmtpTransport().sendMail({ from: process.env.SMTP_FROM, to: process.env.ADMIN_EMAIL, subject, text }); }
-function appointmentNotificationText(created) { const day=String(created.date).split('-').reverse().join('/'); return `Novo agendamento\nNome: ${created.client_name}\nTelefone: ${created.phone}\nServiço: ${created.service_name}\nDia e horário: ${day} às ${created.start_time}`; }
-async function notifyAdministrator(created) { const text=appointmentNotificationText(created); const subject='Novo agendamento - Studio Marcelly Freitas'; const jobs=[]; if(smtpIsConfigured()) jobs.push(sendSmtpEmail(subject,text)); else if(process.env.RESEND_API_KEY&&process.env.ADMIN_EMAIL&&process.env.NOTIFICATIONS_FROM_EMAIL) jobs.push(fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:`Bearer ${process.env.RESEND_API_KEY}`,'Content-Type':'application/json'},body:JSON.stringify({from:process.env.NOTIFICATIONS_FROM_EMAIL,to:[process.env.ADMIN_EMAIL],subject,text})})); if(process.env.WHATSAPP_ACCESS_TOKEN&&process.env.WHATSAPP_PHONE_NUMBER_ID&&process.env.WHATSAPP_ADMIN_PHONE) jobs.push(fetch(`https://graph.facebook.com/v21.0/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`,{method:'POST',headers:{Authorization:`Bearer ${process.env.WHATSAPP_ACCESS_TOKEN}`,'Content-Type':'application/json'},body:JSON.stringify({messaging_product:'whatsapp',to:process.env.WHATSAPP_ADMIN_PHONE,type:'text',text:{body:text}})})); const results=await Promise.allSettled(jobs); if(results.some((result)=>result.status==='rejected')) console.error('Falha ao enviar notificação de novo agendamento.'); }
+const viewRoutes = {
+    '/': 'index',
+    '/index.html': 'index',
+    '/index': 'index',
+    '/curso.html': 'curso',
+    '/curso': 'curso',
+    '/minha-conta.html': 'minha-conta',
+    '/minha-conta': 'minha-conta',
+    '/admin.html': 'admin',
+    '/admin': 'admin',
+    '/clientes.html': 'clientes',
+    '/clientes': 'clientes',
+};
+const viewOptions = {
+    index: {
+        title: 'Studio Marcelly Freitas — Extensão de Cílios',
+        description: 'Studio Marcelly Freitas — estúdio especializado em extensão de cílios. Agende seu horário.',
+        layout: 'public',
+        pageStyles: [],
+    },
+    curso: {
+        title: 'Curso de Lash Design Iniciante — Studio Marcelly Freitas',
+        description: 'Curso de Lash Design Iniciante do Studio Marcelly Freitas.',
+        layout: 'public',
+        pageStyles: ['curso.css'],
+    },
+    'minha-conta': { title: 'Minha Conta | Studio Marcelly Freitas', description: '', layout: 'public', pageStyles: ['minha-conta.css'] },
+    admin: {
+        title: 'Painel Administrativo | Studio Marcelly Freitas',
+        description: 'Painel administrativo do Studio Marcelly Freitas.',
+        layout: 'admin',
+        adminPage: 'dashboard',
+        pageStyles: ['admin.css?v=20260914-maintenance-3'],
+    },
+    clientes: {
+        title: 'Clientes | Studio Marcelly Freitas',
+        description: '',
+        layout: 'admin',
+        adminPage: 'clients',
+        pageStyles: ['admin.css?v=20260914-maintenance-3', 'clientes.css'],
+    },
+};
+const assetTypes = {
+    '.css': 'text/css; charset=utf-8',
+    '.js': 'application/javascript; charset=utf-8',
+    '.png': 'image/png',
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.svg': 'image/svg+xml',
+    '.webp': 'image/webp',
+    '.ico': 'image/x-icon',
+};
+
+function sendHtml(response, status, html) {
+    response.writeHead(status, { 'Content-Type': 'text/html; charset=utf-8' });
+    response.end(html);
+}
+async function renderView(response, name) {
+    const html = await ejs.renderFile(path.join(__dirname, 'views', `${name}.ejs`), viewOptions[name]);
+    sendHtml(response, 200, html);
+}
+async function serveAsset(response, requestPath) {
+    const extension = path.extname(requestPath).toLowerCase();
+    if (!assetTypes[extension]) return false;
+    const relativePath = decodeURIComponent(requestPath).replace(/^[/\\]+/, '');
+    const absolutePath = path.resolve(__dirname, relativePath);
+    const workspace = `${path.resolve(__dirname)}${path.sep}`;
+    if (!absolutePath.startsWith(workspace)) return false;
+    try {
+        const info = await fs.promises.stat(absolutePath);
+        if (!info.isFile()) return false;
+        response.writeHead(200, { 'Content-Type': assetTypes[extension] });
+        fs.createReadStream(absolutePath).pipe(response);
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+function send(response, status, data) {
+    response.writeHead(status, {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        'Access-Control-Allow-Methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
+    });
+    response.end(JSON.stringify(data));
+}
+function fail(status, error) {
+    const result = new Error(error);
+    result.status = status;
+    throw result;
+}
+function minutes(time) {
+    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) fail(422, 'Horário inválido.');
+    const [hour, minute] = time.split(':').map(Number);
+    return hour * 60 + minute;
+}
+function time(value) {
+    return `${String(Math.floor(value / 60)).padStart(2, '0')}:${String(value % 60).padStart(2, '0')}`;
+}
+function phoneKey(value) {
+    return String(value || '').replace(/\D/g, '');
+}
+async function passwordHash(password) {
+    const salt = crypto.randomBytes(16).toString('hex');
+    const key = await scrypt(password, salt, 64);
+    return `${salt}:${key.toString('hex')}`;
+}
+async function passwordMatches(password, stored) {
+    const [salt, hash] = String(stored || '').split(':');
+    if (!salt || !hash) return false;
+    const key = await scrypt(password, salt, 64);
+    return crypto.timingSafeEqual(key, Buffer.from(hash, 'hex'));
+}
+async function createSession(clientId) {
+    const token = crypto.randomBytes(32).toString('hex');
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    await pool.execute('INSERT INTO client_sessions (client_id,token_hash,expires_at) VALUES (?,?,DATE_ADD(NOW(), INTERVAL 30 DAY))', [
+        clientId,
+        tokenHash,
+    ]);
+    return token;
+}
+async function authenticatedClient(request) {
+    const token = String(request.headers.authorization || '').replace(/^Bearer\s+/i, '');
+    if (!token) fail(401, 'Faça login para acessar sua conta.');
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    const [rows] = await pool.execute(
+        'SELECT c.id,c.name,c.phone,c.email FROM client_sessions s JOIN clients c ON c.id=s.client_id WHERE s.token_hash=? AND s.expires_at>NOW()',
+        [tokenHash],
+    );
+    if (!rows[0]) fail(401, 'Sua sessão expirou. Faça login novamente.');
+    return rows[0];
+}
+function duration(value) {
+    const hours = Number((value.match(/(\d+)\s*hora/i) || [])[1] || 0);
+    const mins = Number((value.match(/(\d+)\s*minuto/i) || [])[1] || 0);
+    const total = hours * 60 + mins;
+    if (!total) fail(422, 'A duração do serviço é inválida.');
+    return total;
+}
+function date(value) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value) || Number.isNaN(new Date(`${value}T12:00:00`).valueOf())) fail(422, 'Data inválida.');
+    return value;
+}
+function overlap(start, end, periods) {
+    return periods.some((item) => start < minutes(item.end_time.slice(0, 5)) && end > minutes(item.start_time.slice(0, 5)));
+}
+async function body(request) {
+    let raw = '';
+    for await (const chunk of request) raw += chunk;
+    try {
+        return JSON.parse(raw || '{}');
+    } catch {
+        fail(400, 'Dados inválidos.');
+    }
+}
+function servicePayload(data) {
+    const name = String(data.name || '').trim();
+    const durationValue = String(data.duration || '').trim();
+    const value = Number(data.value);
+    const deposit = data.deposit === '' || data.deposit == null ? null : Number(data.deposit);
+    const maintenanceDays = data.maintenance_days === '' || data.maintenance_days == null ? null : Number(data.maintenance_days);
+
+    if (!name || name.length > 80 || !durationValue || durationValue.length > 40 || !Number.isFinite(value) || value < 0 || (deposit !== null && (!Number.isFinite(deposit) || deposit < 0))) {
+        fail(422, 'Verifique os campos obrigatórios e os valores informados.');
+    }
+    if (maintenanceDays !== null && (!Number.isInteger(maintenanceDays) || maintenanceDays < 1 || maintenanceDays > 365)) {
+        fail(422, 'Informe uma manutenção entre 1 e 365 dias ou deixe o campo vazio.');
+    }
+    return { name, duration: durationValue, value, deposit, maintenanceDays };
+}
+function formatService(row) {
+    return {
+        ...row,
+        id: String(row.id),
+        value: Number(row.value),
+        deposit: row.deposit == null ? null : Number(row.deposit),
+        maintenance_days: row.maintenance_days == null ? null : Number(row.maintenance_days),
+        active: Boolean(row.active),
+    };
+}
+function formatMaintenance(row) {
+    return {
+        ...row,
+        id: String(row.id),
+        client_id: String(row.client_id),
+        completed_appointment_id: String(row.completed_appointment_id),
+        service_id: String(row.service_id),
+        maintenance_days: row.maintenance_days == null ? null : Number(row.maintenance_days),
+    };
+}
+async function service(connection, id, lock = false) {
+    const [rows] = await connection.execute(
+        `SELECT id, name, price, duration, deposit FROM services WHERE id = ? AND active = 1${lock ? ' FOR UPDATE' : ''}`,
+        [Number(id)],
+    );
+    if (!rows[0]) fail(422, 'O serviço selecionado está desativado ou não existe.');
+    return { ...rows[0], minutes: duration(rows[0].duration) };
+}
+async function settings(connection) {
+    const [rows] = await connection.query('SELECT opening_minutes, closing_minutes, monday_closed FROM business_settings WHERE id = 1');
+    return rows[0] || { opening_minutes: 420, closing_minutes: 1200, monday_closed: 1 };
+}
+async function periods(connection, bookingDate, excludeId = 0, lock = false) {
+    const [appointments] = await connection.execute(
+        `SELECT start_time, end_time FROM appointments WHERE booking_date = ? AND status NOT IN ('cancelled','no_show') AND id <> ?${lock ? ' FOR UPDATE' : ''}`,
+        [bookingDate, Number(excludeId)],
+    );
+    const [blocks] = await connection.execute('SELECT start_time, end_time FROM schedule_blocks WHERE block_date = ?', [bookingDate]);
+    return [...appointments, ...blocks];
+}
+async function validateSlot(connection, bookingDate, start, durationMinutes, excludeId = 0, override = false, lock = false) {
+    const config = await settings(connection);
+    const day = new Date(`${bookingDate}T12:00:00`).getDay();
+    const end = start + durationMinutes;
+    if (!override && config.monday_closed && day === 1) fail(422, 'O studio não atende às segundas-feiras.');
+    if (!override && (start < config.opening_minutes || end > config.closing_minutes))
+        fail(422, 'Este horário está fora do período de atendimento.');
+    if (overlap(start, end, await periods(connection, bookingDate, excludeId, lock)))
+        fail(409, 'Este horário acabou de ficar indisponível. Escolha outro horário.');
+    return end;
+}
+function format(row) {
+    return {
+        ...row,
+        id: String(row.id),
+        client_id: row.client_id == null ? null : String(row.client_id),
+        service_id: String(row.service_id),
+        duration_minutes: Number(row.duration_minutes),
+        price: Number(row.price),
+        deposit: row.deposit == null ? null : Number(row.deposit),
+    };
+}
+async function appointment(connection, id) {
+    const [rows] = await connection.execute(
+        `SELECT a.id,a.client_id,a.client_name,a.client_phone AS phone,c.email,a.service_id,a.service_name,DATE_FORMAT(a.booking_date,'%Y-%m-%d') AS date,TIME_FORMAT(a.start_time,'%H:%i') AS start_time,TIME_FORMAT(a.end_time,'%H:%i') AS end_time,a.duration_minutes,a.service_price AS price,a.deposit_amount AS deposit,a.notes,a.status,a.cancellation_reason,a.completed_at,a.created_at FROM appointments a LEFT JOIN clients c ON c.id=a.client_id WHERE a.id=?`,
+        [Number(id)],
+    );
+    if (!rows[0]) fail(404, 'Agendamento não encontrado.');
+    return format(rows[0]);
+}
+async function createMaintenanceRecord(connection, completedAppointment) {
+    if (!completedAppointment.client_id) return;
+    const [services] = await connection.execute('SELECT maintenance_days FROM services WHERE id=?', [completedAppointment.service_id]);
+    const maintenanceDays = Number(services[0]?.maintenance_days);
+    if (!Number.isInteger(maintenanceDays) || maintenanceDays < 1) return;
+
+    await connection.execute(
+        `INSERT INTO maintenance_records (client_id,completed_appointment_id,service_id,service_name,maintenance_days,last_appointment_date,maintenance_date,status)
+        VALUES (?,?,?,?,?,?,DATE_ADD(?, INTERVAL ? DAY),'awaiting')
+        ON DUPLICATE KEY UPDATE updated_at=updated_at`,
+        [
+            completedAppointment.client_id,
+            completedAppointment.id,
+            completedAppointment.service_id,
+            completedAppointment.service_name,
+            maintenanceDays,
+            completedAppointment.date,
+            completedAppointment.date,
+            maintenanceDays,
+        ],
+    );
+}
+const maintenanceSelect = `
+    SELECT m.id,m.client_id,m.completed_appointment_id,m.service_id,m.service_name,
+        DATE_FORMAT(m.last_appointment_date,'%Y-%m-%d') AS last_appointment_date,
+        DATE_FORMAT(m.maintenance_date,'%Y-%m-%d') AS maintenance_date,
+        m.status AS stored_status,m.reminder_sent_at,m.cancelled_at,m.created_at,
+        c.name AS client_name,c.phone,c.email,m.maintenance_days,
+        CASE
+            WHEN m.status='cancelled' THEN 'cancelled'
+            WHEN EXISTS (
+                SELECT 1 FROM appointments future_appointment
+                WHERE future_appointment.client_id=m.client_id
+                    AND future_appointment.id<>m.completed_appointment_id
+                    AND (future_appointment.booking_date>CURDATE() OR (future_appointment.booking_date=CURDATE() AND future_appointment.start_time>=CURTIME()))
+                    AND future_appointment.status NOT IN ('cancelled','completed','no_show')
+            ) THEN 'rescheduled'
+            WHEN m.reminder_sent_at IS NOT NULL THEN 'reminder_sent'
+            ELSE 'awaiting'
+        END AS status
+    FROM maintenance_records m
+    JOIN clients c ON c.id=m.client_id`;
+async function maintenanceRecord(connection, id) {
+    const [rows] = await connection.execute(`${maintenanceSelect} WHERE m.id=?`, [Number(id)]);
+    if (!rows[0]) fail(404, 'Manutenção não encontrada.');
+    return formatMaintenance(rows[0]);
+}
+function smtpIsConfigured() {
+    return Boolean(
+        process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS && process.env.SMTP_FROM && process.env.ADMIN_EMAIL,
+    );
+}
+function getSmtpTransport() {
+    if (!smtpTransport)
+        smtpTransport = nodemailer.createTransport({
+            host: process.env.SMTP_HOST,
+            port: Number(process.env.SMTP_PORT || 587),
+            secure: process.env.SMTP_SECURE === 'true' || Number(process.env.SMTP_PORT) === 465,
+            auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+        });
+    return smtpTransport;
+}
+async function sendSmtpEmail(subject, text) {
+    return getSmtpTransport().sendMail({ from: process.env.SMTP_FROM, to: process.env.ADMIN_EMAIL, subject, text });
+}
+function appointmentNotificationText(created) {
+    const day = String(created.date).split('-').reverse().join('/');
+    return `Novo agendamento\nNome: ${created.client_name}\nTelefone: ${created.phone}\nServiço: ${created.service_name}\nDia e horário: ${day} às ${created.start_time}`;
+}
+async function notifyAdministrator(created) {
+    const text = appointmentNotificationText(created);
+    const subject = 'Novo agendamento - Studio Marcelly Freitas';
+    const jobs = [];
+    if (smtpIsConfigured()) jobs.push(sendSmtpEmail(subject, text));
+    else if (process.env.RESEND_API_KEY && process.env.ADMIN_EMAIL && process.env.NOTIFICATIONS_FROM_EMAIL)
+        jobs.push(
+            fetch('https://api.resend.com/emails', {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ from: process.env.NOTIFICATIONS_FROM_EMAIL, to: [process.env.ADMIN_EMAIL], subject, text }),
+            }),
+        );
+    if (process.env.WHATSAPP_ACCESS_TOKEN && process.env.WHATSAPP_PHONE_NUMBER_ID && process.env.WHATSAPP_ADMIN_PHONE)
+        jobs.push(
+            fetch(`https://graph.facebook.com/v21.0/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${process.env.WHATSAPP_ACCESS_TOKEN}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    messaging_product: 'whatsapp',
+                    to: process.env.WHATSAPP_ADMIN_PHONE,
+                    type: 'text',
+                    text: { body: text },
+                }),
+            }),
+        );
+    const results = await Promise.allSettled(jobs);
+    if (results.some((result) => result.status === 'rejected')) console.error('Falha ao enviar notificação de novo agendamento.');
+}
 
 async function handler(request, response) {
+    const url = new URL(request.url, `http://${request.headers.host}`);
+    const path = url.pathname;
+    const query = url.searchParams;
+    if (request.method === 'GET' && viewRoutes[path]) return renderView(response, viewRoutes[path]);
+    if (request.method === 'GET' && (await serveAsset(response, path))) return;
     if (request.method === 'OPTIONS') return send(response, 204, {});
-    const url = new URL(request.url, `http://${request.headers.host}`); const path = url.pathname; const query = url.searchParams;
-    if (request.method === 'GET' && path === '/') return send(response, 200, { message: 'API administrativa ativa. Abra o painel em http://localhost/studio-marcelly/admin.html#agendamentos' });
     if (request.method === 'POST' && path === '/api/account/register') {
-        const data = await body(request); const name = data.name?.trim(); const phone = phoneKey(data.phone); const email = data.email?.trim().toLowerCase() || null; const password = String(data.password || '');
-        if (!name || !phone || password.length < 6) fail(422, 'Informe nome, telefone e uma senha com ao menos 6 caracteres.'); if (email && !/^\S+@\S+\.\S+$/.test(email)) fail(422, 'Informe um e-mail válido.');
-        const [matches] = await pool.execute("SELECT id,password_hash FROM clients WHERE REPLACE(REPLACE(REPLACE(REPLACE(phone,' ',''),'-',''),'(',''),')','')=? OR (? IS NOT NULL AND LOWER(email)=?)",[phone,email,email]);
-        const ids = [...new Set(matches.map((item)=>item.id))]; if (ids.length > 1) fail(409,'Encontramos mais de um cadastro. Use um e-mail exclusivo para acessar sua conta.'); let clientId;
-        if (matches[0]) { if (matches[0].password_hash) fail(409,'Esta cliente já possui uma conta. Faça login.'); clientId=matches[0].id; await pool.execute('UPDATE clients SET name=?,phone=?,email=?,password_hash=? WHERE id=?',[name,phone,email,await passwordHash(password),clientId]); } else { const [result]=await pool.execute('INSERT INTO clients (name,phone,email,password_hash) VALUES (?,?,?,?)',[name,phone,email,await passwordHash(password)]); clientId=result.insertId; }
-        const token=await createSession(clientId); return send(response,201,{token,client:{id:String(clientId),name,phone,email}});
+        const data = await body(request);
+        const name = data.name?.trim();
+        const phone = phoneKey(data.phone);
+        const email = data.email?.trim().toLowerCase() || null;
+        const password = String(data.password || '');
+        if (!name || !phone || password.length < 6) fail(422, 'Informe nome, telefone e uma senha com ao menos 6 caracteres.');
+        if (email && !/^\S+@\S+\.\S+$/.test(email)) fail(422, 'Informe um e-mail válido.');
+        const [matches] = await pool.execute(
+            "SELECT id,password_hash FROM clients WHERE REPLACE(REPLACE(REPLACE(REPLACE(phone,' ',''),'-',''),'(',''),')','')=? OR (? IS NOT NULL AND LOWER(email)=?)",
+            [phone, email, email],
+        );
+        const ids = [...new Set(matches.map((item) => item.id))];
+        if (ids.length > 1) fail(409, 'Encontramos mais de um cadastro. Use um e-mail exclusivo para acessar sua conta.');
+        let clientId;
+        if (matches[0]) {
+            if (matches[0].password_hash) fail(409, 'Esta cliente já possui uma conta. Faça login.');
+            clientId = matches[0].id;
+            await pool.execute('UPDATE clients SET name=?,phone=?,email=?,password_hash=? WHERE id=?', [
+                name,
+                phone,
+                email,
+                await passwordHash(password),
+                clientId,
+            ]);
+        } else {
+            const [result] = await pool.execute('INSERT INTO clients (name,phone,email,password_hash) VALUES (?,?,?,?)', [
+                name,
+                phone,
+                email,
+                await passwordHash(password),
+            ]);
+            clientId = result.insertId;
+        }
+        const token = await createSession(clientId);
+        return send(response, 201, { token, client: { id: String(clientId), name, phone, email } });
     }
-    if (request.method === 'POST' && path === '/api/account/login') { const data=await body(request); const identifier=String(data.identifier || '').trim(); const password=String(data.password || ''); const [rows]=await pool.execute('SELECT id,name,phone,email,password_hash FROM clients WHERE phone=? OR LOWER(email)=? LIMIT 1',[phoneKey(identifier),identifier.toLowerCase()]); if (!rows[0] || !(await passwordMatches(password,rows[0].password_hash))) fail(401,'Dados de acesso inválidos.'); const token=await createSession(rows[0].id); return send(response,200,{token,client:{...rows[0],id:String(rows[0].id),password_hash:undefined}}); }
-    if (path === '/api/account/me') { const client=await authenticatedClient(request); if (request.method === 'GET') return send(response,200,{...client,id:String(client.id)}); if (request.method === 'PUT') { const data=await body(request); const name=data.name?.trim(); const phone=phoneKey(data.phone); const email=data.email?.trim().toLowerCase() || null; if (!name||!phone) fail(422,'Nome e telefone são obrigatórios.'); if(email&&!/^\S+@\S+\.\S+$/.test(email)) fail(422,'Informe um e-mail válido.'); const [duplicates]=await pool.execute("SELECT id FROM clients WHERE id<>? AND (REPLACE(REPLACE(REPLACE(REPLACE(phone,' ',''),'-',''),'(',''),')','')=? OR (? IS NOT NULL AND LOWER(email)=?)) LIMIT 1",[client.id,phone,email,email]); if(duplicates[0]) fail(409,'Telefone ou e-mail já pertencem a outra cliente.'); await pool.execute('UPDATE clients SET name=?,phone=?,email=? WHERE id=?',[name,phone,email,client.id]); return send(response,200,{id:String(client.id),name,phone,email}); } }
-    if (path === '/api/account/logout' && request.method === 'POST') { const token=String(request.headers.authorization||'').replace(/^Bearer\s+/i,''); if(token) await pool.execute('DELETE FROM client_sessions WHERE token_hash=?',[crypto.createHash('sha256').update(token).digest('hex')]); return send(response,200,{success:true}); }
-    if (path === '/api/account/availability' && request.method === 'GET') { const client=await authenticatedClient(request); const appointmentId=Number(query.get('appointment_id')); const bookingDate=date(query.get('date')); if(bookingDate<new Date().toISOString().slice(0,10)) fail(422,'Escolha uma data futura.'); const [appointments]=await pool.execute('SELECT id,service_id FROM appointments WHERE id=? AND client_id=?',[appointmentId,client.id]); if(!appointments[0]) fail(404,'Agendamento não encontrado.'); const selected=await service(pool,appointments[0].service_id); const config=await settings(pool); const monday=config.monday_closed&&new Date(`${bookingDate}T12:00:00`).getDay()===1; const used=await periods(pool,bookingDate,appointmentId); const slots=[]; if(!monday) for(let start=Number(config.opening_minutes);start+selected.minutes<=Number(config.closing_minutes);start+=30) if(!overlap(start,start+selected.minutes,used)) slots.push(time(start)); return send(response,200,{slots,duration_minutes:selected.minutes}); }
-    if (path === '/api/account/bookings' && request.method === 'POST') { const client=await authenticatedClient(request); const data=await body(request); const connection=await pool.getConnection(); try { await connection.beginTransaction(); const selected=await service(connection,data.service_id,true); const bookingDate=date(data.date); if(bookingDate<new Date().toISOString().slice(0,10)) fail(422,'Escolha uma data futura.'); const start=minutes(data.start_time); const end=await validateSlot(connection,bookingDate,start,selected.minutes,0,false,true); const [result]=await connection.execute("INSERT INTO appointments (client_id,client_name,client_phone,service_id,service_name,booking_date,start_time,end_time,duration_minutes,service_price,deposit_amount,notes,status) VALUES (?,?,?,?,?,?,?,?,?,?,?,?, 'pending')",[client.id,client.name,client.phone,selected.id,selected.name,bookingDate,time(start),time(end),selected.minutes,selected.price,selected.deposit,data.notes?.trim()||null]); await connection.commit(); const created=await appointment(pool,result.insertId); void notifyAdministrator(created); return send(response,201,created); } catch(error) { await connection.rollback(); throw error; } finally { connection.release(); } }
-    if (path === '/api/account/appointments' && request.method === 'GET') { const client=await authenticatedClient(request); const scope=query.get('scope') || 'upcoming'; const today=new Date().toISOString().slice(0,10); let condition="booking_date>=? AND status NOT IN ('cancelled','completed','no_show')",params=[client.id,today]; if(scope==='history'){condition="(booking_date<? OR status IN ('completed','cancelled','no_show'))";params=[client.id,today];} if(scope==='manage') condition="booking_date>=? AND status NOT IN ('cancelled','completed','no_show')"; const [rows]=await pool.execute(`SELECT id,service_name,DATE_FORMAT(booking_date,'%Y-%m-%d') AS date,TIME_FORMAT(start_time,'%H:%i') AS start_time,TIME_FORMAT(end_time,'%H:%i') AS end_time,duration_minutes,service_price AS price,deposit_amount AS deposit,status FROM appointments WHERE client_id=? AND ${condition} ORDER BY booking_date,start_time`,params); return send(response,200,rows.map(format)); }
-    if (/^\/api\/account\/appointments\/\d+$/.test(path) && request.method === 'PATCH') { const client=await authenticatedClient(request); const id=Number(path.split('/').pop()); const data=await body(request); const [rows]=await pool.execute('SELECT id,service_id,status FROM appointments WHERE id=? AND client_id=?',[id,client.id]); if(!rows[0]) fail(404,'Agendamento não encontrado.'); if(['cancelled','completed','no_show'].includes(rows[0].status)) fail(422,'Este agendamento não pode ser alterado.'); if(data.action==='cancel'){await pool.execute("UPDATE appointments SET status='cancelled' WHERE id=?",[id]);return send(response,200,{success:true});} if(data.action==='reschedule'){const connection=await pool.getConnection();try{await connection.beginTransaction();const selected=await service(connection,rows[0].service_id,true);const bookingDate=date(data.date);if(bookingDate<new Date().toISOString().slice(0,10)) fail(422,'Escolha uma data futura.');const start=minutes(data.start_time);const end=await validateSlot(connection,bookingDate,start,selected.minutes,id,false,true);await connection.execute('UPDATE appointments SET booking_date=?,start_time=?,end_time=? WHERE id=?',[bookingDate,time(start),time(end),id]);await connection.commit();return send(response,200,{success:true});}catch(error){await connection.rollback();throw error;}finally{connection.release();}} fail(422,'Ação inválida.'); }
-    if (request.method === 'GET' && path === '/api/services') { const [rows] = await pool.query('SELECT id,name,price AS value,duration,deposit,active FROM services WHERE active=1 ORDER BY name'); return send(response, 200, rows.map((row) => ({ ...row, id: String(row.id), value: Number(row.value), deposit: row.deposit == null ? null : Number(row.deposit), active: Boolean(row.active) }))); }
+    if (request.method === 'POST' && path === '/api/account/login') {
+        const data = await body(request);
+        const identifier = String(data.identifier || '').trim();
+        const password = String(data.password || '');
+        const [rows] = await pool.execute('SELECT id,name,phone,email,password_hash FROM clients WHERE phone=? OR LOWER(email)=? LIMIT 1', [
+            phoneKey(identifier),
+            identifier.toLowerCase(),
+        ]);
+        if (!rows[0] || !(await passwordMatches(password, rows[0].password_hash))) fail(401, 'Dados de acesso inválidos.');
+        const token = await createSession(rows[0].id);
+        return send(response, 200, { token, client: { ...rows[0], id: String(rows[0].id), password_hash: undefined } });
+    }
+    if (path === '/api/account/me') {
+        const client = await authenticatedClient(request);
+        if (request.method === 'GET') return send(response, 200, { ...client, id: String(client.id) });
+        if (request.method === 'PUT') {
+            const data = await body(request);
+            const name = data.name?.trim();
+            const phone = phoneKey(data.phone);
+            const email = data.email?.trim().toLowerCase() || null;
+            if (!name || !phone) fail(422, 'Nome e telefone são obrigatórios.');
+            if (email && !/^\S+@\S+\.\S+$/.test(email)) fail(422, 'Informe um e-mail válido.');
+            const [duplicates] = await pool.execute(
+                "SELECT id FROM clients WHERE id<>? AND (REPLACE(REPLACE(REPLACE(REPLACE(phone,' ',''),'-',''),'(',''),')','')=? OR (? IS NOT NULL AND LOWER(email)=?)) LIMIT 1",
+                [client.id, phone, email, email],
+            );
+            if (duplicates[0]) fail(409, 'Telefone ou e-mail já pertencem a outra cliente.');
+            await pool.execute('UPDATE clients SET name=?,phone=?,email=? WHERE id=?', [name, phone, email, client.id]);
+            return send(response, 200, { id: String(client.id), name, phone, email });
+        }
+    }
+    if (path === '/api/account/logout' && request.method === 'POST') {
+        const token = String(request.headers.authorization || '').replace(/^Bearer\s+/i, '');
+        if (token)
+            await pool.execute('DELETE FROM client_sessions WHERE token_hash=?', [crypto.createHash('sha256').update(token).digest('hex')]);
+        return send(response, 200, { success: true });
+    }
+    if (path === '/api/account/availability' && request.method === 'GET') {
+        const client = await authenticatedClient(request);
+        const appointmentId = Number(query.get('appointment_id'));
+        const bookingDate = date(query.get('date'));
+        if (bookingDate < new Date().toISOString().slice(0, 10)) fail(422, 'Escolha uma data futura.');
+        const [appointments] = await pool.execute('SELECT id,service_id FROM appointments WHERE id=? AND client_id=?', [
+            appointmentId,
+            client.id,
+        ]);
+        if (!appointments[0]) fail(404, 'Agendamento não encontrado.');
+        const selected = await service(pool, appointments[0].service_id);
+        const config = await settings(pool);
+        const monday = config.monday_closed && new Date(`${bookingDate}T12:00:00`).getDay() === 1;
+        const used = await periods(pool, bookingDate, appointmentId);
+        const slots = [];
+        if (!monday)
+            for (let start = Number(config.opening_minutes); start + selected.minutes <= Number(config.closing_minutes); start += 30)
+                if (!overlap(start, start + selected.minutes, used)) slots.push(time(start));
+        return send(response, 200, { slots, duration_minutes: selected.minutes });
+    }
+    if (path === '/api/account/bookings' && request.method === 'POST') {
+        const client = await authenticatedClient(request);
+        const data = await body(request);
+        const connection = await pool.getConnection();
+        try {
+            await connection.beginTransaction();
+            const selected = await service(connection, data.service_id, true);
+            const bookingDate = date(data.date);
+            if (bookingDate < new Date().toISOString().slice(0, 10)) fail(422, 'Escolha uma data futura.');
+            const start = minutes(data.start_time);
+            const end = await validateSlot(connection, bookingDate, start, selected.minutes, 0, false, true);
+            const [result] = await connection.execute(
+                "INSERT INTO appointments (client_id,client_name,client_phone,service_id,service_name,booking_date,start_time,end_time,duration_minutes,service_price,deposit_amount,notes,status) VALUES (?,?,?,?,?,?,?,?,?,?,?,?, 'pending')",
+                [
+                    client.id,
+                    client.name,
+                    client.phone,
+                    selected.id,
+                    selected.name,
+                    bookingDate,
+                    time(start),
+                    time(end),
+                    selected.minutes,
+                    selected.price,
+                    selected.deposit,
+                    data.notes?.trim() || null,
+                ],
+            );
+            await connection.commit();
+            const created = await appointment(pool, result.insertId);
+            void notifyAdministrator(created);
+            return send(response, 201, created);
+        } catch (error) {
+            await connection.rollback();
+            throw error;
+        } finally {
+            connection.release();
+        }
+    }
+    if (path === '/api/account/appointments' && request.method === 'GET') {
+        const client = await authenticatedClient(request);
+        const scope = query.get('scope') || 'upcoming';
+        const today = new Date().toISOString().slice(0, 10);
+        let condition = "booking_date>=? AND status NOT IN ('cancelled','completed','no_show')",
+            params = [client.id, today];
+        if (scope === 'history') {
+            condition = "(booking_date<? OR status IN ('completed','cancelled','no_show'))";
+            params = [client.id, today];
+        }
+        if (scope === 'manage') condition = "booking_date>=? AND status NOT IN ('cancelled','completed','no_show')";
+        const [rows] = await pool.execute(
+            `SELECT id,service_name,DATE_FORMAT(booking_date,'%Y-%m-%d') AS date,TIME_FORMAT(start_time,'%H:%i') AS start_time,TIME_FORMAT(end_time,'%H:%i') AS end_time,duration_minutes,service_price AS price,deposit_amount AS deposit,status FROM appointments WHERE client_id=? AND ${condition} ORDER BY booking_date,start_time`,
+            params,
+        );
+        return send(response, 200, rows.map(format));
+    }
+    if (/^\/api\/account\/appointments\/\d+$/.test(path) && request.method === 'PATCH') {
+        const client = await authenticatedClient(request);
+        const id = Number(path.split('/').pop());
+        const data = await body(request);
+        const [rows] = await pool.execute('SELECT id,service_id,status FROM appointments WHERE id=? AND client_id=?', [id, client.id]);
+        if (!rows[0]) fail(404, 'Agendamento não encontrado.');
+        if (['cancelled', 'completed', 'no_show'].includes(rows[0].status)) fail(422, 'Este agendamento não pode ser alterado.');
+        if (data.action === 'cancel') {
+            await pool.execute("UPDATE appointments SET status='cancelled' WHERE id=?", [id]);
+            return send(response, 200, { success: true });
+        }
+        if (data.action === 'reschedule') {
+            const connection = await pool.getConnection();
+            try {
+                await connection.beginTransaction();
+                const selected = await service(connection, rows[0].service_id, true);
+                const bookingDate = date(data.date);
+                if (bookingDate < new Date().toISOString().slice(0, 10)) fail(422, 'Escolha uma data futura.');
+                const start = minutes(data.start_time);
+                const end = await validateSlot(connection, bookingDate, start, selected.minutes, id, false, true);
+                await connection.execute('UPDATE appointments SET booking_date=?,start_time=?,end_time=? WHERE id=?', [
+                    bookingDate,
+                    time(start),
+                    time(end),
+                    id,
+                ]);
+                await connection.commit();
+                return send(response, 200, { success: true });
+            } catch (error) {
+                await connection.rollback();
+                throw error;
+            } finally {
+                connection.release();
+            }
+        }
+        fail(422, 'Ação inválida.');
+    }
+    if (path === '/api/admin/services') {
+        const id = Number(query.get('id'));
+        if (request.method === 'GET') {
+            const [rows] = await pool.query('SELECT id,name,price AS value,duration,deposit,maintenance_days,active FROM services ORDER BY id DESC');
+            return send(response, 200, rows.map(formatService));
+        }
+        if (request.method === 'POST' || request.method === 'PUT') {
+            if (request.method === 'PUT' && (!Number.isInteger(id) || id < 1)) fail(422, 'Serviço inválido.');
+            const data = servicePayload(await body(request));
+            if (request.method === 'POST') {
+                const [result] = await pool.execute(
+                    'INSERT INTO services (name,price,duration,deposit,maintenance_days) VALUES (?,?,?,?,?)',
+                    [data.name, data.value, data.duration, data.deposit, data.maintenanceDays],
+                );
+                const [rows] = await pool.execute('SELECT id,name,price AS value,duration,deposit,maintenance_days,active FROM services WHERE id=?', [result.insertId]);
+                return send(response, 201, formatService(rows[0]));
+            }
+            const [result] = await pool.execute(
+                'UPDATE services SET name=?,price=?,duration=?,deposit=?,maintenance_days=? WHERE id=?',
+                [data.name, data.value, data.duration, data.deposit, data.maintenanceDays, id],
+            );
+            if (!result.affectedRows) fail(404, 'Serviço não encontrado.');
+            const [rows] = await pool.execute('SELECT id,name,price AS value,duration,deposit,maintenance_days,active FROM services WHERE id=?', [id]);
+            return send(response, 200, formatService(rows[0]));
+        }
+        if (request.method === 'PATCH') {
+            if (!Number.isInteger(id) || id < 1) fail(422, 'Serviço inválido.');
+            const data = await body(request);
+            if (typeof data.active !== 'boolean') fail(422, 'Status do serviço inválido.');
+            const [result] = await pool.execute('UPDATE services SET active=? WHERE id=?', [data.active ? 1 : 0, id]);
+            if (!result.affectedRows) fail(404, 'Serviço não encontrado.');
+            const [rows] = await pool.execute('SELECT id,name,price AS value,duration,deposit,maintenance_days,active FROM services WHERE id=?', [id]);
+            return send(response, 200, formatService(rows[0]));
+        }
+        if (request.method === 'DELETE') {
+            if (!Number.isInteger(id) || id < 1) fail(422, 'Serviço inválido.');
+            const [usage] = await pool.execute('SELECT COUNT(*) AS total FROM appointments WHERE service_id=?', [id]);
+            if (Number(usage[0].total) > 0) fail(409, 'Este serviço possui agendamentos e não pode ser excluído. Desative-o para removê-lo dos novos agendamentos.');
+            const [result] = await pool.execute('DELETE FROM services WHERE id=?', [id]);
+            if (!result.affectedRows) fail(404, 'Serviço não encontrado.');
+            return send(response, 200, { success: true });
+        }
+        return fail(405, 'Método não permitido.');
+    }
+    if (path === '/api/maintenances') {
+        const id = Number(query.get('id'));
+        if (request.method === 'GET' && query.has('id')) return send(response, 200, await maintenanceRecord(pool, id));
+        if (request.method === 'GET') {
+            const [rows] = await pool.query(`${maintenanceSelect} ORDER BY m.maintenance_date ASC, m.created_at DESC`);
+            return send(response, 200, rows.map(formatMaintenance));
+        }
+        if (request.method === 'PATCH') {
+            if (!Number.isInteger(id) || id < 1) fail(422, 'Manutenção inválida.');
+            const data = await body(request);
+            const current = await maintenanceRecord(pool, id);
+            if (data.action === 'reminder_sent') {
+                if (current.stored_status === 'cancelled') fail(422, 'Esta manutenção está cancelada.');
+                await pool.execute("UPDATE maintenance_records SET status='reminder_sent',reminder_sent_at=NOW() WHERE id=?", [id]);
+                return send(response, 200, await maintenanceRecord(pool, id));
+            }
+            if (data.action === 'cancel') {
+                await pool.execute("UPDATE maintenance_records SET status='cancelled',cancelled_at=NOW() WHERE id=?", [id]);
+                return send(response, 200, await maintenanceRecord(pool, id));
+            }
+            if (Object.hasOwn(data, 'maintenance_date')) {
+                const maintenanceDate = date(data.maintenance_date);
+                await pool.execute('UPDATE maintenance_records SET maintenance_date=? WHERE id=?', [maintenanceDate, id]);
+                return send(response, 200, await maintenanceRecord(pool, id));
+            }
+            fail(422, 'Informe uma alteração válida para a manutenção.');
+        }
+        return fail(405, 'Método não permitido.');
+    }
+    if (request.method === 'GET' && path === '/api/services') {
+        const [rows] = await pool.query('SELECT id,name,price AS value,duration,deposit,maintenance_days,active FROM services WHERE active=1 ORDER BY name');
+        return send(
+            response,
+            200,
+            rows.map(formatService),
+        );
+    }
     if (path === '/api/clients' || /^\/api\/clients\/\d+$/.test(path)) {
         const clientId = path === '/api/clients' ? null : Number(path.split('/').pop());
         if (request.method === 'GET' && clientId) {
-            const [clients] = await pool.execute('SELECT id,name,phone,email,created_at FROM clients WHERE id=?', [clientId]); if (!clients[0]) fail(404, 'Cliente não encontrada.');
-            const [appointments] = await pool.execute("SELECT id,service_name,DATE_FORMAT(booking_date,'%Y-%m-%d') AS date,TIME_FORMAT(start_time,'%H:%i') AS start_time,TIME_FORMAT(end_time,'%H:%i') AS end_time,status,service_price AS price,deposit_amount AS deposit FROM appointments WHERE client_id=? ORDER BY booking_date DESC,start_time DESC", [clientId]);
-            const client = { ...clients[0], id: String(clients[0].id), appointments: appointments.map((item) => ({ ...item, id: String(item.id), price: Number(item.price), deposit: item.deposit == null ? null : Number(item.deposit) })) };
-            client.next_appointment = client.appointments.find((item) => item.date >= new Date().toISOString().slice(0,10) && !['cancelled','completed','no_show'].includes(item.status)) || null;
-            client.cancellations = client.appointments.filter((item) => item.status === 'cancelled').length; client.no_shows = client.appointments.filter((item) => item.status === 'no_show').length;
+            const [clients] = await pool.execute('SELECT id,name,phone,email,created_at FROM clients WHERE id=?', [clientId]);
+            if (!clients[0]) fail(404, 'Cliente não encontrada.');
+            const [appointments] = await pool.execute(
+                "SELECT id,service_name,DATE_FORMAT(booking_date,'%Y-%m-%d') AS date,TIME_FORMAT(start_time,'%H:%i') AS start_time,TIME_FORMAT(end_time,'%H:%i') AS end_time,status,service_price AS price,deposit_amount AS deposit FROM appointments WHERE client_id=? ORDER BY booking_date DESC,start_time DESC",
+                [clientId],
+            );
+            const client = {
+                ...clients[0],
+                id: String(clients[0].id),
+                appointments: appointments.map((item) => ({
+                    ...item,
+                    id: String(item.id),
+                    price: Number(item.price),
+                    deposit: item.deposit == null ? null : Number(item.deposit),
+                })),
+            };
+            client.next_appointment =
+                client.appointments.find(
+                    (item) =>
+                        item.date >= new Date().toISOString().slice(0, 10) && !['cancelled', 'completed', 'no_show'].includes(item.status),
+                ) || null;
+            client.cancellations = client.appointments.filter((item) => item.status === 'cancelled').length;
+            client.no_shows = client.appointments.filter((item) => item.status === 'no_show').length;
             return send(response, 200, client);
         }
         if (request.method === 'GET') {
             const q = `%${query.get('q') || ''}%`;
-            const [rows] = await pool.execute(`SELECT c.id,c.name,c.phone,c.email,
+            const [rows] = await pool.execute(
+                `SELECT c.id,c.name,c.phone,c.email,
                 (SELECT CONCAT(DATE_FORMAT(a.booking_date,'%Y-%m-%d'),'|',TIME_FORMAT(a.start_time,'%H:%i'),'|',a.service_name) FROM appointments a WHERE a.client_id=c.id AND a.booking_date>=CURDATE() AND a.status NOT IN ('cancelled','completed','no_show') ORDER BY a.booking_date,a.start_time LIMIT 1) AS next_appointment,
                 (SELECT COUNT(*) FROM appointments a WHERE a.client_id=c.id AND a.status='cancelled') AS cancellations,
                 (SELECT COUNT(*) FROM appointments a WHERE a.client_id=c.id AND a.status='no_show') AS no_shows
-                FROM clients c WHERE c.name LIKE ? OR c.phone LIKE ? OR c.email LIKE ? ORDER BY c.name LIMIT 100`, [q,q,q]);
-            return send(response, 200, rows.map((row) => ({ ...row, id: String(row.id), cancellations: Number(row.cancellations), no_shows: Number(row.no_shows) })));
+                FROM clients c WHERE c.name LIKE ? OR c.phone LIKE ? OR c.email LIKE ? ORDER BY c.name LIMIT 100`,
+                [q, q, q],
+            );
+            return send(
+                response,
+                200,
+                rows.map((row) => ({
+                    ...row,
+                    id: String(row.id),
+                    cancellations: Number(row.cancellations),
+                    no_shows: Number(row.no_shows),
+                })),
+            );
         }
         if (request.method === 'POST') {
-            const data = await body(request); const name = data.name?.trim(); const phone = phoneKey(data.phone); const email = data.email?.trim().toLowerCase() || null;
-            if (!name || !phone) fail(422, 'Informe nome e telefone válidos.'); if (email && !/^\S+@\S+\.\S+$/.test(email)) fail(422, 'Informe um e-mail válido.');
-            const [duplicates] = await pool.execute("SELECT id FROM clients WHERE REPLACE(REPLACE(REPLACE(REPLACE(phone,' ',''),'-',''),'(',''),')','')=? OR (? IS NOT NULL AND LOWER(email)=?) LIMIT 1", [phone,email,email]);
+            const data = await body(request);
+            const name = data.name?.trim();
+            const phone = phoneKey(data.phone);
+            const email = data.email?.trim().toLowerCase() || null;
+            if (!name || !phone) fail(422, 'Informe nome e telefone válidos.');
+            if (email && !/^\S+@\S+\.\S+$/.test(email)) fail(422, 'Informe um e-mail válido.');
+            const [duplicates] = await pool.execute(
+                "SELECT id FROM clients WHERE REPLACE(REPLACE(REPLACE(REPLACE(phone,' ',''),'-',''),'(',''),')','')=? OR (? IS NOT NULL AND LOWER(email)=?) LIMIT 1",
+                [phone, email, email],
+            );
             if (duplicates[0]) fail(409, 'Já existe uma cliente cadastrada com este telefone ou e-mail.');
-            const [result] = await pool.execute('INSERT INTO clients (name,phone,email) VALUES (?,?,?)',[name,phone,email]); return send(response,201,{id:String(result.insertId),name,phone,email});
+            const [result] = await pool.execute('INSERT INTO clients (name,phone,email) VALUES (?,?,?)', [name, phone, email]);
+            return send(response, 201, { id: String(result.insertId), name, phone, email });
         }
     }
     if (path !== '/api/appointments') return fail(404, 'Rota não encontrada.');
-    if (request.method === 'GET' && query.has('availability')) { const bookingDate=date(query.get('date')); const selectedService=await service(pool,query.get('service_id')); const config=await settings(pool); const monday=config.monday_closed && new Date(`${bookingDate}T12:00:00`).getDay()===1; const used=await periods(pool,bookingDate,query.get('exclude_id') || 0); const slots=[]; if (!monday) for(let start=Number(config.opening_minutes);start+selectedService.minutes<=Number(config.closing_minutes);start+=30) if(!overlap(start,start+selectedService.minutes,used)) slots.push(time(start)); return send(response,200,{slots,duration_minutes:selectedService.minutes}); }
-    if (request.method === 'GET' && query.has('id')) return send(response,200,await appointment(pool,query.get('id')));
-    if (request.method === 'GET') { const where=[]; const params=[]; const today=new Date().toISOString().slice(0,10); if(query.get('date')){where.push('a.booking_date=?');params.push(query.get('date'));} if(query.get('service_id')){where.push('a.service_id=?');params.push(query.get('service_id'));} if(query.get('status')){where.push('a.status=?');params.push(query.get('status'));} if(query.get('q')){where.push('(a.client_name LIKE ? OR a.client_phone LIKE ? OR c.email LIKE ?)');const q=`%${query.get('q')}%`;params.push(q,q,q);} const quick=query.get('quick'); if(quick==='today'){where.push('a.booking_date=?');params.push(today);} if(quick==='tomorrow'){where.push('a.booking_date=DATE_ADD(?,INTERVAL 1 DAY)');params.push(today);} if(quick==='week'){where.push('a.booking_date BETWEEN ? AND DATE_ADD(?,INTERVAL 6 DAY)');params.push(today,today);} if(quick==='upcoming'){where.push("a.booking_date>=? AND a.status NOT IN ('cancelled','completed','no_show')");params.push(today);} if(quick==='completed'||quick==='cancelled'){where.push('a.status=?');params.push(quick);} const [rows]=await pool.execute(`SELECT a.id,a.client_id,a.client_name,a.client_phone AS phone,c.email,a.service_id,a.service_name,DATE_FORMAT(a.booking_date,'%Y-%m-%d') AS date,TIME_FORMAT(a.start_time,'%H:%i') AS start_time,TIME_FORMAT(a.end_time,'%H:%i') AS end_time,a.duration_minutes,a.service_price AS price,a.deposit_amount AS deposit,a.notes,a.status,a.cancellation_reason,a.completed_at,a.created_at FROM appointments a LEFT JOIN clients c ON c.id=a.client_id ${where.length?'WHERE '+where.join(' AND '):''} ORDER BY a.booking_date,a.start_time`,params); return send(response,200,rows.map(format)); }
-    if (request.method === 'POST') { const data=await body(request); const connection=await pool.getConnection(); try { await connection.beginTransaction(); let client; if(data.client_id){const [rows]=await connection.execute('SELECT id,name,phone FROM clients WHERE id=?',[Number(data.client_id)]);client=rows[0];if(!client)fail(422,'Cliente não encontrada.');} else {if(!data.client_name?.trim()||!data.phone?.trim())fail(422,'Selecione uma cliente ou informe nome e telefone.');const [result]=await connection.execute('INSERT INTO clients (name,phone,email) VALUES (?,?,?)',[data.client_name.trim(),data.phone.trim(),data.email?.trim()||null]);client={id:result.insertId,name:data.client_name.trim(),phone:data.phone.trim()};} const selectedService=await service(connection,data.service_id,true);const bookingDate=date(data.date);const start=minutes(data.start_time);const end=await validateSlot(connection,bookingDate,start,selectedService.minutes,0,Boolean(data.allow_override),true);const [result]=await connection.execute("INSERT INTO appointments (client_id,client_name,client_phone,service_id,service_name,booking_date,start_time,end_time,duration_minutes,service_price,deposit_amount,notes,status) VALUES (?,?,?,?,?,?,?,?,?,?,?,?, 'pending')",[client.id,client.name,client.phone,selectedService.id,selectedService.name,bookingDate,time(start),time(end),selectedService.minutes,selectedService.price,selectedService.deposit,data.notes?.trim()||null]);await connection.commit();return send(response,201,await appointment(pool,result.insertId));} catch(error){await connection.rollback();throw error;} finally{connection.release();} }
-    if (request.method === 'PUT') { const id=Number(query.get('id'));const data=await body(request);const connection=await pool.getConnection();try{await connection.beginTransaction();const current=await appointment(connection,id);if(['cancelled','completed','no_show'].includes(current.status))fail(422,'Este agendamento não pode ser remarcado.');const selectedService=await service(connection,current.service_id,true);const bookingDate=date(data.date);const start=minutes(data.start_time);const end=await validateSlot(connection,bookingDate,start,selectedService.minutes,id,Boolean(data.allow_override),true);await connection.execute('UPDATE appointments SET booking_date=?,start_time=?,end_time=?,duration_minutes=?,service_price=?,deposit_amount=? WHERE id=?',[bookingDate,time(start),time(end),selectedService.minutes,selectedService.price,selectedService.deposit,id]);await connection.commit();return send(response,200,await appointment(pool,id));}catch(error){await connection.rollback();throw error;}finally{connection.release();} }
-    if (request.method === 'PATCH') { const id=Number(query.get('id'));const data=await body(request);if(!statuses.has(data.status))fail(422,'Status inválido.');const current=await appointment(pool,id);const allowed={pending:['completed','cancelled','no_show'],confirmed:['completed','cancelled','no_show'],in_progress:['completed','cancelled'],completed:[],cancelled:[],no_show:[]};if(!allowed[current.status]?.includes(data.status))fail(422,'Esta alteração de status não é permitida.');await pool.execute('UPDATE appointments SET status=?,cancellation_reason=?,completed_at=? WHERE id=?',[data.status,data.status==='cancelled'?(data.cancellation_reason?.trim()||null):null,data.status==='completed'?new Date():null,id]);return send(response,200,await appointment(pool,id)); }
-    fail(405,'Método não permitido.');
+    if (request.method === 'GET' && query.has('availability')) {
+        const bookingDate = date(query.get('date'));
+        const selectedService = await service(pool, query.get('service_id'));
+        const config = await settings(pool);
+        const monday = config.monday_closed && new Date(`${bookingDate}T12:00:00`).getDay() === 1;
+        const used = await periods(pool, bookingDate, query.get('exclude_id') || 0);
+        const slots = [];
+        if (!monday)
+            for (let start = Number(config.opening_minutes); start + selectedService.minutes <= Number(config.closing_minutes); start += 30)
+                if (!overlap(start, start + selectedService.minutes, used)) slots.push(time(start));
+        return send(response, 200, { slots, duration_minutes: selectedService.minutes });
+    }
+    if (request.method === 'GET' && query.has('id')) return send(response, 200, await appointment(pool, query.get('id')));
+    if (request.method === 'GET') {
+        const where = [];
+        const params = [];
+        const today = new Date().toISOString().slice(0, 10);
+        if (query.get('date')) {
+            where.push('a.booking_date=?');
+            params.push(query.get('date'));
+        }
+        if (query.get('service_id')) {
+            where.push('a.service_id=?');
+            params.push(query.get('service_id'));
+        }
+        if (query.get('status')) {
+            where.push('a.status=?');
+            params.push(query.get('status'));
+        }
+        if (query.get('q')) {
+            where.push('(a.client_name LIKE ? OR a.client_phone LIKE ? OR c.email LIKE ?)');
+            const q = `%${query.get('q')}%`;
+            params.push(q, q, q);
+        }
+        const quick = query.get('quick');
+        if (quick === 'today') {
+            where.push('a.booking_date=?');
+            params.push(today);
+        }
+        if (quick === 'tomorrow') {
+            where.push('a.booking_date=DATE_ADD(?,INTERVAL 1 DAY)');
+            params.push(today);
+        }
+        if (quick === 'week') {
+            where.push('a.booking_date BETWEEN ? AND DATE_ADD(?,INTERVAL 6 DAY)');
+            params.push(today, today);
+        }
+        if (quick === 'upcoming') {
+            where.push("a.booking_date>=? AND a.status NOT IN ('cancelled','completed','no_show')");
+            params.push(today);
+        }
+        if (quick === 'completed' || quick === 'cancelled') {
+            where.push('a.status=?');
+            params.push(quick);
+        }
+        const [rows] = await pool.execute(
+            `SELECT a.id,a.client_id,a.client_name,a.client_phone AS phone,c.email,a.service_id,a.service_name,DATE_FORMAT(a.booking_date,'%Y-%m-%d') AS date,TIME_FORMAT(a.start_time,'%H:%i') AS start_time,TIME_FORMAT(a.end_time,'%H:%i') AS end_time,a.duration_minutes,a.service_price AS price,a.deposit_amount AS deposit,a.notes,a.status,a.cancellation_reason,a.completed_at,a.created_at FROM appointments a LEFT JOIN clients c ON c.id=a.client_id ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY a.booking_date,a.start_time`,
+            params,
+        );
+        return send(response, 200, rows.map(format));
+    }
+    if (request.method === 'POST') {
+        const data = await body(request);
+        const connection = await pool.getConnection();
+        try {
+            await connection.beginTransaction();
+            let client;
+            if (data.client_id) {
+                const [rows] = await connection.execute('SELECT id,name,phone FROM clients WHERE id=?', [Number(data.client_id)]);
+                client = rows[0];
+                if (!client) fail(422, 'Cliente não encontrada.');
+            } else {
+                if (!data.client_name?.trim() || !data.phone?.trim()) fail(422, 'Selecione uma cliente ou informe nome e telefone.');
+                const [result] = await connection.execute('INSERT INTO clients (name,phone,email) VALUES (?,?,?)', [
+                    data.client_name.trim(),
+                    data.phone.trim(),
+                    data.email?.trim() || null,
+                ]);
+                client = { id: result.insertId, name: data.client_name.trim(), phone: data.phone.trim() };
+            }
+            const selectedService = await service(connection, data.service_id, true);
+            const bookingDate = date(data.date);
+            const start = minutes(data.start_time);
+            const end = await validateSlot(connection, bookingDate, start, selectedService.minutes, 0, Boolean(data.allow_override), true);
+            const [result] = await connection.execute(
+                "INSERT INTO appointments (client_id,client_name,client_phone,service_id,service_name,booking_date,start_time,end_time,duration_minutes,service_price,deposit_amount,notes,status) VALUES (?,?,?,?,?,?,?,?,?,?,?,?, 'pending')",
+                [
+                    client.id,
+                    client.name,
+                    client.phone,
+                    selectedService.id,
+                    selectedService.name,
+                    bookingDate,
+                    time(start),
+                    time(end),
+                    selectedService.minutes,
+                    selectedService.price,
+                    selectedService.deposit,
+                    data.notes?.trim() || null,
+                ],
+            );
+            await connection.commit();
+            return send(response, 201, await appointment(pool, result.insertId));
+        } catch (error) {
+            await connection.rollback();
+            throw error;
+        } finally {
+            connection.release();
+        }
+    }
+    if (request.method === 'PUT') {
+        const id = Number(query.get('id'));
+        const data = await body(request);
+        const connection = await pool.getConnection();
+        try {
+            await connection.beginTransaction();
+            const current = await appointment(connection, id);
+            if (['cancelled', 'completed', 'no_show'].includes(current.status)) fail(422, 'Este agendamento não pode ser remarcado.');
+            const selectedService = await service(connection, current.service_id, true);
+            const bookingDate = date(data.date);
+            const start = minutes(data.start_time);
+            const end = await validateSlot(connection, bookingDate, start, selectedService.minutes, id, Boolean(data.allow_override), true);
+            await connection.execute(
+                'UPDATE appointments SET booking_date=?,start_time=?,end_time=?,duration_minutes=?,service_price=?,deposit_amount=? WHERE id=?',
+                [bookingDate, time(start), time(end), selectedService.minutes, selectedService.price, selectedService.deposit, id],
+            );
+            await connection.commit();
+            return send(response, 200, await appointment(pool, id));
+        } catch (error) {
+            await connection.rollback();
+            throw error;
+        } finally {
+            connection.release();
+        }
+    }
+    if (request.method === 'PATCH') {
+        const id = Number(query.get('id'));
+        const data = await body(request);
+        if (!statuses.has(data.status)) fail(422, 'Status inválido.');
+        const connection = await pool.getConnection();
+        try {
+            await connection.beginTransaction();
+            const current = await appointment(connection, id);
+            const allowed = {
+                pending: ['completed', 'cancelled', 'no_show'],
+                confirmed: ['completed', 'cancelled', 'no_show'],
+                in_progress: ['completed', 'cancelled'],
+                completed: [],
+                cancelled: [],
+                no_show: [],
+            };
+            if (!allowed[current.status]?.includes(data.status)) fail(422, 'Esta alteração de status não é permitida.');
+            await connection.execute('UPDATE appointments SET status=?,cancellation_reason=?,completed_at=? WHERE id=?', [
+                data.status,
+                data.status === 'cancelled' ? data.cancellation_reason?.trim() || null : null,
+                data.status === 'completed' ? new Date() : null,
+                id,
+            ]);
+            if (data.status === 'completed') await createMaintenanceRecord(connection, current);
+            await connection.commit();
+            return send(response, 200, await appointment(pool, id));
+        } catch (error) {
+            await connection.rollback();
+            throw error;
+        } finally {
+            connection.release();
+        }
+    }
+    fail(405, 'Método não permitido.');
 }
 
-http.createServer((request,response)=>handler(request,response).catch((error)=>{console.error(error);send(response,error.status||500,{error:error.message||'Erro interno do servidor.'});})).listen(port,()=>console.log(`API administrativa em http://127.0.0.1:${port}`));
+http.createServer((request, response) =>
+    handler(request, response).catch((error) => {
+        console.error(error);
+        send(response, error.status || 500, { error: error.message || 'Erro interno do servidor.' });
+    }),
+).listen(port, () => console.log(`API administrativa em http://127.0.0.1:${port}`));

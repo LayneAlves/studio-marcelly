@@ -6,12 +6,14 @@ const adminContent = document.querySelector('.admin-content');
 const dashboardView = document.getElementById('dashboardView');
 const servicesView = document.getElementById('servicos');
 const appointmentsView = document.getElementById('agendamentos');
+const maintenancesView = document.getElementById('manutencoes');
 const serviceForm = document.getElementById('serviceForm');
 const serviceIdInput = document.getElementById('serviceId');
 const serviceNameInput = document.getElementById('serviceName');
 const serviceValueInput = document.getElementById('serviceValue');
 const serviceDurationInput = document.getElementById('serviceDuration');
 const serviceDepositInput = document.getElementById('serviceDeposit');
+const serviceMaintenanceDaysInput = document.getElementById('serviceMaintenanceDays');
 const serviceSubmitButton = document.getElementById('serviceSubmitButton');
 const serviceCancelEditButton = document.getElementById('serviceCancelEdit');
 const serviceFormTitle = document.getElementById('serviceFormTitle');
@@ -20,7 +22,7 @@ const serviceCount = document.getElementById('serviceCount');
 const serviceEmptyState = document.getElementById('serviceEmptyState');
 const serviceFeedback = document.getElementById('serviceFeedback');
 
-const SERVICES_API_URL = 'api/services.php';
+const SERVICES_API_URL = `http://${window.location.hostname || '127.0.0.1'}:3000/api/admin/services`;
 let services = [];
 
 function setAdminMenuState(isOpen) {
@@ -45,16 +47,19 @@ function showAdminView(hash) {
         || document.querySelector('.admin-menu-link[href="#dashboard"]');
     const isServicesView = hash === '#servicos';
     const isAppointmentsView = hash === '#agendamentos';
+    const isMaintenancesView = hash === '#manutencoes';
 
     setActiveAdminLink(selectedLink);
-    dashboardView.hidden = isServicesView || isAppointmentsView;
+    dashboardView.hidden = isServicesView || isAppointmentsView || isMaintenancesView;
     servicesView.hidden = !isServicesView;
     appointmentsView.hidden = !isAppointmentsView;
-    adminContent.classList.toggle('is-services-view', isServicesView);
-    adminContent.classList.toggle('is-admin-view', isServicesView || isAppointmentsView);
+    maintenancesView.hidden = !isMaintenancesView;
+    adminContent.classList.toggle('is-services-view', isServicesView || isMaintenancesView);
+    adminContent.classList.toggle('is-admin-view', isServicesView || isAppointmentsView || isMaintenancesView);
 
     if (isServicesView) loadServices();
     if (isAppointmentsView) loadAppointments();
+    if (isMaintenancesView) loadMaintenances();
 }
 
 function showServiceFeedback(message = '', isError = false) {
@@ -139,7 +144,8 @@ function renderServices() {
             createServiceCell('Nome do serviço', service.name),
             createServiceCell('Valor', formatCurrency(service.value)),
             createServiceCell('Duração', service.duration),
-            createServiceCell('Valor do sinal', service.deposit === null ? 'Não informado' : formatCurrency(service.deposit))
+            createServiceCell('Valor do sinal', service.deposit === null ? 'Não informado' : formatCurrency(service.deposit)),
+            createServiceCell('Manutenção', service.maintenance_days ? `${service.maintenance_days} dias` : 'Não definida')
         );
 
         const status = document.createElement('div');
@@ -205,6 +211,7 @@ function editService(id) {
     serviceValueInput.value = formatCurrency(service.value);
     serviceDurationInput.value = service.duration;
     serviceDepositInput.value = service.deposit === null ? '' : formatCurrency(service.deposit);
+    serviceMaintenanceDaysInput.value = service.maintenance_days || '';
     serviceFormTitle.textContent = 'Editar serviço';
     serviceSubmitButton.textContent = 'Salvar alterações';
     serviceCancelEditButton.hidden = false;
@@ -249,6 +256,7 @@ serviceForm.addEventListener('submit', async (event) => {
     event.preventDefault();
     const value = parseCurrency(serviceValueInput.value);
     const deposit = serviceDepositInput.value.trim() ? parseCurrency(serviceDepositInput.value) : null;
+    const maintenanceDays = serviceMaintenanceDaysInput.value.trim() ? Number(serviceMaintenanceDaysInput.value) : null;
 
     if (value === null || deposit === null && serviceDepositInput.value.trim()) {
         const invalidInput = value === null ? serviceValueInput : serviceDepositInput;
@@ -258,11 +266,19 @@ serviceForm.addEventListener('submit', async (event) => {
         return;
     }
 
+    if (maintenanceDays !== null && (!Number.isInteger(maintenanceDays) || maintenanceDays < 1 || maintenanceDays > 365)) {
+        serviceMaintenanceDaysInput.setCustomValidity('Informe um número entre 1 e 365 dias.');
+        serviceMaintenanceDaysInput.reportValidity();
+        serviceMaintenanceDaysInput.setCustomValidity('');
+        return;
+    }
+
     const serviceData = {
         name: serviceNameInput.value.trim(),
         value,
         duration: serviceDurationInput.value.trim(),
-        deposit
+        deposit,
+        maintenance_days: maintenanceDays,
     };
 
     try {
@@ -299,10 +315,13 @@ const appointmentDialog = document.getElementById('appointmentDialog');
 const appointmentDialogContent = document.getElementById('appointmentDialogContent');
 const appointmentsCalendarView = document.getElementById('appointmentsCalendarView');
 const appointmentsListView = document.getElementById('appointmentsListView');
+const maintenanceList = document.getElementById('maintenanceList');
+const maintenanceEmptyState = document.getElementById('maintenanceEmptyState');
 
 const ADMIN_API_URL = `http://${window.location.hostname || '127.0.0.1'}:3000/api`;
 const APPOINTMENTS_API_URL = `${ADMIN_API_URL}/appointments`;
 const CLIENTS_API_URL = `${ADMIN_API_URL}/clients`;
+const MAINTENANCES_API_URL = `${ADMIN_API_URL}/maintenances`;
 const statusLabels = { pending: 'Pendente', confirmed: 'Confirmado', in_progress: 'Em atendimento', completed: 'Concluído', cancelled: 'Cancelado', no_show: 'Não compareceu' };
 let appointments = [];
 let appointmentServices = [];
@@ -314,6 +333,8 @@ function escapeHtml(value = '') { const element = document.createElement('div');
 function appointmentDateLabel(value) { return new Date(`${value}T12:00:00`).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' }); }
 function appointmentRequest(path = '', options = {}) { return requestJson(`${APPOINTMENTS_API_URL}${path}`, options); }
 async function requestJson(url, options = {}) { const response = await fetch(url, { headers: { 'Content-Type': 'application/json' }, ...options }); const data = await response.json().catch(() => ({})); if (!response.ok) throw new Error(data.error || 'Não foi possível concluir a operação.'); return data; }
+
+function maintenanceRequest(path = '', options = {}) { return requestJson(`${MAINTENANCES_API_URL}${path}`, options); }
 
 async function loadAppointmentServices() {
     appointmentServices = await requestJson(`${ADMIN_API_URL}/services`);
@@ -339,7 +360,7 @@ function appointmentActions(appointment) {
     const options = ['<option value="">Ações</option>', '<option value="details">Detalhes</option>'];
     if (['pending', 'confirmed'].includes(appointment.status)) options.push('<option value="reschedule">Remarcar</option>', '<option value="cancelled">Cancelar</option>', '<option value="no_show">Não compareceu</option>', '<option value="completed">Concluir</option>');
     if (appointment.status === 'in_progress') options.push('<option value="cancelled">Cancelar</option>', '<option value="completed">Concluir</option>');
-    return `<select class="appointment-actions-select" data-id="${appointment.id}" aria-label="Ações para ${escapeHtml(appointment.client_name)}">${options.join('')}</select>`;
+    return `<select class="appointment-actions-select" data-id="${appointment.id}" aria-label="Ações para ${escapeHtml(appointment.client_name)}">${options.join('')}</select><button class="appointment-mobile-details" type="button" data-appointment-details="${appointment.id}">Ver mais</button>`;
 }
 
 function renderAppointments() {
@@ -360,6 +381,101 @@ function renderAppointmentCalendar() {
         const column = document.createElement('div'); column.className = 'calendar-day-column'; column.innerHTML = `<h3>${day.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit' })}</h3>`;
         appointments.filter((appointment) => appointment.date === key).forEach((appointment) => { const button = document.createElement('button'); button.className = 'calendar-item'; button.dataset.id = appointment.id; button.innerHTML = `${appointment.start_time} · ${escapeHtml(appointment.client_name)}<span>${escapeHtml(appointment.service_name)}</span>`; column.append(button); });
         appointmentsCalendarView.append(column);
+    }
+}
+
+const maintenanceStatusLabels = {
+    awaiting: 'Aguardando',
+    reminder_sent: 'Lembrete enviado',
+    rescheduled: 'Já reagendou',
+    cancelled: 'Cancelado',
+};
+
+function maintenanceDateTimeLabel(value) {
+    if (!value) return 'Ainda não enviado';
+    const parsed = new Date(String(value).replace(' ', 'T'));
+    return Number.isNaN(parsed.getTime()) ? 'Ainda não enviado' : parsed.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+}
+
+function maintenanceBadge(status) {
+    return `<span class="status-badge maintenance-status maintenance-status-${status}">${maintenanceStatusLabels[status] || 'Aguardando'}</span>`;
+}
+
+async function loadMaintenances() {
+    try {
+        const maintenances = await maintenanceRequest();
+        renderMaintenances(maintenances);
+    } catch (error) {
+        maintenanceList.replaceChildren();
+        maintenanceEmptyState.hidden = false;
+        maintenanceEmptyState.textContent = error.message;
+    }
+}
+
+function renderMaintenances(maintenances) {
+    maintenanceList.replaceChildren();
+    maintenanceEmptyState.hidden = maintenances.length > 0;
+    maintenances.forEach((maintenance) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `<td data-label="Cliente">${escapeHtml(maintenance.client_name)}</td><td class="appointment-mobile-phone" data-label="Telefone">${escapeHtml(maintenance.phone)}</td><td data-label="Serviço realizado">${escapeHtml(maintenance.service_name)}</td><td data-label="Último atendimento">${appointmentDateLabel(maintenance.last_appointment_date)}</td><td data-label="Data prevista">${appointmentDateLabel(maintenance.maintenance_date)}</td><td data-label="Status">${maintenanceBadge(maintenance.status)}</td><td data-label="Ações"><div class="appointment-actions"><button class="appointment-action maintenance-details-button" type="button" data-maintenance-details="${maintenance.id}">Detalhes</button><button class="appointment-mobile-details" type="button" data-maintenance-details="${maintenance.id}">Ver mais</button></div></td>`;
+        const actions = row.querySelector('.appointment-actions');
+        const mobileDetails = actions.querySelector('[data-maintenance-details]');
+        const actionSelect = document.createElement('select');
+        actionSelect.className = 'appointment-actions-select maintenance-actions-select';
+        actionSelect.dataset.maintenanceId = maintenance.id;
+        maintenanceList.append(row);
+    });
+}
+
+function whatsappNumber(phone) {
+    const digits = String(phone || '').replace(/\D/g, '');
+    const number = digits.startsWith('55') && (digits.length === 12 || digits.length === 13) ? digits : `55${digits}`;
+    if (!/^55\d{10,11}$/.test(number)) throw new Error('O telefone desta cliente não está em um formato válido para WhatsApp.');
+    return number;
+}
+
+function reminderMessage(maintenance) {
+    const days = Number(maintenance.maintenance_days);
+    const period = Number.isInteger(days) && days > 0 ? (days === 1 ? '1 dia' : `${days} dias`) : 'o período recomendado';
+    return `Oi, ${maintenance.client_name}! Tudo bem ? Sua manutenção completa 15 dias ${appointmentDateLabel(maintenance.maintenance_date)}, após ${period}. Deseja agendar seu horário?`;
+}
+
+async function showMaintenanceDetails(id) {
+    try {
+        const maintenance = await maintenanceRequest(`?id=${encodeURIComponent(id)}`);
+        openDialog(`<h2>Detalhes da manutenção</h2><p class="admin-page-heading">${escapeHtml(maintenance.service_name)}</p><dl class="appointment-details"><div><dt>Cliente</dt><dd>${escapeHtml(maintenance.client_name)}</dd></div><div><dt>Telefone</dt><dd>${escapeHtml(maintenance.phone)}</dd></div><div><dt>Serviço realizado</dt><dd>${escapeHtml(maintenance.service_name)}</dd></div><div><dt>Último atendimento</dt><dd>${appointmentDateLabel(maintenance.last_appointment_date)}</dd></div><div><dt>Data prevista</dt><dd id="maintenanceDateValue">${appointmentDateLabel(maintenance.maintenance_date)}</dd></div><div><dt>Status</dt><dd>${maintenanceBadge(maintenance.status)}</dd></div><div><dt>Último lembrete</dt><dd>${maintenanceDateTimeLabel(maintenance.reminder_sent_at)}</dd></div></dl><form class="maintenance-date-form" id="maintenanceDateForm"><label for="maintenanceDateInput">Alterar data prevista</label><div><input id="maintenanceDateInput" type="date" value="${maintenance.maintenance_date}" required><button class="maintenance-date-save" type="submit">Salvar data</button></div><p class="appointment-feedback" id="maintenanceDateFeedback"></p></form><div class="maintenance-reminder-action"><button class="maintenance-reminder-button" id="sendMaintenanceReminder" type="button" ${maintenance.status === 'cancelled' ? 'disabled' : ''}>Enviar lembrete agora</button><p class="appointment-feedback" id="maintenanceReminderFeedback"></p></div>`);
+
+        document.getElementById('maintenanceDateForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const feedback = document.getElementById('maintenanceDateFeedback');
+            try {
+                const updated = await maintenanceRequest(`?id=${encodeURIComponent(maintenance.id)}`, { method: 'PATCH', body: JSON.stringify({ maintenance_date: document.getElementById('maintenanceDateInput').value }) });
+                maintenance.maintenance_date = updated.maintenance_date;
+                document.getElementById('maintenanceDateValue').textContent = appointmentDateLabel(updated.maintenance_date);
+                feedback.classList.remove('is-error');
+                feedback.textContent = 'Data prevista atualizada.';
+                await loadMaintenances();
+            } catch (error) {
+                feedback.textContent = error.message;
+                feedback.classList.add('is-error');
+            }
+        });
+
+        document.getElementById('sendMaintenanceReminder').addEventListener('click', async () => {
+            const feedback = document.getElementById('maintenanceReminderFeedback');
+            try {
+                window.open(`https://wa.me/${whatsappNumber(maintenance.phone)}?text=${encodeURIComponent(reminderMessage(maintenance))}`, '_blank');
+                await maintenanceRequest(`?id=${encodeURIComponent(maintenance.id)}`, { method: 'PATCH', body: JSON.stringify({ action: 'reminder_sent' }) });
+                feedback.classList.remove('is-error');
+                feedback.textContent = 'Lembrete registrado agora.';
+                await loadMaintenances();
+            } catch (error) {
+                feedback.textContent = error.message;
+                feedback.classList.add('is-error');
+            }
+        });
+    } catch (error) {
+        alert(error.message);
     }
 }
 
@@ -386,6 +502,9 @@ async function openAppointmentForm(appointment = null) { openDialog(appointmentF
 document.getElementById('newAppointmentButton').addEventListener('click', () => openAppointmentForm());
 document.getElementById('appointmentDialogClose').addEventListener('click', closeDialog);
 appointmentList.addEventListener('change', (event) => { const select = event.target.closest('.appointment-actions-select'); if (!select || !select.value) return; const appointment = appointments.find((item) => item.id === select.dataset.id); const action = select.value; select.value = ''; if (action === 'details') showAppointmentDetails(select.dataset.id); if (action === 'reschedule' && appointment) openAppointmentForm(appointment); if (['cancelled', 'no_show', 'completed'].includes(action)) changeAppointmentStatus(select.dataset.id, action); });
+appointmentList.addEventListener('click', (event) => { const button = event.target.closest('[data-appointment-details]'); if (button) showAppointmentDetails(button.dataset.appointmentDetails); });
+maintenanceList.addEventListener('change', (event) => { const select = event.target.closest('.maintenance-actions-select'); if (!select || !select.value) return; const action = select.value; select.value = ''; if (action === 'details') showMaintenanceDetails(select.dataset.maintenanceId); });
+maintenanceList.addEventListener('click', (event) => { const button = event.target.closest('[data-maintenance-details]'); if (button) showMaintenanceDetails(button.dataset.maintenanceDetails); });
 appointmentsCalendarView.addEventListener('click', (event) => { const button = event.target.closest('[data-id]'); if (button) showAppointmentDetails(button.dataset.id); });
 document.querySelectorAll('[data-quick]').forEach((button) => button.addEventListener('click', () => { appointmentQuickFilter = button.dataset.quick; document.querySelectorAll('[data-quick]').forEach((item) => item.classList.toggle('is-active', item === button)); loadAppointments(); }));
 [appointmentDateFilter, appointmentServiceFilter, appointmentStatusFilter].forEach((field) => field.addEventListener('change', () => { appointmentQuickFilter = ''; document.querySelectorAll('[data-quick]').forEach((item) => item.classList.remove('is-active')); loadAppointments(); }));

@@ -1,26 +1,3 @@
-const header = document.getElementById('siteHeader');
-window.addEventListener('scroll', () => {
-    if (header) header.classList.toggle('scrolled', window.scrollY > 40);
-});
-
-const navToggle = document.getElementById('navToggle');
-const navMenu = document.getElementById('navMenu');
-
-if (navToggle && navMenu) {
-    navToggle.addEventListener('click', () => navMenu.classList.toggle('open'));
-    navMenu.querySelectorAll('a').forEach((link) => {
-        link.addEventListener('click', () => navMenu.classList.remove('open'));
-    });
-}
-
-const accountHeaderLink = document.getElementById('accountHeaderLink');
-function updateAccountHeader() {
-    const savedAccount = JSON.parse(localStorage.getItem('smf-account') || 'null');
-    if (accountHeaderLink) accountHeaderLink.textContent = savedAccount?.client?.name ? `Olá, ${savedAccount.client.name}` : 'Minha Conta';
-}
-updateAccountHeader();
-window.addEventListener('pageshow', updateAccountHeader);
-
 const revealEls = document.querySelectorAll('.reveal');
 const revealObserver = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
@@ -71,7 +48,7 @@ if (galleryGrid) {
     });
 }
 
-const SERVICES_API_URL = 'api/services.php?active=1';
+const SERVICES_API_URL = `http://${window.location.hostname || '127.0.0.1'}:3000/api/services`;
 const APPOINTMENTS_API_URL = `http://${window.location.hostname || '127.0.0.1'}:3000/api/appointments`;
 const ACCOUNT_API_URL = `http://${window.location.hostname || '127.0.0.1'}:3000/api/account`;
 const MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
@@ -91,6 +68,7 @@ let selectedTime = null;
 let selectedService = null;
 let activeServices = [];
 let slotsRequestVersion = 0;
+let authModalContext = { source: 'booking', booking: null };
 
 function isPast(date) {
     const today = new Date();
@@ -126,7 +104,7 @@ async function accountRequest(path = '', options = {}) {
     if (!response.ok) {
         if (response.status === 401) {
             localStorage.removeItem('smf-account');
-            updateAccountHeader();
+            if (typeof updateSharedAccountLink === 'function') updateSharedAccountLink();
         }
         const error = new Error(data.error || 'Não foi possível concluir esta ação.');
         error.status = response.status;
@@ -330,7 +308,7 @@ function currentSession() {
 
 function storeSession(session) {
     localStorage.setItem('smf-account', JSON.stringify(session));
-    updateAccountHeader();
+    if (typeof updateSharedAccountLink === 'function') updateSharedAccountLink();
 }
 
 async function finishBooking() {
@@ -355,7 +333,7 @@ async function finishBooking() {
     } catch (error) {
         if (error.status === 401) {
             formMsg.textContent = 'Entre ou cadastre-se para finalizar o agendamento.';
-            openBookingAuthDialog();
+            openAuthenticationDialog('booking');
         } else {
             formMsg.textContent = error.message;
         }
@@ -364,33 +342,77 @@ async function finishBooking() {
     }
 }
 
-function openBookingAuthDialog() {
-    const dialog = document.getElementById('bookingAuthDialog');
-    const name = document.getElementById('nome').value.trim();
-    const phone = document.getElementById('telefone').value.trim();
-    document.getElementById('bookingRegisterName').value = name;
-    document.getElementById('bookingRegisterPhone').value = formatBrazilianPhone(phone);
-    document.getElementById('bookingLoginIdentifier').value = phone;
-    setBookingAuthView('login');
-    dialog.showModal();
+function bookingSnapshot() {
+    return {
+        name: document.getElementById('nome')?.value.trim() || '',
+        phone: document.getElementById('telefone')?.value.trim() || '',
+        notes: document.getElementById('obs')?.value.trim() || '',
+    };
 }
+
+function updateAuthModalContent(source) {
+    const isBooking = source === 'booking';
+    document.getElementById('bookingAuthTitle').textContent = isBooking ? 'Entre para finalizar' : 'Acesse sua conta';
+    document.querySelector('.booking-auth-description').textContent = isBooking
+        ? 'Acesse sua conta para salvar seu agendamento.'
+        : 'Entre ou crie sua conta para acessar sua área.';
+    document.getElementById('bookingLoginSubmit').textContent = isBooking ? 'Entrar e confirmar' : 'Entrar';
+    document.getElementById('bookingRegisterSubmit').textContent = isBooking ? 'Criar conta e confirmar' : 'Criar conta';
+}
+
+function openAuthenticationDialog(source = 'booking') {
+    const dialog = document.getElementById('bookingAuthDialog');
+    if (!dialog) return false;
+
+    const isBooking = source === 'booking';
+    const snapshot = isBooking ? bookingSnapshot() : null;
+    authModalContext = { source: isBooking ? 'booking' : 'account', booking: snapshot };
+
+    document.getElementById('bookingRegisterName').value = snapshot?.name || '';
+    document.getElementById('bookingRegisterPhone').value = snapshot ? formatBrazilianPhone(snapshot.phone) : '';
+    document.getElementById('bookingLoginIdentifier').value = snapshot?.phone || '';
+    document.getElementById('bookingLoginPassword').value = '';
+    document.getElementById('bookingRegisterPassword').value = '';
+    document.getElementById('bookingRegisterPasswordConfirm').value = '';
+    document.getElementById('bookingRegisterEmail').value = '';
+    updateAuthModalContent(authModalContext.source);
+    setBookingAuthView('login');
+    if (!dialog.open) dialog.showModal();
+    return true;
+}
+
+window.openBookingAuthDialogForAccount = () => openAuthenticationDialog('account');
 
 function setBookingAuthView(view) {
     document.getElementById('bookingLoginForm').hidden = view !== 'login';
     document.getElementById('bookingRegisterForm').hidden = view !== 'register';
     document.querySelectorAll('[data-booking-auth-view]').forEach((button) => button.classList.toggle('is-active', button.dataset.bookingAuthView === view));
-    document.getElementById('bookingAuthMsg').textContent = '';
+    setAuthFeedback();
 }
 
-async function authenticateBooking(response) {
+function setAuthFeedback(text = '', state = '') {
+    const message = document.getElementById('bookingAuthMsg');
+    message.textContent = text;
+    message.classList.toggle('is-pending', state === 'pending');
+    message.classList.toggle('is-error', state === 'error');
+}
+
+async function finishAuthentication(response) {
     storeSession(response);
+    document.getElementById('bookingAuthDialog').close();
+
+    if (authModalContext.source === 'account') {
+        window.location.href = '/minha-conta.html';
+        return;
+    }
+
     document.getElementById('nome').value = response.client.name;
     document.getElementById('telefone').value = response.client.phone;
-    document.getElementById('bookingAuthDialog').close();
+    if (authModalContext.booking?.notes) document.getElementById('obs').value = authModalContext.booking.notes;
     await finishBooking();
 }
 
-if (bookingForm && document.getElementById('bookingAuthDialog')) {
+if (bookingForm) {
     bookingForm.addEventListener('submit', (event) => {
         event.preventDefault();
         if (!selectedService || !selectedDate || !selectedTime) {
@@ -398,29 +420,48 @@ if (bookingForm && document.getElementById('bookingAuthDialog')) {
         } else if (currentSession()) {
             finishBooking();
         } else {
-            openBookingAuthDialog();
+            openAuthenticationDialog('booking');
         }
     });
+}
 
+if (document.getElementById('bookingAuthDialog')) {
     document.querySelectorAll('[data-booking-auth-view]').forEach((button) => button.addEventListener('click', () => setBookingAuthView(button.dataset.bookingAuthView)));
     document.getElementById('bookingAuthClose').addEventListener('click', () => document.getElementById('bookingAuthDialog').close());
     document.getElementById('bookingLoginForm').addEventListener('submit', async (event) => {
         event.preventDefault();
-        const message = document.getElementById('bookingAuthMsg');
+        const submitButton = event.currentTarget.querySelector('[type="submit"]');
+        submitButton.disabled = true;
+        setAuthFeedback('Entrando...', 'pending');
         try {
-            await authenticateBooking(await accountRequest('/login', { method: 'POST', body: JSON.stringify({ identifier: document.getElementById('bookingLoginIdentifier').value, password: document.getElementById('bookingLoginPassword').value }) }));
-        } catch (error) { message.textContent = error.message; }
+            await finishAuthentication(await accountRequest('/login', { method: 'POST', body: JSON.stringify({ identifier: document.getElementById('bookingLoginIdentifier').value, password: document.getElementById('bookingLoginPassword').value }) }));
+        } catch (error) {
+            setAuthFeedback(error.message, 'error');
+        } finally {
+            submitButton.disabled = false;
+        }
     });
     document.getElementById('bookingRegisterForm').addEventListener('submit', async (event) => {
         event.preventDefault();
-        const message = document.getElementById('bookingAuthMsg');
+        const submitButton = event.currentTarget.querySelector('[type="submit"]');
         const password = document.getElementById('bookingRegisterPassword').value;
         if (password !== document.getElementById('bookingRegisterPasswordConfirm').value) {
-            message.textContent = 'As senhas não coincidem.';
+            setAuthFeedback('As senhas não coincidem.', 'error');
             return;
         }
+        submitButton.disabled = true;
+        setAuthFeedback('Criando conta...', 'pending');
         try {
-            await authenticateBooking(await accountRequest('/register', { method: 'POST', body: JSON.stringify({ name: document.getElementById('bookingRegisterName').value.trim(), phone: document.getElementById('bookingRegisterPhone').value.trim(), email: document.getElementById('bookingRegisterEmail').value.trim(), password }) }));
-        } catch (error) { message.textContent = error.message; }
+            await finishAuthentication(await accountRequest('/register', { method: 'POST', body: JSON.stringify({ name: document.getElementById('bookingRegisterName').value.trim(), phone: document.getElementById('bookingRegisterPhone').value.trim(), email: document.getElementById('bookingRegisterEmail').value.trim(), password }) }));
+        } catch (error) {
+            setAuthFeedback(error.message, 'error');
+        } finally {
+            submitButton.disabled = false;
+        }
     });
+
+    if (new URLSearchParams(window.location.search).get('auth') === 'account') {
+        window.history.replaceState({}, '', '/index.html');
+        openAuthenticationDialog('account');
+    }
 }

@@ -52,9 +52,9 @@
 }
 
 .curso-hero .curso-watermark {
-    top: -2vw;
+    top: 39vw;
     left: -0.6rem;
-    font-size: clamp(4rem, 24vw, 18rem);
+    font-size: clamp(2rem, 18vw, 11rem);
     max-width: 48vw;
     color: var(--on-ink);
     opacity: 0.07;

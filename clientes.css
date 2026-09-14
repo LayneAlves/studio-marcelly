@@ -160,29 +160,70 @@
     }
 
     .clients-table tr {
-        padding: .2rem .8rem;
+        padding: 1rem;
         border: 1px solid var(--line);
         border-radius: var(--radius-sm);
     }
 
     .clients-table td {
-        display: grid;
-        grid-template-columns: 110px minmax(0, 1fr);
-        gap: .7rem;
-        padding: .65rem 0;
+        display: block;
+        padding: .2rem 0;
     }
 
     .clients-table td::before {
-        content: attr(data-label);
-        color: var(--text-faint);
-        font-size: .64rem;
-        font-weight: 500;
-        letter-spacing: .08em;
-        text-transform: uppercase;
+        display: none;
     }
 
-    .clients-table td:last-child::before {
-        content: '';
+    .clients-table td:first-child {
+        margin-bottom: .32rem;
+        color: var(--text);
+        font-size: .98rem;
+        font-weight: 600;
+    }
+
+    .clients-table td:not(:first-child):not(:last-child) {
+        color: var(--text-soft);
+        font-size: .78rem;
+        font-weight: 300;
+        line-height: 1.45;
+        opacity: .52;
+    }
+
+    .clients-table td:not(:first-child):not(:last-child) small {
+        font: inherit;
+    }
+
+    .clients-table td:not(:first-child):not(:last-child) .client-count {
+        font-weight: 400;
+        opacity: .74;
+    }
+
+    .clients-table td:last-child {
+        margin-top: .9rem;
+        padding-top: .85rem;
+        border-top: 1px solid var(--line);
+        text-align: center;
+    }
+
+    .client-profile-action {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 132px;
+        padding: .58rem 1.1rem;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-pill);
+        background: var(--surface-2);
+        color: var(--text-soft);
+        font: 500 .78rem 'Jost', sans-serif;
+        transition: background var(--transicao), color var(--transicao), border-color var(--transicao);
+    }
+
+    .client-profile-action:hover,
+    .client-profile-action:focus-visible {
+        border-color: var(--text-soft);
+        background: var(--surface);
+        color: var(--text);
     }
 
     .client-history-item {

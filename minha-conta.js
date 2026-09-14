@@ -42,7 +42,7 @@ function saveAccount(data) {
 
 async function enter(data) {
     saveAccount(data);
-    auth.hidden = true;
+    if (auth) auth.hidden = true;
     panel.hidden = false;
     document.getElementById('accountGreeting').textContent = `Olá, ${data.client.name}`;
     await showSection('personal');
@@ -58,7 +58,8 @@ async function showSection(section) {
         localStorage.removeItem('smf-account');
         account = null;
         panel.hidden = true;
-        auth.hidden = false;
+        if (auth) auth.hidden = false;
+        else window.location.href = '/index.html#agendamento';
         return;
     }
 
@@ -165,5 +166,8 @@ if (account) {
     request('/me').then((client) => enter({ ...account, client })).catch(() => {
         localStorage.removeItem('smf-account');
         account = null;
+        window.location.replace('/index.html?auth=account');
     });
+} else {
+    window.location.replace('/index.html?auth=account');
 }

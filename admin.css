@@ -606,6 +606,10 @@
     color: var(--text);
 }
 
+.appointment-mobile-details {
+    display: none;
+}
+
 .status-badge {
     display: inline-flex;
     justify-content: center;
@@ -619,22 +623,57 @@
 }
 
 .status-pending {
-    background: var(--surface-2);
+    border-color: #ead590;
+    background: #fff7d8;
+    color: #816312;
 }
 
-.status-confirmed,
+.status-confirmed {
+    border-color: #bfd0ef;
+    background: #edf3ff;
+    color: #3b619b;
+}
+
 .status-in_progress {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: var(--accent-contrast);
+    border-color: #d5c2e9;
+    background: #f5edfc;
+    color: #765295;
 }
 
 .status-completed {
-    color: var(--text);
+    border-color: #abd6bc;
+    background: #e8f6ec;
+    color: #277343;
 }
 
-.status-cancelled,
+.status-cancelled {
+    border-color: #e2b5b5;
+    background: #fff0f0;
+    color: #a14747;
+}
+
 .status-no_show {
+    border-color: #edc6a7;
+    background: #fff3e8;
+    color: #a55c2b;
+}
+
+.maintenance-status-awaiting {
+    border-color: #ead590;
+    background: #fff7d8;
+    color: #816312;
+}
+
+.maintenance-status-reminder_sent,
+.maintenance-status-rescheduled {
+    border-color: #abd6bc;
+    background: #e8f6ec;
+    color: #277343;
+}
+
+.maintenance-status-cancelled {
+    border-color: #e2b5b5;
+    background: #fff0f0;
     color: #a14747;
 }
 
@@ -779,6 +818,85 @@
 
 .appointment-feedback.is-error {
     color: #a14747;
+}
+
+.maintenance-date-form {
+    margin-top: 1.2rem;
+    padding-top: 1.2rem;
+    border-top: 1px solid var(--line);
+}
+
+.maintenance-date-form label {
+    display: block;
+    margin-bottom: .4rem;
+    color: var(--text-soft);
+    font-size: .8rem;
+}
+
+.maintenance-date-form > div {
+    display: flex;
+    gap: .6rem;
+}
+
+.maintenance-date-form input {
+    min-height: 40px;
+    min-width: 0;
+    flex: 1;
+    padding: .55rem .65rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    outline: none;
+    background: var(--bg);
+    color: var(--text);
+    font: 400 .84rem 'Jost', sans-serif;
+}
+
+.maintenance-date-save {
+    padding: .55rem .8rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--surface-2);
+    color: var(--text-soft);
+    font: 500 .78rem 'Jost', sans-serif;
+    cursor: pointer;
+}
+
+.maintenance-reminder-action {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 1.6rem;
+    padding-top: 1.4rem;
+    border-top: 1px solid var(--line);
+    text-align: center;
+}
+
+.maintenance-reminder-button {
+    min-width: min(100%, 240px);
+    padding: .7rem 1.2rem;
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-pill);
+    background: var(--accent);
+    color: var(--accent-contrast);
+    font: 500 .84rem 'Jost', sans-serif;
+    cursor: pointer;
+    transition: opacity var(--transicao), transform var(--transicao);
+}
+
+.maintenance-reminder-button:hover,
+.maintenance-reminder-button:focus-visible {
+    opacity: .82;
+    outline: none;
+    transform: translateY(-1px);
+}
+
+.maintenance-reminder-button:disabled {
+    cursor: not-allowed;
+    opacity: .5;
+}
+
+.maintenance-reminder-action .appointment-feedback {
+    margin: .7rem 0 0;
 }
 
 .appointment-mobile-phone {
@@ -1014,29 +1132,99 @@
     }
 
     .appointment-table tr {
-        padding: .2rem .8rem;
+        padding: 1rem;
         border: 1px solid var(--line);
         border-radius: var(--radius-sm);
     }
 
     .appointment-table td {
-        display: grid;
-        grid-template-columns: 92px minmax(0, 1fr);
-        gap: .7rem;
-        padding: .65rem 0;
+        display: block;
+        padding: .2rem 0;
     }
 
     .appointment-table td::before {
-        color: var(--text-faint);
-        font-size: .64rem;
-        font-weight: 500;
-        letter-spacing: .08em;
-        text-transform: uppercase;
-        content: attr(data-label);
+        display: none;
     }
 
     .appointment-mobile-phone {
-        display: grid;
+        display: block;
+    }
+
+    .appointment-table td:first-child {
+        margin-bottom: .32rem;
+        color: var(--text);
+        font-size: .98rem;
+        font-weight: 600;
+    }
+
+    .appointment-table td:not(:first-child):not(:last-child) {
+        color: var(--text-soft);
+        font-size: .78rem;
+        font-weight: 300;
+        line-height: 1.45;
+        opacity: .52;
+    }
+
+    .appointment-table td:not(:first-child):not(:last-child) small {
+        font: inherit;
+    }
+
+    .appointment-table td:not(:first-child):not(:last-child) .status-badge {
+        border-color: var(--line);
+        font-weight: 400;
+        opacity: .74;
+    }
+
+    .appointment-table td:last-child {
+        margin-top: .9rem;
+        padding-top: .85rem;
+        border-top: 1px solid var(--line);
+    }
+
+    .appointment-actions {
+        justify-content: center;
+    }
+
+    .appointment-actions-select {
+        display: none;
+    }
+
+    .maintenance-details-button {
+        display: none;
+    }
+
+    .maintenance-table .status-badge {
+        opacity: 1 !important;
+    }
+
+    .appointment-mobile-details {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 132px;
+        padding: .58rem 1.1rem;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-pill);
+        background: var(--surface-2);
+        color: var(--text-soft);
+        font: 500 .78rem 'Jost', sans-serif;
+        cursor: pointer;
+        transition: background var(--transicao), color var(--transicao), border-color var(--transicao);
+    }
+
+    .appointment-mobile-details:hover,
+    .appointment-mobile-details:focus-visible {
+        border-color: var(--text-soft);
+        background: var(--surface);
+        color: var(--text);
+    }
+
+    .maintenance-date-form > div {
+        flex-direction: column;
+    }
+
+    .maintenance-date-save {
+        width: 100%;
     }
 
     .appointment-table tr:last-child td:last-child {

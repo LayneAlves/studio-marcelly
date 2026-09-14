@@ -3,7 +3,7 @@
     /* tokens de marca — painéis "ink" permanecem escuros nos dois modos */
     --ink: #121214;
     --ink-soft: #1c1c1f;
-    --ink-softer: #232326;
+    --ink-softer: #2323269b;
     --on-ink: #f2f1ef;
     --on-ink-soft: rgba(242, 241, 239, 0.68);
     --on-ink-faint: rgba(242, 241, 239, 0.38);
@@ -146,8 +146,8 @@ section {
 
 /* Botões sobre painéis escuros */
 .btn-primary {
-    background: var(--on-ink);
-    color: var(--ink);
+    background: var(--ink);
+    color: var(--on-ink);
 }
 
 .btn-primary:hover {
@@ -174,6 +174,68 @@ section {
     background: var(--text);
     color: var(--bg);
 }
+
+/*Sistema de cor dos botões — 2 grupos + 1 classe única por botão*/
+
+.on-dark {
+    background: var(--on-ink);
+    color: var(--ink);
+    border-color: var(--on-ink);
+}
+.on-dark:hover {
+    background: var(--on-ink-soft);
+}
+.on-dark.btn-outline {
+    background: transparent;
+    color: var(--on-ink);
+    border-color: var(--ink-line);
+}
+.on-dark.btn-outline:hover {
+    background: rgba(242, 241, 239, 0.1);
+    color: var(--on-ink);
+}
+
+.on-light {
+    background: var(--accent);
+    color: var(--accent-contrast);
+    border-color: var(--accent);
+}
+.on-light:hover {
+    background: var(--text);
+}
+.on-light.btn-outline {
+    background: transparent;
+    color: var(--text);
+    border-color: var(--text);
+}
+.on-light.btn-outline:hover {
+    background: var(--text);
+    color: var(--bg);
+}
+
+/* Classes únicas — ponto de ajuste individual de cada botão do site.
+   Vazias de propósito: preenchem o valor dos grupos acima até você
+   sobrescrever alguma propriedade (background, color, border-color) aqui. */
+/* .btn-hero-agendar {}
+.btn-hero-galeria {}
+.btn-brows-agendar {}
+.btn-booking-confirmar {}
+.btn-auth-close {}
+.btn-auth-tab-login {}
+.btn-auth-tab-cadastro {}
+.btn-auth-entrar {}
+.btn-auth-criar-conta {}
+.btn-cal-prev {}
+.btn-cal-next {}
+.btn-tab-todas {}
+.btn-tab-mega-brasileiro {}
+.btn-tab-volume-4d {}
+.btn-tab-volume-6d {}
+.btn-tab-volume-brasileiro {}
+.btn-tab-volume-fox {}
+.btn-tab-volume-hibrido {}
+.btn-tab-volume-princesa {}
+.btn-tab-volume-russo {} */
 
 /* Divisor */
 .divider {
@@ -217,16 +279,10 @@ nav {
     gap: 1rem;
 }
 
-.logo {
-    font-family: 'Playfair Display', serif;
-    font-size: 1.5rem;
-    color: var(--on-ink);
-    letter-spacing: 0.02em;
-}
-
-.logo span {
-    color: var(--on-ink-soft);
-    font-style: italic;
+.logo img {
+    display: block;
+    width: 260px;
+    pointer-events: none;
 }
 
 .nav-menu {
@@ -361,6 +417,23 @@ nav {
     justify-content: center;
 }
 
+.booking-auth-dialog .form-msg {
+    color: var(--text-soft);
+}
+
+.booking-auth-dialog .form-msg.is-pending {
+    color: var(--text-soft);
+}
+
+.booking-auth-dialog .form-msg.is-error {
+    color: #9d2323;
+}
+
+.booking-auth-dialog .booking-auth-form .btn:disabled {
+    cursor: wait;
+    opacity: 0.7;
+}
+
 .booking-auth-close {
     position: absolute;
     top: 0.65rem;
@@ -408,6 +481,26 @@ nav {
     color: var(--on-ink);
     overflow: hidden;
     --lash-color-hero: rgba(242, 241, 239, 0.8);
+}
+.curso-watermark {
+    position: absolute;
+    display: flex;
+    font-family: 'Arial Black', 'Helvetica Neue', Arial, sans-serif;
+    font-weight: 900;
+    line-height: 0.78;
+    text-transform: uppercase;
+    white-space: nowrap;
+    pointer-events: none;
+    user-select: none;
+    z-index: 0;
+
+    top: 32vw;
+    left: -0.6rem;
+    font-size: clamp(4rem, 24vw, 28rem);
+    max-width: 48vw;
+    color: var(--on-ink);
+    opacity: 0.07;
+   
 }
 
 .hero::before {
@@ -593,8 +686,8 @@ nav {
     margin-bottom: 1rem;
 }
 
-.brows-content p em {
-    color: var(--on-ink-soft);
+.brows-content p.brows-subtitle em{
+    color: var(--ink-softer);
     font-style: italic;
 }
 
@@ -1271,8 +1364,8 @@ footer span {
         gap: 0.6rem;
     }
 
-    .logo {
-        font-size: 1.25rem;
+    .logo img {
+        width: 170px;
     }
 
     .hero-content h2 {
