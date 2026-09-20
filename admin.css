@@ -574,23 +574,152 @@
     flex-wrap: wrap;
 }
 
-.appointment-actions-select {
-    min-height: 36px;
-    max-width: 84px;
-    width: 100%;
-    padding: .45rem .7rem;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-sm);
-    outline: none;
-    background: var(--bg);
-    color: var(--text-soft);
-    font: 500 .78rem 'Jost', sans-serif;
-    cursor: pointer;
+.action-dropdown {
+    position: relative;
+    display: inline-flex;
+    min-width: 126px;
 }
 
-.appointment-actions-select:focus {
+.action-dropdown-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    min-height: 40px;
+    gap: .7rem;
+    padding: .55rem .75rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: rgba(255, 255, 255, .68);
+    color: var(--text);
+    font: 500 .78rem 'Jost', sans-serif;
+    cursor: pointer;
+    transition: background var(--transicao), border-color var(--transicao), box-shadow var(--transicao);
+}
+
+.action-dropdown-toggle > i {
+    color: var(--text-faint);
+    font-size: .65rem;
+    transition: transform var(--transicao);
+}
+
+.action-dropdown-toggle:hover,
+.action-dropdown-toggle:focus-visible,
+.action-dropdown.is-open .action-dropdown-toggle {
     border-color: var(--text-soft);
+    background: var(--surface);
+    outline: none;
     box-shadow: 0 0 0 3px var(--ring);
+}
+
+.action-dropdown.is-open .action-dropdown-toggle > i {
+    transform: rotate(180deg);
+}
+
+.action-dropdown-menu {
+    position: absolute;
+    z-index: 8;
+    top: calc(100% + .45rem);
+    right: 0;
+    display: grid;
+    min-width: 184px;
+    padding: .35rem;
+    border: 1px solid rgba(20, 20, 20, .12);
+    border-radius: var(--radius-sm);
+    background: rgba(255, 255, 255, .92);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, .12);
+    backdrop-filter: blur(14px);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-5px) scale(.98);
+    transform-origin: top right;
+    transition: opacity var(--transicao), transform var(--transicao), visibility var(--transicao);
+    visibility: hidden;
+}
+
+.action-dropdown.is-open .action-dropdown-menu {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0) scale(1);
+    visibility: visible;
+}
+
+.action-dropdown-item {
+    display: flex;
+    align-items: center;
+    min-height: 40px;
+    gap: .7rem;
+    width: 100%;
+    padding: .55rem .65rem;
+    border: 0;
+    border-radius: calc(var(--radius-sm) - 2px);
+    background: transparent;
+    color: var(--text-soft);
+    font: 500 .78rem 'Jost', sans-serif;
+    text-align: left;
+    cursor: pointer;
+    transition: background var(--transicao), color var(--transicao), transform var(--transicao);
+}
+
+.action-dropdown-item > i {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    color: currentColor;
+    font-size: .82rem;
+}
+
+.action-dropdown-item:hover,
+.action-dropdown-item:focus-visible,
+.action-dropdown-item.is-active {
+    background: var(--surface-2);
+    color: var(--text);
+    outline: none;
+}
+
+.action-dropdown-item:active {
+    transform: scale(.98);
+}
+
+.action-dropdown-item--reschedule {
+    color: #3b619b;
+}
+
+.action-dropdown-item--reschedule:hover,
+.action-dropdown-item--reschedule:focus-visible {
+    background: #edf3ff;
+    color: #2b4d82;
+}
+
+.action-dropdown-item--danger {
+    color: #a14747;
+}
+
+.action-dropdown-item--danger:hover,
+.action-dropdown-item--danger:focus-visible {
+    background: #fff0f0;
+    color: #8a3636;
+}
+
+.action-dropdown-item--warning {
+    color: #a55c2b;
+}
+
+.action-dropdown-item--warning:hover,
+.action-dropdown-item--warning:focus-visible {
+    background: #fff3e8;
+    color: #89451e;
+}
+
+.action-dropdown-item--success {
+    color: #277343;
+}
+
+.action-dropdown-item--success:hover,
+.action-dropdown-item--success:focus-visible {
+    background: #e8f6ec;
+    color: #1d5c34;
 }
 
 .appointment-action {
@@ -1185,11 +1314,7 @@
         justify-content: center;
     }
 
-    .appointment-actions-select {
-        display: none;
-    }
-
-    .maintenance-details-button {
+    .action-dropdown {
         display: none;
     }
 

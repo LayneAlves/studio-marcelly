@@ -61,14 +61,14 @@ const viewOptions = {
         description: 'Painel administrativo do Studio Marcelly Freitas.',
         layout: 'admin',
         adminPage: 'dashboard',
-        pageStyles: ['admin.css?v=20260914-maintenance-3'],
+        pageStyles: ['admin.css?v=20260914-action-dropdowns'],
     },
     clientes: {
         title: 'Clientes | Studio Marcelly Freitas',
         description: '',
         layout: 'admin',
         adminPage: 'clients',
-        pageStyles: ['admin.css?v=20260914-maintenance-3', 'clientes.css'],
+        pageStyles: ['admin.css?v=20260914-action-dropdowns', 'clientes.css'],
     },
 };
 const assetTypes = {

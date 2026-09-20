@@ -249,7 +249,10 @@ adminMenuLinks.forEach((link) => {
 
 
 document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') setAdminMenuState(false);
+    if (event.key === 'Escape') {
+        setAdminMenuState(false);
+        closeActionDropdowns();
+    }
 });
 
 serviceForm.addEventListener('submit', async (event) => {
@@ -356,11 +359,25 @@ async function loadAppointments() {
     } catch (error) { appointmentList.replaceChildren(); appointmentEmptyState.hidden = false; appointmentEmptyState.textContent = error.message; }
 }
 
+const actionMenuIcons = {
+    details: 'fa-regular fa-file-lines',
+    reschedule: 'fa-regular fa-calendar-days',
+    cancelled: 'fa-solid fa-xmark',
+    no_show: 'fa-solid fa-triangle-exclamation',
+    completed: 'fa-solid fa-check',
+};
+
+function actionDropdown({ id, context, label, items }) {
+    const menuId = `${context}-actions-${id}`;
+    const menuItems = items.map((item) => `<button class="action-dropdown-item action-dropdown-item--${item.tone || 'neutral'}" type="button" role="menuitem" data-${context}-action="${item.action}" data-${context}-id="${id}"><i class="${actionMenuIcons[item.action]}" aria-hidden="true"></i><span>${item.label}</span></button>`).join('');
+    return `<div class="action-dropdown" data-action-dropdown><button class="action-dropdown-toggle" type="button" data-action-dropdown-toggle aria-label="${escapeHtml(label)}" aria-haspopup="menu" aria-expanded="false" aria-controls="${menuId}"><span>Ações</span><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></button><div class="action-dropdown-menu" id="${menuId}" role="menu">${menuItems}</div></div>`;
+}
+
 function appointmentActions(appointment) {
-    const options = ['<option value="">Ações</option>', '<option value="details">Detalhes</option>'];
-    if (['pending', 'confirmed'].includes(appointment.status)) options.push('<option value="reschedule">Remarcar</option>', '<option value="cancelled">Cancelar</option>', '<option value="no_show">Não compareceu</option>', '<option value="completed">Concluir</option>');
-    if (appointment.status === 'in_progress') options.push('<option value="cancelled">Cancelar</option>', '<option value="completed">Concluir</option>');
-    return `<select class="appointment-actions-select" data-id="${appointment.id}" aria-label="Ações para ${escapeHtml(appointment.client_name)}">${options.join('')}</select><button class="appointment-mobile-details" type="button" data-appointment-details="${appointment.id}">Ver mais</button>`;
+    const items = [{ action: 'details', label: 'Detalhes' }];
+    if (['pending', 'confirmed'].includes(appointment.status)) items.push({ action: 'reschedule', label: 'Remarcar', tone: 'reschedule' }, { action: 'cancelled', label: 'Cancelar', tone: 'danger' }, { action: 'no_show', label: 'Não compareceu', tone: 'warning' }, { action: 'completed', label: 'Concluir', tone: 'success' });
+    if (appointment.status === 'in_progress') items.push({ action: 'cancelled', label: 'Cancelar', tone: 'danger' }, { action: 'completed', label: 'Concluir', tone: 'success' });
+    return `${actionDropdown({ id: appointment.id, context: 'appointment', label: `Ações para ${appointment.client_name}`, items })}<button class="appointment-mobile-details" type="button" data-appointment-details="${appointment.id}">Ver mais</button>`;
 }
 
 function renderAppointments() {
@@ -412,17 +429,17 @@ async function loadMaintenances() {
     }
 }
 
+function maintenanceActions(maintenance) {
+    const items = [{ action: 'details', label: 'Detalhes' }];
+    return `${actionDropdown({ id: maintenance.id, context: 'maintenance', label: `Ações para ${maintenance.client_name}`, items })}<button class="appointment-mobile-details" type="button" data-maintenance-details="${maintenance.id}">Ver mais</button>`;
+}
+
 function renderMaintenances(maintenances) {
     maintenanceList.replaceChildren();
     maintenanceEmptyState.hidden = maintenances.length > 0;
     maintenances.forEach((maintenance) => {
         const row = document.createElement('tr');
-        row.innerHTML = `<td data-label="Cliente">${escapeHtml(maintenance.client_name)}</td><td class="appointment-mobile-phone" data-label="Telefone">${escapeHtml(maintenance.phone)}</td><td data-label="Serviço realizado">${escapeHtml(maintenance.service_name)}</td><td data-label="Último atendimento">${appointmentDateLabel(maintenance.last_appointment_date)}</td><td data-label="Data prevista">${appointmentDateLabel(maintenance.maintenance_date)}</td><td data-label="Status">${maintenanceBadge(maintenance.status)}</td><td data-label="Ações"><div class="appointment-actions"><button class="appointment-action maintenance-details-button" type="button" data-maintenance-details="${maintenance.id}">Detalhes</button><button class="appointment-mobile-details" type="button" data-maintenance-details="${maintenance.id}">Ver mais</button></div></td>`;
-        const actions = row.querySelector('.appointment-actions');
-        const mobileDetails = actions.querySelector('[data-maintenance-details]');
-        const actionSelect = document.createElement('select');
-        actionSelect.className = 'appointment-actions-select maintenance-actions-select';
-        actionSelect.dataset.maintenanceId = maintenance.id;
+        row.innerHTML = `<td data-label="Cliente">${escapeHtml(maintenance.client_name)}</td><td class="appointment-mobile-phone" data-label="Telefone">${escapeHtml(maintenance.phone)}</td><td data-label="Serviço realizado">${escapeHtml(maintenance.service_name)}</td><td data-label="Último atendimento">${appointmentDateLabel(maintenance.last_appointment_date)}</td><td data-label="Data prevista">${appointmentDateLabel(maintenance.maintenance_date)}</td><td data-label="Status">${maintenanceBadge(maintenance.status)}</td><td data-label="Ações"><div class="appointment-actions">${maintenanceActions(maintenance)}</div></td>`;
         maintenanceList.append(row);
     });
 }
@@ -499,12 +516,54 @@ function appointmentFormHtml(title, appointment = null) { const serviceOptions =
 async function fillAppointmentSlots(excludeId = '') { const date = document.getElementById('appointmentDate').value; const serviceId = document.getElementById('appointmentService').value; const select = document.getElementById('appointmentTime'); if (!date || !serviceId) return; try { const data = await appointmentRequest(`?availability=1&date=${date}&service_id=${serviceId}${excludeId ? `&exclude_id=${excludeId}` : ''}`); select.replaceChildren(new Option('Selecione um horário', '')); data.slots.forEach((time) => select.add(new Option(time, time))); } catch (error) { select.replaceChildren(new Option(error.message, '')); } }
 async function openAppointmentForm(appointment = null) { openDialog(appointmentFormHtml(appointment ? 'Remarcar agendamento' : 'Novo agendamento', appointment)); await loadClientOptions(); const form = document.getElementById('appointmentForm'); const clientSearch = document.getElementById('appointmentClientSearch'); const newFields = document.getElementById('newClientFields'); document.getElementById('newClientToggle').addEventListener('click', () => newFields.hidden = !newFields.hidden); clientSearch.addEventListener('input', () => loadClientOptions(clientSearch.value)); document.getElementById('appointmentDate').addEventListener('change', () => fillAppointmentSlots(appointment?.id)); document.getElementById('appointmentService').addEventListener('change', () => fillAppointmentSlots(appointment?.id)); if (appointment) { document.getElementById('appointmentTime').innerHTML = `<option value="${appointment.start_time}">${appointment.start_time}</option>`; } form.addEventListener('submit', async (event) => { event.preventDefault(); const feedback = document.getElementById('appointmentFormFeedback'); const payload = { client_id: document.getElementById('appointmentClient').value || null, client_name: document.getElementById('newClientName').value, phone: document.getElementById('newClientPhone').value, email: document.getElementById('newClientEmail').value, service_id: document.getElementById('appointmentService').value, date: document.getElementById('appointmentDate').value, start_time: document.getElementById('appointmentTime').value, notes: document.getElementById('appointmentNotes').value, allow_override: document.getElementById('appointmentOverride').checked }; try { await appointmentRequest(appointment ? `?id=${appointment.id}` : '', { method: appointment ? 'PUT' : 'POST', body: JSON.stringify(payload) }); closeDialog(); await loadAppointments(); } catch (error) { feedback.textContent = error.message; feedback.classList.add('is-error'); } }); }
 
+function closeActionDropdowns(except = null) {
+    document.querySelectorAll('[data-action-dropdown].is-open').forEach((dropdown) => {
+        if (dropdown !== except) {
+            dropdown.classList.remove('is-open');
+            dropdown.querySelector('[data-action-dropdown-toggle]').setAttribute('aria-expanded', 'false');
+        }
+    });
+}
+
+document.addEventListener('click', (event) => {
+    const toggle = event.target.closest('[data-action-dropdown-toggle]');
+    if (toggle) {
+        const dropdown = toggle.closest('[data-action-dropdown]');
+        const shouldOpen = !dropdown.classList.contains('is-open');
+        closeActionDropdowns(dropdown);
+        dropdown.classList.toggle('is-open', shouldOpen);
+        toggle.setAttribute('aria-expanded', String(shouldOpen));
+        return;
+    }
+    if (!event.target.closest('[data-action-dropdown]')) closeActionDropdowns();
+});
+
 document.getElementById('newAppointmentButton').addEventListener('click', () => openAppointmentForm());
 document.getElementById('appointmentDialogClose').addEventListener('click', closeDialog);
-appointmentList.addEventListener('change', (event) => { const select = event.target.closest('.appointment-actions-select'); if (!select || !select.value) return; const appointment = appointments.find((item) => item.id === select.dataset.id); const action = select.value; select.value = ''; if (action === 'details') showAppointmentDetails(select.dataset.id); if (action === 'reschedule' && appointment) openAppointmentForm(appointment); if (['cancelled', 'no_show', 'completed'].includes(action)) changeAppointmentStatus(select.dataset.id, action); });
-appointmentList.addEventListener('click', (event) => { const button = event.target.closest('[data-appointment-details]'); if (button) showAppointmentDetails(button.dataset.appointmentDetails); });
-maintenanceList.addEventListener('change', (event) => { const select = event.target.closest('.maintenance-actions-select'); if (!select || !select.value) return; const action = select.value; select.value = ''; if (action === 'details') showMaintenanceDetails(select.dataset.maintenanceId); });
-maintenanceList.addEventListener('click', (event) => { const button = event.target.closest('[data-maintenance-details]'); if (button) showMaintenanceDetails(button.dataset.maintenanceDetails); });
+appointmentList.addEventListener('click', (event) => {
+    const actionButton = event.target.closest('[data-appointment-action]');
+    if (actionButton) {
+        const { appointmentAction: action, appointmentId: id } = actionButton.dataset;
+        const appointment = appointments.find((item) => item.id === id);
+        closeActionDropdowns();
+        if (action === 'details') showAppointmentDetails(id);
+        if (action === 'reschedule' && appointment) openAppointmentForm(appointment);
+        if (['cancelled', 'no_show', 'completed'].includes(action)) changeAppointmentStatus(id, action);
+        return;
+    }
+    const button = event.target.closest('[data-appointment-details]');
+    if (button) showAppointmentDetails(button.dataset.appointmentDetails);
+});
+maintenanceList.addEventListener('click', (event) => {
+    const actionButton = event.target.closest('[data-maintenance-action]');
+    if (actionButton) {
+        closeActionDropdowns();
+        if (actionButton.dataset.maintenanceAction === 'details') showMaintenanceDetails(actionButton.dataset.maintenanceId);
+        return;
+    }
+    const button = event.target.closest('[data-maintenance-details]');
+    if (button) showMaintenanceDetails(button.dataset.maintenanceDetails);
+});
 appointmentsCalendarView.addEventListener('click', (event) => { const button = event.target.closest('[data-id]'); if (button) showAppointmentDetails(button.dataset.id); });
 document.querySelectorAll('[data-quick]').forEach((button) => button.addEventListener('click', () => { appointmentQuickFilter = button.dataset.quick; document.querySelectorAll('[data-quick]').forEach((item) => item.classList.toggle('is-active', item === button)); loadAppointments(); }));
 [appointmentDateFilter, appointmentServiceFilter, appointmentStatusFilter].forEach((field) => field.addEventListener('change', () => { appointmentQuickFilter = ''; document.querySelectorAll('[data-quick]').forEach((item) => item.classList.remove('is-active')); loadAppointments(); }));
