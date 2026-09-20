@@ -33,76 +33,74 @@
     box-shadow: 0 0 0 3px var(--ring);
 }
 
-.clients-table {
-    width: 100%;
-    border-collapse: collapse;
-    text-align: left;
-}
-
-.clients-table th,
-.clients-table td {
+.clients-cards {
+    display: grid;
+    gap: 1rem;
     padding: 1rem;
-    border-bottom: 1px solid var(--line);
-    vertical-align: middle;
 }
 
-.clients-table th {
-    color: var(--text-soft);
-    font-size: .66rem;
-    font-weight: 500;
-    letter-spacing: .1em;
-    text-transform: uppercase;
-}
-
-.clients-table td {
-    color: var(--text-soft);
-    font-size: .86rem;
-}
-
-.clients-table td:first-child {
-    color: var(--text);
-    font-weight: 500;
-}
-
-.client-count {
+.client-card-summary {
     display: inline-flex;
-    min-width: 1.5rem;
-    justify-content: center;
-    padding: .15rem .4rem;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: .4rem;
+    min-height: 34px;
+    padding: .42rem .65rem;
+    border: 1px solid var(--line);
     border-radius: var(--radius-pill);
     background: var(--surface-2);
-    color: var(--text);
-    font-size: .75rem;
-}
-
-.client-profile-head {
-    padding-right: 2rem;
-}
-
-.client-profile-head p {
     color: var(--text-soft);
+    font: 500 .7rem 'Jost', sans-serif;
 }
 
-.client-history {
-    margin-top: 1.5rem;
-    border-top: 1px solid var(--line);
+.client-card-summary i {
+    color: var(--text-faint);
 }
 
-.client-history h3 {
-    margin: 1.2rem 0 .7rem;
-    font: 500 1rem 'Jost', sans-serif;
+.client-card-counts {
+    font: inherit;
+    white-space: normal;
+}
+
+.client-history-card {
+    padding: 1.1rem 1.15rem;
+}
+
+.client-history-card .booking-detail-section-title {
+    margin-bottom: .75rem;
+}
+
+.client-history-list {
+    display: grid;
 }
 
 .client-history-item {
     display: flex;
+    align-items: center;
     justify-content: space-between;
     gap: 1rem;
     padding: .8rem 0;
-    border-bottom: 1px solid var(--line);
 }
 
-.client-history-item small {
+.client-history-item + .client-history-item {
+    border-top: 1px solid var(--line);
+}
+
+.client-history-item > div {
+    min-width: 0;
+}
+
+.client-history-item strong {
+    display: block;
+    color: var(--text);
+    font: 500 .88rem 'Jost', sans-serif;
+    overflow-wrap: anywhere;
+}
+
+.client-history-item p {
+    margin: .18rem 0 0;
     color: var(--text-soft);
+    font: 400 .76rem 'Jost', sans-serif;
 }
 
 .client-form {
@@ -135,99 +133,25 @@
     font-size: .84rem;
 }
 
-@media (max-width:560px) {
+@media (max-width: 560px) {
     .clients-module .admin-page-heading {
         flex-direction: column;
         align-items: stretch;
     }
 
-    .clients-table thead {
-        display: none;
-    }
-
-    .clients-table,
-    .clients-table tbody,
-    .clients-table tr,
-    .clients-table td {
-        display: block;
-        width: 100%;
-    }
-
-    .clients-table tbody {
-        display: grid;
-        gap: .8rem;
+    .clients-cards {
         padding: .8rem;
     }
 
-    .clients-table tr {
-        padding: 1rem;
-        border: 1px solid var(--line);
-        border-radius: var(--radius-sm);
-    }
-
-    .clients-table td {
-        display: block;
-        padding: .2rem 0;
-    }
-
-    .clients-table td::before {
-        display: none;
-    }
-
-    .clients-table td:first-child {
-        margin-bottom: .32rem;
-        color: var(--text);
-        font-size: .98rem;
-        font-weight: 600;
-    }
-
-    .clients-table td:not(:first-child):not(:last-child) {
-        color: var(--text-soft);
-        font-size: .78rem;
-        font-weight: 300;
-        line-height: 1.45;
-        opacity: .52;
-    }
-
-    .clients-table td:not(:first-child):not(:last-child) small {
-        font: inherit;
-    }
-
-    .clients-table td:not(:first-child):not(:last-child) .client-count {
-        font-weight: 400;
-        opacity: .74;
-    }
-
-    .clients-table td:last-child {
-        margin-top: .9rem;
-        padding-top: .85rem;
-        border-top: 1px solid var(--line);
-        text-align: center;
-    }
-
-    .client-profile-action {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-width: 132px;
-        padding: .58rem 1.1rem;
-        border: 1px solid var(--line);
-        border-radius: var(--radius-pill);
-        background: var(--surface-2);
-        color: var(--text-soft);
-        font: 500 .78rem 'Jost', sans-serif;
-        transition: background var(--transicao), color var(--transicao), border-color var(--transicao);
-    }
-
-    .client-profile-action:hover,
-    .client-profile-action:focus-visible {
-        border-color: var(--text-soft);
-        background: var(--surface);
-        color: var(--text);
-    }
-
     .client-history-item {
+        align-items: flex-start;
         flex-direction: column;
-        gap: .25rem;
+        gap: .45rem;
+    }
+}
+
+@media (max-width: 420px) {
+    .client-card-summary {
+        align-self: flex-start;
     }
 }

@@ -367,10 +367,10 @@ const actionMenuIcons = {
     completed: 'fa-solid fa-check',
 };
 
-function actionDropdown({ id, context, label, items }) {
-    const menuId = `${context}-actions-${id}`;
+function actionDropdown({ id, context, label, items, triggerContent = '<span>Ações</span>', triggerClass = '', menuKey = '' }) {
+    const menuId = `${context}-actions-${id}${menuKey ? `-${menuKey}` : ''}`;
     const menuItems = items.map((item) => `<button class="action-dropdown-item action-dropdown-item--${item.tone || 'neutral'}" type="button" role="menuitem" data-${context}-action="${item.action}" data-${context}-id="${id}"><i class="${actionMenuIcons[item.action]}" aria-hidden="true"></i><span>${item.label}</span></button>`).join('');
-    return `<div class="action-dropdown" data-action-dropdown><button class="action-dropdown-toggle" type="button" data-action-dropdown-toggle aria-label="${escapeHtml(label)}" aria-haspopup="menu" aria-expanded="false" aria-controls="${menuId}"><span>Ações</span><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></button><div class="action-dropdown-menu" id="${menuId}" role="menu">${menuItems}</div></div>`;
+    return `<div class="action-dropdown" data-action-dropdown><button class="action-dropdown-toggle ${triggerClass}" type="button" data-action-dropdown-toggle aria-label="${escapeHtml(label)}" aria-haspopup="menu" aria-expanded="false" aria-controls="${menuId}">${triggerContent}<i class="fa-solid fa-chevron-down" aria-hidden="true"></i></button><div class="action-dropdown-menu" id="${menuId}" role="menu">${menuItems}</div></div>`;
 }
 
 function appointmentActions(appointment) {
@@ -380,12 +380,40 @@ function appointmentActions(appointment) {
     return `${actionDropdown({ id: appointment.id, context: 'appointment', label: `Ações para ${appointment.client_name}`, items })}<button class="appointment-mobile-details" type="button" data-appointment-details="${appointment.id}">Ver mais</button>`;
 }
 
+const appointmentStatusIcons = {
+    pending: 'fa-regular fa-clock',
+    confirmed: 'fa-regular fa-circle-check',
+    in_progress: 'fa-solid fa-spinner',
+    completed: 'fa-solid fa-check',
+    cancelled: 'fa-solid fa-xmark',
+    no_show: 'fa-solid fa-triangle-exclamation',
+};
+
+function appointmentStatusControl(appointment, { includeDetails = false, includeReschedule = false, menuKey = 'modal-status' } = {}) {
+    const transitions = {
+        pending: [{ action: 'completed', label: 'Concluir', tone: 'success' }, { action: 'cancelled', label: 'Cancelar', tone: 'danger' }, { action: 'no_show', label: 'Não compareceu', tone: 'warning' }],
+        confirmed: [{ action: 'completed', label: 'Concluir', tone: 'success' }, { action: 'cancelled', label: 'Cancelar', tone: 'danger' }, { action: 'no_show', label: 'Não compareceu', tone: 'warning' }],
+        in_progress: [{ action: 'completed', label: 'Concluir', tone: 'success' }, { action: 'cancelled', label: 'Cancelar', tone: 'danger' }],
+    };
+    const status = appointment.status;
+    const label = statusLabels[status] || status;
+    const triggerContent = `<span><i class="${appointmentStatusIcons[status] || 'fa-regular fa-circle'}" aria-hidden="true"></i>${label}</span>`;
+    const items = [...(transitions[status] || [])];
+    if (includeDetails) items.unshift({ action: 'details', label: 'Detalhes' });
+    if (includeReschedule && ['pending', 'confirmed'].includes(status)) items.splice(includeDetails ? 1 : 0, 0, { action: 'reschedule', label: 'Remarcar', tone: 'reschedule' });
+    if (!items.length) return `<span class="appointment-status-toggle is-static status-${status}">${triggerContent}</span>`;
+    return actionDropdown({ id: appointment.id, context: 'appointment', label: `Alterar status: ${label}`, items, triggerContent, triggerClass: `appointment-status-toggle status-${status}`, menuKey });
+}
+
 function renderAppointments() {
-    appointmentList.replaceChildren(); appointmentEmptyState.hidden = appointments.length > 0;
+    appointmentList.replaceChildren();
+    appointmentEmptyState.hidden = appointments.length > 0;
     appointments.forEach((appointment) => {
-        const row = document.createElement('tr');
-        row.innerHTML = `<td data-label="Cliente">${escapeHtml(appointment.client_name)}</td><td class="appointment-mobile-phone" data-label="Número">${escapeHtml(appointment.phone)}</td><td data-label="Serviço">${escapeHtml(appointment.service_name)}</td><td data-label="Data e horário">${appointmentDateLabel(appointment.date)}<br><small>${appointment.start_time} – ${appointment.end_time}</small></td><td data-label="Status"><span class="status-badge status-${appointment.status}">${statusLabels[appointment.status]}</span></td><td data-label="Ações"><div class="appointment-actions">${appointmentActions(appointment)}</div></td>`;
-        appointmentList.append(row);
+        const card = document.createElement('article');
+        const initial = String(appointment.client_name || '?').trim().charAt(0).toUpperCase() || '?';
+        card.className = 'appointment-card';
+        card.innerHTML = `<header class="appointment-card-header"><div class="appointment-card-client"><span class="appointment-card-avatar" aria-hidden="true">${escapeHtml(initial)}</span><div><h3>${escapeHtml(appointment.client_name)}</h3><p>${escapeHtml(appointment.service_name)}</p></div></div><div class="appointment-card-status">${appointmentStatusControl(appointment, { includeDetails: true, includeReschedule: true, menuKey: 'card-status' })}</div></header><div class="appointment-card-divider" aria-hidden="true"></div><div class="appointment-card-body"><div class="appointment-card-data"><div class="appointment-card-data-item"><span class="appointment-card-icon"><i class="fa-solid fa-phone" aria-hidden="true"></i></span><div><p>Telefone</p><strong>${escapeHtml(appointment.phone)}</strong></div></div><div class="appointment-card-data-item"><span class="appointment-card-icon"><i class="fa-regular fa-calendar" aria-hidden="true"></i></span><div><p>Data</p><strong>${appointmentDateLabel(appointment.date)}</strong></div></div><div class="appointment-card-data-item"><span class="appointment-card-icon"><i class="fa-regular fa-clock" aria-hidden="true"></i></span><div><p>Horário</p><strong>${appointment.start_time} — ${appointment.end_time}</strong></div></div><div class="appointment-card-data-item"><span class="appointment-card-icon"><i class="fa-solid fa-layer-group" aria-hidden="true"></i></span><div><p>Serviço</p><strong>${escapeHtml(appointment.service_name)}</strong></div></div></div><svg class="appointment-card-lashes" viewBox="0 0 170 50" aria-hidden="true"><path d="M18 38C45 15 72 15 98 38M45 38C61 20 77 20 92 38M100 38c16-14 31-14 47 0M57 30l-7-14M68 26l-3-16M80 25V9M92 26l4-16M104 29l8-14"/></svg></div><div class="appointment-card-divider" aria-hidden="true"></div><footer class="appointment-card-footer"><button class="appointment-card-details" type="button" data-appointment-details="${appointment.id}">Ver mais <span aria-hidden="true">›</span></button></footer>`;
+        appointmentList.append(card);
     });
     renderAppointmentCalendar();
 }
@@ -438,9 +466,11 @@ function renderMaintenances(maintenances) {
     maintenanceList.replaceChildren();
     maintenanceEmptyState.hidden = maintenances.length > 0;
     maintenances.forEach((maintenance) => {
-        const row = document.createElement('tr');
-        row.innerHTML = `<td data-label="Cliente">${escapeHtml(maintenance.client_name)}</td><td class="appointment-mobile-phone" data-label="Telefone">${escapeHtml(maintenance.phone)}</td><td data-label="Serviço realizado">${escapeHtml(maintenance.service_name)}</td><td data-label="Último atendimento">${appointmentDateLabel(maintenance.last_appointment_date)}</td><td data-label="Data prevista">${appointmentDateLabel(maintenance.maintenance_date)}</td><td data-label="Status">${maintenanceBadge(maintenance.status)}</td><td data-label="Ações"><div class="appointment-actions">${maintenanceActions(maintenance)}</div></td>`;
-        maintenanceList.append(row);
+        const card = document.createElement('article');
+        const initial = String(maintenance.client_name || '?').trim().charAt(0).toUpperCase() || '?';
+        card.className = 'appointment-card maintenance-card';
+        card.innerHTML = `<header class="appointment-card-header"><div class="appointment-card-client"><span class="appointment-card-avatar" aria-hidden="true">${escapeHtml(initial)}</span><div><h3>${escapeHtml(maintenance.client_name)}</h3><p>${escapeHtml(maintenance.service_name)}</p></div></div><div class="appointment-card-status">${maintenanceBadge(maintenance.status)}</div></header><div class="appointment-card-divider" aria-hidden="true"></div><div class="appointment-card-body"><div class="appointment-card-data"><div class="appointment-card-data-item"><span class="appointment-card-icon"><i class="fa-solid fa-phone" aria-hidden="true"></i></span><div><p>Telefone</p><strong>${escapeHtml(maintenance.phone)}</strong></div></div><div class="appointment-card-data-item"><span class="appointment-card-icon"><i class="fa-regular fa-calendar" aria-hidden="true"></i></span><div><p>Último atendimento</p><strong>${appointmentDateLabel(maintenance.last_appointment_date)}</strong></div></div><div class="appointment-card-data-item"><span class="appointment-card-icon"><i class="fa-regular fa-clock" aria-hidden="true"></i></span><div><p>Data prevista</p><strong>${appointmentDateLabel(maintenance.maintenance_date)}</strong></div></div><div class="appointment-card-data-item"><span class="appointment-card-icon"><i class="fa-solid fa-layer-group" aria-hidden="true"></i></span><div><p>Serviço realizado</p><strong>${escapeHtml(maintenance.service_name)}</strong></div></div></div><svg class="appointment-card-lashes" viewBox="0 0 170 50" aria-hidden="true"><path d="M18 38C45 15 72 15 98 38M45 38C61 20 77 20 92 38M100 38c16-14 31-14 47 0M57 30l-7-14M68 26l-3-16M80 25V9M92 26l4-16M104 29l8-14"/></svg></div><div class="appointment-card-divider" aria-hidden="true"></div><footer class="appointment-card-footer"><button class="appointment-card-details" type="button" data-maintenance-details="${maintenance.id}">Ver mais <span aria-hidden="true">›</span></button></footer>`;
+        maintenanceList.append(card);
     });
 }
 
@@ -460,7 +490,8 @@ function reminderMessage(maintenance) {
 async function showMaintenanceDetails(id) {
     try {
         const maintenance = await maintenanceRequest(`?id=${encodeURIComponent(id)}`);
-        openDialog(`<h2>Detalhes da manutenção</h2><p class="admin-page-heading">${escapeHtml(maintenance.service_name)}</p><dl class="appointment-details"><div><dt>Cliente</dt><dd>${escapeHtml(maintenance.client_name)}</dd></div><div><dt>Telefone</dt><dd>${escapeHtml(maintenance.phone)}</dd></div><div><dt>Serviço realizado</dt><dd>${escapeHtml(maintenance.service_name)}</dd></div><div><dt>Último atendimento</dt><dd>${appointmentDateLabel(maintenance.last_appointment_date)}</dd></div><div><dt>Data prevista</dt><dd id="maintenanceDateValue">${appointmentDateLabel(maintenance.maintenance_date)}</dd></div><div><dt>Status</dt><dd>${maintenanceBadge(maintenance.status)}</dd></div><div><dt>Último lembrete</dt><dd>${maintenanceDateTimeLabel(maintenance.reminder_sent_at)}</dd></div></dl><form class="maintenance-date-form" id="maintenanceDateForm"><label for="maintenanceDateInput">Alterar data prevista</label><div><input id="maintenanceDateInput" type="date" value="${maintenance.maintenance_date}" required><button class="maintenance-date-save" type="submit">Salvar data</button></div><p class="appointment-feedback" id="maintenanceDateFeedback"></p></form><div class="maintenance-reminder-action"><button class="maintenance-reminder-button" id="sendMaintenanceReminder" type="button" ${maintenance.status === 'cancelled' ? 'disabled' : ''}>Enviar lembrete agora</button><p class="appointment-feedback" id="maintenanceReminderFeedback"></p></div>`);
+        const initial = String(maintenance.client_name || '?').trim().charAt(0).toUpperCase() || '?';
+        openDialog(`<article class="booking-detail-modal maintenance-detail-modal"><header class="booking-detail-header"><div><p class="booking-detail-eyebrow">Studio Marcelly Freitas</p><h2>Detalhes da manutenção</h2><p class="booking-detail-service">${escapeHtml(maintenance.service_name)}</p></div><svg class="booking-detail-lashes" viewBox="0 0 170 50" aria-hidden="true"><path d="M18 38C45 15 72 15 98 38M45 38C61 20 77 20 92 38M100 38c16-14 31-14 47 0M57 30l-7-14M68 26l-3-16M80 25V9M92 26l4-16M104 29l8-14"/></svg></header><section class="booking-detail-card booking-detail-client-card"><div class="booking-detail-client"><span class="booking-detail-avatar" aria-hidden="true">${escapeHtml(initial)}</span><div><p class="booking-detail-label">Cliente</p><strong>${escapeHtml(maintenance.client_name)}</strong></div></div><div class="booking-detail-card-divider" aria-hidden="true"></div><div class="booking-detail-contact"><p><i class="fa-solid fa-phone" aria-hidden="true"></i><span>${escapeHtml(maintenance.phone)}</span></p><p><i class="fa-regular fa-envelope" aria-hidden="true"></i><span>${escapeHtml(maintenance.email || 'E-mail não informado')}</span></p></div></section><section class="booking-detail-card booking-detail-info-card"><p class="booking-detail-section-title">Informações da manutenção</p><div class="booking-detail-info-list"><div class="booking-detail-info-row"><span class="booking-detail-icon"><i class="fa-solid fa-layer-group" aria-hidden="true"></i></span><div><p class="booking-detail-label">Serviço realizado</p><strong>${escapeHtml(maintenance.service_name)}</strong></div></div><div class="booking-detail-info-row"><span class="booking-detail-icon"><i class="fa-regular fa-calendar" aria-hidden="true"></i></span><div><p class="booking-detail-label">Último atendimento</p><strong>${appointmentDateLabel(maintenance.last_appointment_date)}</strong></div></div><div class="booking-detail-info-row"><span class="booking-detail-icon"><i class="fa-regular fa-clock" aria-hidden="true"></i></span><div><p class="booking-detail-label">Data prevista</p><strong id="maintenanceDateValue">${appointmentDateLabel(maintenance.maintenance_date)}</strong></div></div><div class="booking-detail-info-row"><span class="booking-detail-icon"><i class="fa-regular fa-bell" aria-hidden="true"></i></span><div><p class="booking-detail-label">Último lembrete</p><strong>${maintenanceDateTimeLabel(maintenance.reminder_sent_at)}</strong></div></div></div></section><footer class="booking-detail-footer"><section class="booking-detail-card booking-detail-meta-card"><p class="booking-detail-label">Status</p><div class="maintenance-detail-status">${maintenanceBadge(maintenance.status)}</div></section><section class="booking-detail-card booking-detail-meta-card"><p class="booking-detail-label">Manutenção recomendada</p><p class="booking-detail-created"><i class="fa-regular fa-hourglass-half" aria-hidden="true"></i><strong>${maintenance.maintenance_days} dias</strong></p></section></footer><section class="booking-detail-card maintenance-detail-date-card"><form class="maintenance-date-form" id="maintenanceDateForm"><label for="maintenanceDateInput">Alterar data prevista</label><div><input id="maintenanceDateInput" type="date" value="${maintenance.maintenance_date}" required><button class="maintenance-date-save" type="submit">Salvar data</button></div><p class="appointment-feedback" id="maintenanceDateFeedback"></p></form></section><div class="maintenance-reminder-action"><button class="maintenance-reminder-button" id="sendMaintenanceReminder" type="button" ${maintenance.status === 'cancelled' ? 'disabled' : ''}>Enviar lembrete agora</button><p class="appointment-feedback" id="maintenanceReminderFeedback"></p></div></article>`, 'appointment-details');
 
         document.getElementById('maintenanceDateForm').addEventListener('submit', async (event) => {
             event.preventDefault();
@@ -496,18 +527,36 @@ async function showMaintenanceDetails(id) {
     }
 }
 
-function openDialog(content) { appointmentDialogContent.innerHTML = content; appointmentDialog.showModal(); }
-function closeDialog() { if (appointmentDialog.open) appointmentDialog.close(); }
+function openDialog(content, variant = '') {
+    appointmentDialog.classList.toggle('is-appointment-details-dialog', variant === 'appointment-details');
+    appointmentDialogContent.innerHTML = content;
+    appointmentDialog.showModal();
+}
+function closeDialog() {
+    if (appointmentDialog.open) appointmentDialog.close();
+    appointmentDialog.classList.remove('is-appointment-details-dialog');
+}
 
 async function showAppointmentDetails(id) {
-    try { const appointment = await appointmentRequest(`?id=${id}`); const remaining = appointment.price - (appointment.deposit || 0);
-        openDialog(`<h2>Detalhes do agendamento</h2><p class="admin-page-heading">${escapeHtml(appointment.service_name)}</p><dl class="appointment-details"><div><dt>Cliente</dt><dd>${escapeHtml(appointment.client_name)}</dd></div><div><dt>Telefone</dt><dd>${escapeHtml(appointment.phone)}</dd></div><div><dt>E-mail</dt><dd>${escapeHtml(appointment.email || 'Não informado')}</dd></div><div><dt>Data</dt><dd>${appointmentDateLabel(appointment.date)}</dd></div><div><dt>Horário</dt><dd>${appointment.start_time} – ${appointment.end_time}</dd></div><div><dt>Duração</dt><dd>${appointment.duration_minutes} minutos</dd></div><div><dt>Valor</dt><dd>${formatCurrency(appointment.price)}</dd></div><div><dt>Sinal</dt><dd>${appointment.deposit === null ? 'Não informado' : formatCurrency(appointment.deposit)}</dd></div><div><dt>Valor restante</dt><dd>${formatCurrency(remaining)}</dd></div><div><dt>Status</dt><dd><span class="status-badge status-${appointment.status}">${statusLabels[appointment.status]}</span></dd></div><div><dt>Criado em</dt><dd>${new Date(appointment.created_at.replace(' ', 'T')).toLocaleString('pt-BR')}</dd></div></dl>`);
+    try {
+        const appointment = await appointmentRequest(`?id=${id}`);
+        const remaining = appointment.price - (appointment.deposit || 0);
+        const createdAt = new Date(appointment.created_at.replace(' ', 'T')).toLocaleString('pt-BR');
+        openDialog(`<article class="booking-detail-modal"><header class="booking-detail-header"><div><p class="booking-detail-eyebrow">Studio Marcelly Freitas</p><h2>Detalhes do agendamento</h2><p class="booking-detail-service">${escapeHtml(appointment.service_name)}</p></div></header><section class="booking-detail-card booking-detail-client-card"><div class="booking-detail-client"><span class="booking-detail-avatar"><i class="fa-regular fa-user" aria-hidden="true"></i></span><div><p class="booking-detail-label">Cliente</p><strong>${escapeHtml(appointment.client_name)}</strong></div></div><div class="booking-detail-card-divider" aria-hidden="true"></div><div class="booking-detail-contact"><p><i class="fa-solid fa-phone" aria-hidden="true"></i><span>${escapeHtml(appointment.phone)}</span></p><p><i class="fa-regular fa-envelope" aria-hidden="true"></i><span>${escapeHtml(appointment.email || 'E-mail não informado')}</span></p></div></section><section class="booking-detail-card booking-detail-info-card"><p class="booking-detail-section-title">Informações do agendamento</p><div class="booking-detail-info-list"><div class="booking-detail-info-row"><span class="booking-detail-icon"><i class="fa-regular fa-calendar" aria-hidden="true"></i></span><div><p class="booking-detail-label">Data</p><strong>${appointmentDateLabel(appointment.date)}</strong></div></div><div class="booking-detail-info-row"><span class="booking-detail-icon"><i class="fa-regular fa-clock" aria-hidden="true"></i></span><div><p class="booking-detail-label">Horário</p><strong>${appointment.start_time} — ${appointment.end_time}</strong></div></div><div class="booking-detail-info-row"><span class="booking-detail-icon"><i class="fa-regular fa-hourglass-half" aria-hidden="true"></i></span><div><p class="booking-detail-label">Duração</p><strong>${appointment.duration_minutes} minutos</strong></div></div></div></section><section class="booking-detail-card booking-detail-values-card"><div class="booking-detail-value"><span class="booking-detail-icon"><i class="fa-regular fa-credit-card" aria-hidden="true"></i></span><div><p class="booking-detail-label">Valor</p><strong>${formatCurrency(appointment.price)}</strong></div></div><div class="booking-detail-value"><span class="booking-detail-icon"><i class="fa-solid fa-money-bill-wave" aria-hidden="true"></i></span><div><p class="booking-detail-label">Sinal</p><strong>${appointment.deposit === null ? 'Não informado' : formatCurrency(appointment.deposit)}</strong></div></div><div class="booking-detail-value"><span class="booking-detail-icon"><i class="fa-solid fa-chart-line" aria-hidden="true"></i></span><div><p class="booking-detail-label">Valor restante</p><strong>${formatCurrency(remaining)}</strong></div></div></section><footer class="booking-detail-footer"><section class="booking-detail-card booking-detail-meta-card"><p class="booking-detail-label">Status</p><div class="booking-detail-status-control">${appointmentStatusControl(appointment)}</div></section><section class="booking-detail-card booking-detail-meta-card"><p class="booking-detail-label">Criado em</p><p class="booking-detail-created"><i class="fa-regular fa-clock" aria-hidden="true"></i><strong>${createdAt}</strong></p></section></footer></article>`, 'appointment-details');
     } catch (error) { alert(error.message); }
 }
 
 async function changeAppointmentStatus(id, status) {
     const label = statusLabels[status].toLowerCase(); if (status === 'cancelled' && !window.confirm('Cancelar este agendamento? O registro será mantido no histórico.')) return;
     try { await appointmentRequest(`?id=${id}`, { method: 'PATCH', body: JSON.stringify({ status }) }); await loadAppointments(); closeDialog(); } catch (error) { alert(error.message); }
+}
+
+function handleAppointmentAction(action, id) {
+    const appointment = appointments.find((item) => item.id === id);
+    closeActionDropdowns();
+    if (action === 'details') showAppointmentDetails(id);
+    if (action === 'reschedule' && appointment) openAppointmentForm(appointment);
+    if (['cancelled', 'no_show', 'completed'].includes(action)) changeAppointmentStatus(id, action);
 }
 
 async function loadClientOptions(query = '') { const clients = await requestJson(`${CLIENTS_API_URL}?q=${encodeURIComponent(query)}`); const select = document.getElementById('appointmentClient'); if (!select) return; select.replaceChildren(new Option('Selecione uma cliente', '')); clients.forEach((client) => select.add(new Option(`${client.name} · ${client.phone}`, client.id))); }
@@ -540,15 +589,15 @@ document.addEventListener('click', (event) => {
 
 document.getElementById('newAppointmentButton').addEventListener('click', () => openAppointmentForm());
 document.getElementById('appointmentDialogClose').addEventListener('click', closeDialog);
+appointmentDialogContent.addEventListener('click', (event) => {
+    const actionButton = event.target.closest('[data-appointment-action]');
+    if (actionButton) handleAppointmentAction(actionButton.dataset.appointmentAction, actionButton.dataset.appointmentId);
+});
 appointmentList.addEventListener('click', (event) => {
     const actionButton = event.target.closest('[data-appointment-action]');
     if (actionButton) {
         const { appointmentAction: action, appointmentId: id } = actionButton.dataset;
-        const appointment = appointments.find((item) => item.id === id);
-        closeActionDropdowns();
-        if (action === 'details') showAppointmentDetails(id);
-        if (action === 'reschedule' && appointment) openAppointmentForm(appointment);
-        if (['cancelled', 'no_show', 'completed'].includes(action)) changeAppointmentStatus(id, action);
+        handleAppointmentAction(action, id);
         return;
     }
     const button = event.target.closest('[data-appointment-details]');

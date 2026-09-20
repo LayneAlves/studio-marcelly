@@ -130,20 +130,7 @@
                             data-appointment-view="list">Lista</button><button type="button"
                             data-appointment-view="calendar">Calendário</button></div>
                     <div class="appointment-list-panel" id="appointmentsListView">
-                        <div class="appointment-table-wrap">
-                            <table class="appointment-table">
-                                <thead>
-                                    <tr>
-                                        <th>Cliente</th>
-                                        <th>Serviço</th>
-                                        <th>Data e horário</th>
-                                        <th>Status</th>
-                                        <th>Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="appointmentList"></tbody>
-                            </table>
-                        </div>
+                        <div class="appointment-cards" id="appointmentList"></div>
                         <p class="service-empty-state" id="appointmentEmptyState">Nenhum agendamento encontrado.</p>
                     </div>
                     <div class="appointment-calendar" id="appointmentsCalendarView" hidden></div>
@@ -244,21 +231,7 @@
                         </div>
                     </div>
                     <div class="appointment-list-panel">
-                        <div class="appointment-table-wrap">
-                            <table class="appointment-table maintenance-table">
-                                <thead>
-                                    <tr>
-                                        <th>Cliente</th>
-                                        <th>Telefone</th>
-                                        <th>Serviço realizado</th>
-                                        <th>Último atendimento</th>
-                                        <th>Data prevista</th>
-                                        <th>Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="maintenanceList"></tbody>
-                            </table>
-                        </div>
+                        <div class="appointment-cards maintenance-cards" id="maintenanceList"></div>
                         <p class="service-empty-state" id="maintenanceEmptyState">Nenhuma manutenção recomendada no
                             momento.</p>
                     </div>
@@ -275,7 +248,7 @@
 
     <%- include('../includes/footer') %>
         <script src="phone-mask.js"></script>
-        <script src="admin.js?v=20260914-action-dropdowns"></script>
+        <script src="admin.js?v=20260914-appointment-cards"></script>
 </body>
 
 </html>
