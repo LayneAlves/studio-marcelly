@@ -9,82 +9,7 @@
     <div class="admin-panel">
         <%- include('../includes/header') %>
 
-            <button class="admin-sidebar-backdrop" id="adminSidebarBackdrop" type="button"
-                aria-label="Fechar menu"></button>
-
-            <aside class="admin-sidebar" id="adminSidebar" aria-label="Navegação administrativa">
-                <div class="admin-sidebar-top">
-                    <a class="admin-brand" href="index.html" aria-label="Voltar para o site Studio Marcelly Freitas">
-                        <img src="/cilios-imagens/logos/simbolo.png" alt="">
-                    </a>
-                    <p class="admin-brand-label">Área administrativa</p>
-                </div>
-
-                <nav class="admin-menu" aria-label="Módulos do painel">
-                    <a class="admin-menu-link is-active" href="#dashboard" aria-current="page">
-                        <svg viewBox="0 0 24 24" aria-hidden="true">
-                            <rect x="3.5" y="3.5" width="6.5" height="6.5" rx="1"></rect>
-                            <rect x="14" y="3.5" width="6.5" height="6.5" rx="1"></rect>
-                            <rect x="3.5" y="14" width="6.5" height="6.5" rx="1"></rect>
-                            <rect x="14" y="14" width="6.5" height="6.5" rx="1"></rect>
-                        </svg>
-                        <span>Dashboard</span>
-                    </a>
-                    <a class="admin-menu-link" href="#agendamentos">
-                        <svg viewBox="0 0 24 24" aria-hidden="true">
-                            <rect x="3.5" y="5" width="17" height="15.5" rx="1.5"></rect>
-                            <path d="M7.5 3v4M16.5 3v4M3.5 10h17"></path>
-                        </svg>
-                        <span>Agendamentos</span>
-                    </a>
-                    <a class="admin-menu-link" href="#faturamento">
-                        <svg viewBox="0 0 24 24" aria-hidden="true">
-                            <path d="M4 20V10M10 20V4M16 20v-7M22 20H2"></path>
-                        </svg>
-                        <span>Faturamento</span>
-                    </a>
-                    <a class="admin-menu-link" href="clientes.html">
-                        <svg viewBox="0 0 24 24" aria-hidden="true">
-                            <circle cx="9" cy="8" r="3"></circle>
-                            <path
-                                d="M3.5 20c.4-3.6 2.4-5.5 5.5-5.5s5.1 1.9 5.5 5.5M16 5.5a3 3 0 0 1 0 5.8M17.2 14.7c2 .7 3.1 2.4 3.3 5.3">
-                            </path>
-                        </svg>
-                        <span>Clientes</span>
-                    </a>
-                    <a class="admin-menu-link" href="#servicos">
-                        <svg viewBox="0 0 24 24" aria-hidden="true">
-                            <path d="M4 4.5h11l5 5v10H4z"></path>
-                            <circle cx="9" cy="10" r="1.2"></circle>
-                            <path d="M15 4.5v5h5"></path>
-                        </svg>
-                        <span>Serviços</span>
-                    </a>
-                    <a class="admin-menu-link" href="#manutencoes">
-                        <svg viewBox="0 0 24 24" aria-hidden="true">
-                            <circle cx="12" cy="12" r="8.5"></circle>
-                            <path d="M12 7v5l3.2 2M5.5 5.5l-2 2M18.5 5.5l2 2"></path>
-                        </svg>
-                        <span>Manutenções</span>
-                    </a>
-                    <a class="admin-menu-link" href="#relatorios">
-                        <svg viewBox="0 0 24 24" aria-hidden="true">
-                            <path d="M6 3.5h9l3 3V20.5H6z"></path>
-                            <path d="M15 3.5v3h3M9 11h6M9 15h6"></path>
-                        </svg>
-                        <span>Relatórios</span>
-                    </a>
-                </nav>
-
-                <div class="admin-sidebar-footer">
-                    <a class="admin-menu-link admin-logout" href="index.html">
-                        <svg viewBox="0 0 24 24" aria-hidden="true">
-                            <path d="M10 5H5v14h5M14 8l4 4-4 4M18 12H9"></path>
-                        </svg>
-                        <span>Sair</span>
-                    </a>
-                </div>
-            </aside>
+            <%- include('../includes/admin-sidebar') %>
 
             <main class="admin-content" id="dashboard">
                 <section class="admin-dashboard-view" id="dashboardView">
@@ -134,6 +59,64 @@
                         <p class="service-empty-state" id="appointmentEmptyState">Nenhum agendamento encontrado.</p>
                     </div>
                     <div class="appointment-calendar" id="appointmentsCalendarView" hidden></div>
+                </section>
+
+                <section class="admin-schedule-settings" id="configuracoes-agenda" hidden
+                    aria-labelledby="scheduleSettingsTitle">
+                    <div class="schedule-settings-header">
+                        <button class="schedule-back-button" id="scheduleBackButton" type="button"
+                            aria-label="Voltar ao painel"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i></button>
+                        <div>
+                            <p class="admin-eyebrow">Studio Marcelly Freitas · Administração</p>
+                            <h1 id="scheduleSettingsTitle">Configurações da agenda</h1>
+                            <p>Defina os dias e horários de funcionamento do atendimento</p>
+                        </div>
+                    </div>
+
+                    <section class="schedule-card business-hours-card" aria-labelledby="businessHoursTitle">
+                        <div class="schedule-card-heading">
+                            <span class="schedule-heading-icon"><i class="fa-regular fa-clock" aria-hidden="true"></i></span>
+                            <div>
+                                <h2 id="businessHoursTitle">Dias e horários de funcionamento</h2>
+                                <p>Escolha quais dias a agenda estará disponível e defina os horários.</p>
+                            </div>
+                        </div>
+                        <form id="scheduleSettingsForm">
+                            <div class="schedule-days" id="businessHoursList"></div>
+                            <p class="schedule-feedback" id="scheduleSettingsFeedback" role="status" aria-live="polite"></p>
+                            <div class="schedule-form-actions">
+                                <button class="schedule-save-button" type="submit"><i class="fa-solid fa-check"
+                                        aria-hidden="true"></i> Salvar configurações</button>
+                            </div>
+                        </form>
+                    </section>
+
+                    <section class="schedule-card manual-blocks-card" aria-labelledby="manualBlocksTitle">
+                        <div class="schedule-card-heading">
+                            <span class="schedule-heading-icon"><i class="fa-regular fa-clock" aria-hidden="true"></i></span>
+                            <div>
+                                <h2 id="manualBlocksTitle">Bloqueios manuais</h2>
+                                <p>Reserve horários que não devem aparecer como disponíveis para novos agendamentos.</p>
+                            </div>
+                        </div>
+                        <form class="schedule-block-form" id="scheduleBlockForm">
+                            <div class="schedule-field"><label for="scheduleBlockDate">Data</label><input
+                                    id="scheduleBlockDate" type="date" required></div>
+                            <div class="schedule-field"><label for="scheduleBlockStart">Início</label><input
+                                    id="scheduleBlockStart" type="time" required></div>
+                            <div class="schedule-field"><label for="scheduleBlockEnd">Fim</label><input
+                                    id="scheduleBlockEnd" type="time" required></div>
+                            <div class="schedule-field schedule-field-reason"><label for="scheduleBlockReason">Motivo
+                                    <span>(opcional)</span></label><input id="scheduleBlockReason" type="text"
+                                    maxlength="255" placeholder="Ex.: Pausa para almoço"></div>
+                            <button class="schedule-secondary-button" type="submit"><i class="fa-solid fa-plus"
+                                    aria-hidden="true"></i> Bloquear horário</button>
+                        </form>
+                        <p class="schedule-feedback" id="scheduleBlockFeedback" role="status" aria-live="polite"></p>
+                        <div class="schedule-blocks-heading"><h3>Próximos bloqueios</h3><span id="scheduleBlockCount">0 bloqueios</span></div>
+                        <div class="schedule-blocks-list" id="scheduleBlockList"></div>
+                        <p class="schedule-blocks-empty" id="scheduleBlockEmptyState">Nenhum bloqueio manual cadastrado.</p>
+                    </section>
                 </section>
 
                 <section class="admin-services" id="servicos" hidden aria-labelledby="servicesTitle">
@@ -248,7 +231,7 @@
 
     <%- include('../includes/footer') %>
         <script src="phone-mask.js"></script>
-        <script src="admin.js?v=20260914-appointment-cards"></script>
+        <script src="admin.js?v=20260920-schedule-settings"></script>
 </body>
 
 </html>

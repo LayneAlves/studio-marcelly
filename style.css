@@ -279,10 +279,14 @@ nav {
     gap: 1rem;
 }
 
-.logo img {
-    display: block;
-    width: 260px;
-    pointer-events: none;
+.logo {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.logo img{
+    height: 134px;
+    width: auto;
 }
 
 .nav-menu {
@@ -1181,6 +1185,92 @@ nav {
     border: 0;
 }
 
+/* Horário de funcionamento */
+.business-hours {
+    padding: 6.5rem 0;
+    background: var(--surface);
+}
+
+.business-hours-inner {
+    display: grid;
+    grid-template-columns: minmax(240px, .72fr) minmax(0, 1.28fr);
+    align-items: start;
+    gap: clamp(2rem, 6vw, 5rem);
+}
+
+.business-hours-heading p {
+    max-width: 360px;
+    margin-top: 1rem;
+    color: var(--text-soft);
+}
+
+.business-hours-card {
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    background: #fff;
+    box-shadow: var(--sombra);
+}
+
+.business-hours-row {
+    display: grid;
+    grid-template-columns: minmax(132px, 1fr) auto minmax(112px, .9fr);
+    align-items: center;
+    gap: 1rem;
+    min-height: 60px;
+    padding: .8rem 1.2rem;
+}
+
+.business-hours-row + .business-hours-row {
+    border-top: 1px solid var(--line);
+}
+
+.business-hours-day {
+    color: var(--text);
+    font: 500 .88rem 'Jost', sans-serif;
+}
+
+.business-hours-status {
+    display: inline-flex;
+    justify-content: center;
+    min-width: 74px;
+    padding: .27rem .55rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    font: 500 .7rem 'Jost', sans-serif;
+}
+
+.business-hours-status.is-open {
+    border-color: #abd6bc;
+    background: #e8f6ec;
+    color: #277343;
+}
+
+.business-hours-status.is-closed {
+    border-color: #e2b5b5;
+    background: #fff0f0;
+    color: #a14747;
+}
+
+.business-hours-time {
+    color: var(--text-soft);
+    font: 400 .82rem 'Jost', sans-serif;
+    text-align: right;
+}
+
+.business-hours-time.is-closed {
+    color: #a14747;
+}
+
+.business-hours-loading,
+.business-hours-error {
+    margin: 0;
+    padding: 1.6rem;
+    color: var(--text-soft);
+    font: 400 .86rem 'Jost', sans-serif;
+    text-align: center;
+}
+
 /* Footer */
 footer {
     background: var(--ink);
@@ -1211,7 +1301,8 @@ footer span {
     .about-grid,
     .booking-grid,
     .contact-grid,
-    .brows-grid {
+    .brows-grid,
+    .business-hours-inner {
         grid-template-columns: 1fr;
     }
 
@@ -1378,5 +1469,20 @@ footer span {
 
     .slots-grid {
         grid-template-columns: repeat(3, 1fr);
+    }
+
+    .business-hours {
+        padding: 4.5rem 0;
+    }
+
+    .business-hours-row {
+        grid-template-columns: 1fr auto;
+        gap: .5rem .75rem;
+        padding: .85rem 1rem;
+    }
+
+    .business-hours-time {
+        grid-column: 1 / -1;
+        text-align: left;
     }
 }

@@ -7,6 +7,19 @@ const dashboardView = document.getElementById('dashboardView');
 const servicesView = document.getElementById('servicos');
 const appointmentsView = document.getElementById('agendamentos');
 const maintenancesView = document.getElementById('manutencoes');
+const scheduleSettingsView = document.getElementById('configuracoes-agenda');
+const scheduleSettingsForm = document.getElementById('scheduleSettingsForm');
+const businessHoursList = document.getElementById('businessHoursList');
+const scheduleSettingsFeedback = document.getElementById('scheduleSettingsFeedback');
+const scheduleBlockForm = document.getElementById('scheduleBlockForm');
+const scheduleBlockDate = document.getElementById('scheduleBlockDate');
+const scheduleBlockStart = document.getElementById('scheduleBlockStart');
+const scheduleBlockEnd = document.getElementById('scheduleBlockEnd');
+const scheduleBlockReason = document.getElementById('scheduleBlockReason');
+const scheduleBlockFeedback = document.getElementById('scheduleBlockFeedback');
+const scheduleBlockList = document.getElementById('scheduleBlockList');
+const scheduleBlockEmptyState = document.getElementById('scheduleBlockEmptyState');
+const scheduleBlockCount = document.getElementById('scheduleBlockCount');
 const serviceForm = document.getElementById('serviceForm');
 const serviceIdInput = document.getElementById('serviceId');
 const serviceNameInput = document.getElementById('serviceName');
@@ -23,6 +36,8 @@ const serviceEmptyState = document.getElementById('serviceEmptyState');
 const serviceFeedback = document.getElementById('serviceFeedback');
 
 const SERVICES_API_URL = `http://${window.location.hostname || '127.0.0.1'}:3000/api/admin/services`;
+const SCHEDULE_SETTINGS_API_URL = `http://${window.location.hostname || '127.0.0.1'}:3000/api/admin/schedule-settings`;
+const SCHEDULE_BLOCKS_API_URL = `http://${window.location.hostname || '127.0.0.1'}:3000/api/admin/schedule-blocks`;
 let services = [];
 
 function setAdminMenuState(isOpen) {
@@ -48,23 +63,103 @@ function showAdminView(hash) {
     const isServicesView = hash === '#servicos';
     const isAppointmentsView = hash === '#agendamentos';
     const isMaintenancesView = hash === '#manutencoes';
+    const isScheduleSettingsView = hash === '#configuracoes-agenda';
 
     setActiveAdminLink(selectedLink);
-    dashboardView.hidden = isServicesView || isAppointmentsView || isMaintenancesView;
+    dashboardView.hidden = isServicesView || isAppointmentsView || isMaintenancesView || isScheduleSettingsView;
     servicesView.hidden = !isServicesView;
     appointmentsView.hidden = !isAppointmentsView;
     maintenancesView.hidden = !isMaintenancesView;
-    adminContent.classList.toggle('is-services-view', isServicesView || isMaintenancesView);
-    adminContent.classList.toggle('is-admin-view', isServicesView || isAppointmentsView || isMaintenancesView);
+    scheduleSettingsView.hidden = !isScheduleSettingsView;
+    adminContent.classList.toggle('is-services-view', isServicesView || isMaintenancesView || isScheduleSettingsView);
+    adminContent.classList.toggle('is-admin-view', isServicesView || isAppointmentsView || isMaintenancesView || isScheduleSettingsView);
 
     if (isServicesView) loadServices();
     if (isAppointmentsView) loadAppointments();
     if (isMaintenancesView) loadMaintenances();
+    if (isScheduleSettingsView) loadScheduleSettings();
 }
 
 function showServiceFeedback(message = '', isError = false) {
     serviceFeedback.textContent = message;
     serviceFeedback.classList.toggle('is-error', isError);
+}
+
+const scheduleWeekDays = [
+    { id: 0, label: 'Domingo', shortLabel: 'Dom' },
+    { id: 1, label: 'Segunda-feira', shortLabel: 'Seg' },
+    { id: 2, label: 'Terça-feira', shortLabel: 'Ter' },
+    { id: 3, label: 'Quarta-feira', shortLabel: 'Qua' },
+    { id: 4, label: 'Quinta-feira', shortLabel: 'Qui' },
+    { id: 5, label: 'Sexta-feira', shortLabel: 'Sex' },
+    { id: 6, label: 'Sábado', shortLabel: 'Sáb' },
+];
+
+function scheduleRequest(url, options = {}) {
+    return requestJson(url, options);
+}
+
+function showScheduleFeedback(target, message = '', isError = false) {
+    target.textContent = message;
+    target.classList.toggle('is-error', isError);
+}
+
+function setScheduleDayState(dayElement) {
+    const isActive = dayElement.querySelector('[data-schedule-day-active]').checked;
+    dayElement.classList.toggle('is-inactive', !isActive);
+    dayElement.querySelectorAll('input[type="time"]').forEach((input) => input.disabled = !isActive);
+    dayElement.querySelector('.schedule-day-status').textContent = isActive ? 'Aberto' : 'Fechado';
+}
+
+function renderScheduleSettings(settings) {
+    const days = new Map((settings.days || []).map((day) => [Number(day.day_of_week), day]));
+    businessHoursList.replaceChildren();
+
+    scheduleWeekDays.forEach((weekDay) => {
+        const current = days.get(weekDay.id) || { is_active: false, opening_time: '07:00', closing_time: '20:00' };
+        const day = document.createElement('article');
+        day.className = 'schedule-day';
+        day.dataset.scheduleDay = String(weekDay.id);
+        day.innerHTML = `<p class="schedule-day-name">${weekDay.label}</p><label class="schedule-day-switch" title="${current.is_active ? `Desativar ${weekDay.label}` : `Ativar ${weekDay.label}`}"><input type="checkbox" data-schedule-day-active ${current.is_active ? 'checked' : ''} aria-label="${current.is_active ? 'Desativar' : 'Ativar'} ${weekDay.label}"><span class="schedule-day-switch-track"></span></label><p class="schedule-day-status">${current.is_active ? 'Aberto' : 'Fechado'}</p><div class="schedule-day-times"><label class="schedule-time-field"><i class="fa-regular fa-clock" aria-hidden="true"></i><input type="time" data-schedule-opening value="${current.opening_time}" required aria-label="Horário de início de ${weekDay.label}"></label><span aria-hidden="true">às</span><label class="schedule-time-field"><i class="fa-regular fa-clock" aria-hidden="true"></i><input type="time" data-schedule-closing value="${current.closing_time}" required aria-label="Horário de fim de ${weekDay.label}"></label></div>`;
+        day.querySelector('[data-schedule-day-active]').addEventListener('change', () => setScheduleDayState(day));
+        setScheduleDayState(day);
+        businessHoursList.append(day);
+    });
+}
+
+function renderScheduleBlocks(blocks) {
+    scheduleBlockList.replaceChildren();
+    scheduleBlockCount.textContent = `${blocks.length} ${blocks.length === 1 ? 'bloqueio' : 'bloqueios'}`;
+    scheduleBlockEmptyState.hidden = blocks.length > 0;
+
+    blocks.forEach((block) => {
+        const item = document.createElement('article');
+        item.className = 'schedule-block-item';
+        item.innerHTML = `<div class="schedule-block-date"><span class="schedule-block-icon"><i class="fa-regular fa-calendar" aria-hidden="true"></i></span><div><p>${appointmentDateLabel(block.block_date)}</p><strong>${block.start_time} — ${block.end_time}</strong></div></div><p class="schedule-block-reason">${escapeHtml(block.reason || 'Horário reservado manualmente')}</p><button class="schedule-block-delete" type="button" data-schedule-block-id="${block.id}" aria-label="Excluir bloqueio de ${appointmentDateLabel(block.block_date)}"><i class="fa-solid fa-trash-can" aria-hidden="true"></i><span>Excluir</span></button>`;
+        scheduleBlockList.append(item);
+    });
+}
+
+async function loadScheduleBlocks() {
+    const blocks = await scheduleRequest(SCHEDULE_BLOCKS_API_URL);
+    renderScheduleBlocks(blocks);
+}
+
+async function loadScheduleSettings() {
+    try {
+        const [settings, blocks] = await Promise.all([
+            scheduleRequest(SCHEDULE_SETTINGS_API_URL),
+            scheduleRequest(SCHEDULE_BLOCKS_API_URL),
+        ]);
+        renderScheduleSettings(settings);
+        renderScheduleBlocks(blocks);
+        if (!scheduleBlockDate.value) scheduleBlockDate.value = new Date().toISOString().slice(0, 10);
+        showScheduleFeedback(scheduleSettingsFeedback);
+        showScheduleFeedback(scheduleBlockFeedback);
+    } catch (error) {
+        showScheduleFeedback(scheduleSettingsFeedback, error.message, true);
+        showScheduleFeedback(scheduleBlockFeedback, error.message, true);
+    }
 }
 
 async function requestServices(path = '', options = {}) {
@@ -618,5 +713,63 @@ document.querySelectorAll('[data-quick]').forEach((button) => button.addEventLis
 [appointmentDateFilter, appointmentServiceFilter, appointmentStatusFilter].forEach((field) => field.addEventListener('change', () => { appointmentQuickFilter = ''; document.querySelectorAll('[data-quick]').forEach((item) => item.classList.remove('is-active')); loadAppointments(); }));
 appointmentSearch.addEventListener('input', () => { clearTimeout(appointmentSearchTimer); appointmentSearchTimer = setTimeout(loadAppointments, 250); });
 document.querySelectorAll('[data-appointment-view]').forEach((button) => button.addEventListener('click', () => { appointmentViewMode = button.dataset.appointmentView; document.querySelectorAll('[data-appointment-view]').forEach((item) => item.classList.toggle('is-active', item === button)); appointmentsListView.hidden = appointmentViewMode !== 'list'; appointmentsCalendarView.hidden = appointmentViewMode !== 'calendar'; }));
+
+scheduleSettingsForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const days = [...businessHoursList.querySelectorAll('[data-schedule-day]')].map((day) => ({
+        day_of_week: Number(day.dataset.scheduleDay),
+        is_active: day.querySelector('[data-schedule-day-active]').checked,
+        opening_time: day.querySelector('[data-schedule-opening]').value,
+        closing_time: day.querySelector('[data-schedule-closing]').value,
+    }));
+
+    try {
+        const saved = await scheduleRequest(SCHEDULE_SETTINGS_API_URL, {
+            method: 'PUT',
+            body: JSON.stringify({ days }),
+        });
+        renderScheduleSettings(saved);
+        showScheduleFeedback(scheduleSettingsFeedback, 'Configurações salvas com sucesso.');
+    } catch (error) {
+        showScheduleFeedback(scheduleSettingsFeedback, error.message, true);
+    }
+});
+
+scheduleBlockForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    try {
+        await scheduleRequest(SCHEDULE_BLOCKS_API_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+                block_date: scheduleBlockDate.value,
+                start_time: scheduleBlockStart.value,
+                end_time: scheduleBlockEnd.value,
+                reason: scheduleBlockReason.value,
+            }),
+        });
+        scheduleBlockForm.reset();
+        scheduleBlockDate.value = new Date().toISOString().slice(0, 10);
+        showScheduleFeedback(scheduleBlockFeedback, 'Horário bloqueado com sucesso.');
+        await loadScheduleBlocks();
+    } catch (error) {
+        showScheduleFeedback(scheduleBlockFeedback, error.message, true);
+    }
+});
+
+scheduleBlockList.addEventListener('click', async (event) => {
+    const button = event.target.closest('[data-schedule-block-id]');
+    if (!button || !window.confirm('Excluir este bloqueio manual?')) return;
+
+    try {
+        await scheduleRequest(`${SCHEDULE_BLOCKS_API_URL}?id=${encodeURIComponent(button.dataset.scheduleBlockId)}`, { method: 'DELETE' });
+        showScheduleFeedback(scheduleBlockFeedback, 'Bloqueio excluído com sucesso.');
+        await loadScheduleBlocks();
+    } catch (error) {
+        showScheduleFeedback(scheduleBlockFeedback, error.message, true);
+    }
+});
+
+document.getElementById('scheduleBackButton').addEventListener('click', () => { window.location.hash = '#dashboard'; });
 
 showAdminView(window.location.hash || '#dashboard');

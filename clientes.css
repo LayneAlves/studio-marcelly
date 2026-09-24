@@ -1,5 +1,6 @@
 .clients-module {
     width: min(100%, 1180px);
+    margin-inline: auto;
     padding: clamp(2rem, 5vw, 4.5rem) 0;
 }
 

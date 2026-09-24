@@ -221,6 +221,19 @@
             </div>
         </section>
 
+        <section class="business-hours" aria-labelledby="businessHoursTitle">
+            <div class="container business-hours-inner reveal">
+                <div class="business-hours-heading">
+                    <span class="eyebrow">Atendimento</span>
+                    <h2 class="section-title" id="businessHoursTitle">Horário de funcionamento</h2>
+                    <p>Consulte os dias e horários disponíveis para agendar seu atendimento.</p>
+                </div>
+                <div class="business-hours-card" id="publicBusinessHours" aria-live="polite" aria-busy="true">
+                    <p class="business-hours-loading">Carregando horários de funcionamento...</p>
+                </div>
+            </div>
+        </section>
+
     </main>
 
     <dialog class="booking-auth-dialog" id="bookingAuthDialog" aria-labelledby="bookingAuthTitle">
@@ -259,7 +272,7 @@
     <%- include('../includes/footer') %>
 
     <script src="phone-mask.js"></script>
-    <script src="script.js?v=20260914-auth2"></script>
+    <script src="script.js?v=20260920-business-hours"></script>
 </body>
 
 </html>

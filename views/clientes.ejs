@@ -8,22 +8,7 @@
 <body class="admin-body">
     <div class="admin-panel">
         <%- include('../includes/header') %>
-        <button class="admin-sidebar-backdrop" id="clientsBackdrop" type="button" aria-label="Fechar menu"></button>
-        <aside class="admin-sidebar" id="clientsSidebar">
-            <div class="admin-sidebar-top"><a class="admin-brand" href="index.html"><span
-                        class="admin-brand-mark">SM</span><span>Studio <em>Marcelly Freitas</em></span></a>
-                <p class="admin-brand-label">Área administrativa</p>
-            </div>
-            <nav class="admin-menu"><a class="admin-menu-link" href="admin.html#dashboard">Dashboard</a><a
-                    class="admin-menu-link" href="admin.html#agendamentos">Agendamentos</a><a class="admin-menu-link"
-                    href="admin.html#faturamento">Faturamento</a><a class="admin-menu-link is-active"
-                    href="clientes.html" aria-current="page">Clientes</a><a class="admin-menu-link"
-                    href="admin.html#servicos">Serviços</a><a class="admin-menu-link"
-                    href="admin.html#manutencoes">Manutenções</a><a class="admin-menu-link"
-                    href="admin.html#relatorios">Relatórios</a></nav>
-            <div class="admin-sidebar-footer"><a class="admin-menu-link admin-logout"
-                    href="admin.html#sair">Sair</a></div>
-        </aside>
+        <%- include('../includes/admin-sidebar') %>
         <main class="admin-content is-admin-view">
             <section class="clients-module" aria-labelledby="clientsTitle">
                 <div class="admin-page-heading">

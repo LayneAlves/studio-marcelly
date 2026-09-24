@@ -61,14 +61,14 @@ const viewOptions = {
         description: 'Painel administrativo do Studio Marcelly Freitas.',
         layout: 'admin',
         adminPage: 'dashboard',
-        pageStyles: ['admin.css?v=20260914-appointment-cards'],
+        pageStyles: ['admin.css?v=20260920-schedule-settings'],
     },
     clientes: {
         title: 'Clientes | Studio Marcelly Freitas',
         description: '',
         layout: 'admin',
         adminPage: 'clients',
-        pageStyles: ['admin.css?v=20260914-appointment-cards', 'clientes.css'],
+        pageStyles: ['admin.css?v=20260920-schedule-settings', 'clientes.css'],
     },
 };
 const assetTypes = {
@@ -234,6 +234,37 @@ async function settings(connection) {
     const [rows] = await connection.query('SELECT opening_minutes, closing_minutes, monday_closed FROM business_settings WHERE id = 1');
     return rows[0] || { opening_minutes: 420, closing_minutes: 1200, monday_closed: 1 };
 }
+async function businessHours(connection, dayOfWeek) {
+    const [rows] = await connection.execute(
+        'SELECT is_active,opening_minutes,closing_minutes FROM business_hours WHERE day_of_week=?',
+        [dayOfWeek],
+    );
+    if (rows[0]) return { ...rows[0], is_active: Boolean(rows[0].is_active) };
+
+    const legacy = await settings(connection);
+    return {
+        is_active: !(dayOfWeek === 1 && legacy.monday_closed),
+        opening_minutes: Number(legacy.opening_minutes),
+        closing_minutes: Number(legacy.closing_minutes),
+    };
+}
+async function scheduleSettings(connection) {
+    const [rows] = await connection.query('SELECT day_of_week,is_active,opening_minutes,closing_minutes FROM business_hours ORDER BY day_of_week');
+    const saved = new Map(rows.map((row) => [Number(row.day_of_week), row]));
+    const legacy = rows.length === 7 ? null : await settings(connection);
+
+    return {
+        days: Array.from({ length: 7 }, (_, dayOfWeek) => {
+            const row = saved.get(dayOfWeek);
+            return {
+                day_of_week: dayOfWeek,
+                is_active: row ? Boolean(row.is_active) : !(dayOfWeek === 1 && legacy.monday_closed),
+                opening_time: time(Number(row?.opening_minutes ?? legacy?.opening_minutes ?? 420)),
+                closing_time: time(Number(row?.closing_minutes ?? legacy?.closing_minutes ?? 1200)),
+            };
+        }),
+    };
+}
 async function periods(connection, bookingDate, excludeId = 0, lock = false) {
     const [appointments] = await connection.execute(
         `SELECT start_time, end_time FROM appointments WHERE booking_date = ? AND status NOT IN ('cancelled','no_show') AND id <> ?${lock ? ' FOR UPDATE' : ''}`,
@@ -242,12 +273,23 @@ async function periods(connection, bookingDate, excludeId = 0, lock = false) {
     const [blocks] = await connection.execute('SELECT start_time, end_time FROM schedule_blocks WHERE block_date = ?', [bookingDate]);
     return [...appointments, ...blocks];
 }
+async function availableSlots(connection, bookingDate, durationMinutes, excludeId = 0) {
+    const dayOfWeek = new Date(`${bookingDate}T12:00:00`).getDay();
+    const hours = await businessHours(connection, dayOfWeek);
+    if (!hours.is_active) return [];
+
+    const used = await periods(connection, bookingDate, excludeId);
+    const slots = [];
+    for (let start = Number(hours.opening_minutes); start + durationMinutes <= Number(hours.closing_minutes); start += 30)
+        if (!overlap(start, start + durationMinutes, used)) slots.push(time(start));
+    return slots;
+}
 async function validateSlot(connection, bookingDate, start, durationMinutes, excludeId = 0, override = false, lock = false) {
-    const config = await settings(connection);
     const day = new Date(`${bookingDate}T12:00:00`).getDay();
+    const hours = await businessHours(connection, day);
     const end = start + durationMinutes;
-    if (!override && config.monday_closed && day === 1) fail(422, 'O studio não atende às segundas-feiras.');
-    if (!override && (start < config.opening_minutes || end > config.closing_minutes))
+    if (!override && !hours.is_active) fail(422, 'O studio não atende neste dia.');
+    if (!override && (start < Number(hours.opening_minutes) || end > Number(hours.closing_minutes)))
         fail(422, 'Este horário está fora do período de atendimento.');
     if (overlap(start, end, await periods(connection, bookingDate, excludeId, lock)))
         fail(409, 'Este horário acabou de ficar indisponível. Escolha outro horário.');
@@ -371,6 +413,38 @@ async function notifyAdministrator(created) {
     if (results.some((result) => result.status === 'rejected')) console.error('Falha ao enviar notificação de novo agendamento.');
 }
 
+function scheduleSettingsPayload(data) {
+    if (!Array.isArray(data.days) || data.days.length !== 7) fail(422, 'Informe os horários dos sete dias da semana.');
+    const days = new Map();
+
+    data.days.forEach((item) => {
+        const dayOfWeek = Number(item.day_of_week);
+        if (!Number.isInteger(dayOfWeek) || dayOfWeek < 0 || dayOfWeek > 6 || days.has(dayOfWeek))
+            fail(422, 'Os dias da semana informados são inválidos.');
+        const openingMinutes = minutes(String(item.opening_time || ''));
+        const closingMinutes = minutes(String(item.closing_time || ''));
+        if (openingMinutes >= closingMinutes) fail(422, 'O horário de término precisa ser posterior ao horário de início.');
+        days.set(dayOfWeek, {
+            dayOfWeek,
+            isActive: Boolean(item.is_active),
+            openingMinutes,
+            closingMinutes,
+        });
+    });
+
+    if (days.size !== 7) fail(422, 'Informe os horários dos sete dias da semana.');
+    return [...days.values()].sort((first, second) => first.dayOfWeek - second.dayOfWeek);
+}
+
+function formatScheduleBlock(row) {
+    return {
+        ...row,
+        id: String(row.id),
+        start_time: String(row.start_time).slice(0, 5),
+        end_time: String(row.end_time).slice(0, 5),
+    };
+}
+
 async function handler(request, response) {
     const url = new URL(request.url, `http://${request.headers.host}`);
     const path = url.pathname;
@@ -378,6 +452,93 @@ async function handler(request, response) {
     if (request.method === 'GET' && viewRoutes[path]) return renderView(response, viewRoutes[path]);
     if (request.method === 'GET' && (await serveAsset(response, path))) return;
     if (request.method === 'OPTIONS') return send(response, 204, {});
+    if (path === '/api/admin/schedule-settings' || path === '/api/schedule-settings') {
+        if (request.method === 'GET') return send(response, 200, await scheduleSettings(pool));
+        if (path === '/api/schedule-settings') return fail(405, 'Método não permitido.');
+        if (request.method === 'PUT') {
+            const days = scheduleSettingsPayload(await body(request));
+            const connection = await pool.getConnection();
+            try {
+                await connection.beginTransaction();
+                for (const day of days) {
+                    await connection.execute(
+                        `INSERT INTO business_hours (day_of_week,is_active,opening_minutes,closing_minutes)
+                        VALUES (?,?,?,?)
+                        ON DUPLICATE KEY UPDATE is_active=VALUES(is_active),opening_minutes=VALUES(opening_minutes),closing_minutes=VALUES(closing_minutes)`,
+                        [day.dayOfWeek, day.isActive ? 1 : 0, day.openingMinutes, day.closingMinutes],
+                    );
+                }
+                await connection.commit();
+                return send(response, 200, await scheduleSettings(pool));
+            } catch (error) {
+                await connection.rollback();
+                throw error;
+            } finally {
+                connection.release();
+            }
+        }
+        return fail(405, 'Método não permitido.');
+    }
+    if (path === '/api/admin/schedule-blocks') {
+        const id = Number(query.get('id'));
+        if (request.method === 'GET') {
+            const [rows] = await pool.query(
+                `SELECT id,DATE_FORMAT(block_date,'%Y-%m-%d') AS block_date,TIME_FORMAT(start_time,'%H:%i') AS start_time,
+                TIME_FORMAT(end_time,'%H:%i') AS end_time,reason,created_at
+                FROM schedule_blocks WHERE block_date>=CURDATE() ORDER BY block_date,start_time`,
+            );
+            return send(response, 200, rows.map(formatScheduleBlock));
+        }
+        if (request.method === 'POST') {
+            const data = await body(request);
+            const blockDate = date(data.block_date);
+            if (blockDate < new Date().toISOString().slice(0, 10)) fail(422, 'Escolha uma data atual ou futura para o bloqueio.');
+            const start = minutes(String(data.start_time || ''));
+            const end = minutes(String(data.end_time || ''));
+            const reason = String(data.reason || '').trim();
+            if (start >= end) fail(422, 'O horário final deve ser posterior ao horário inicial.');
+            if (reason.length > 255) fail(422, 'A descrição do bloqueio pode ter no máximo 255 caracteres.');
+
+            const connection = await pool.getConnection();
+            try {
+                await connection.beginTransaction();
+                const [appointments] = await connection.execute(
+                    `SELECT start_time,end_time FROM appointments
+                    WHERE booking_date=? AND status NOT IN ('cancelled','no_show') FOR UPDATE`,
+                    [blockDate],
+                );
+                const [blocks] = await connection.execute(
+                    'SELECT start_time,end_time FROM schedule_blocks WHERE block_date=? FOR UPDATE',
+                    [blockDate],
+                );
+                if (overlap(start, end, appointments)) fail(409, 'Existe um agendamento neste intervalo. Escolha outro horário.');
+                if (overlap(start, end, blocks)) fail(409, 'Este intervalo já possui um bloqueio manual.');
+                const [result] = await connection.execute(
+                    'INSERT INTO schedule_blocks (block_date,start_time,end_time,reason) VALUES (?,?,?,?)',
+                    [blockDate, time(start), time(end), reason || null],
+                );
+                const [rows] = await connection.execute(
+                    `SELECT id,DATE_FORMAT(block_date,'%Y-%m-%d') AS block_date,TIME_FORMAT(start_time,'%H:%i') AS start_time,
+                    TIME_FORMAT(end_time,'%H:%i') AS end_time,reason,created_at FROM schedule_blocks WHERE id=?`,
+                    [result.insertId],
+                );
+                await connection.commit();
+                return send(response, 201, formatScheduleBlock(rows[0]));
+            } catch (error) {
+                await connection.rollback();
+                throw error;
+            } finally {
+                connection.release();
+            }
+        }
+        if (request.method === 'DELETE') {
+            if (!Number.isInteger(id) || id < 1) fail(422, 'Bloqueio inválido.');
+            const [result] = await pool.execute('DELETE FROM schedule_blocks WHERE id=?', [id]);
+            if (!result.affectedRows) fail(404, 'Bloqueio não encontrado.');
+            return send(response, 200, { success: true });
+        }
+        return fail(405, 'Método não permitido.');
+    }
     if (request.method === 'POST' && path === '/api/account/register') {
         const data = await body(request);
         const name = data.name?.trim();
@@ -463,13 +624,7 @@ async function handler(request, response) {
         ]);
         if (!appointments[0]) fail(404, 'Agendamento não encontrado.');
         const selected = await service(pool, appointments[0].service_id);
-        const config = await settings(pool);
-        const monday = config.monday_closed && new Date(`${bookingDate}T12:00:00`).getDay() === 1;
-        const used = await periods(pool, bookingDate, appointmentId);
-        const slots = [];
-        if (!monday)
-            for (let start = Number(config.opening_minutes); start + selected.minutes <= Number(config.closing_minutes); start += 30)
-                if (!overlap(start, start + selected.minutes, used)) slots.push(time(start));
+        const slots = await availableSlots(pool, bookingDate, selected.minutes, appointmentId);
         return send(response, 200, { slots, duration_minutes: selected.minutes });
     }
     if (path === '/api/account/bookings' && request.method === 'POST') {
@@ -715,13 +870,7 @@ async function handler(request, response) {
     if (request.method === 'GET' && query.has('availability')) {
         const bookingDate = date(query.get('date'));
         const selectedService = await service(pool, query.get('service_id'));
-        const config = await settings(pool);
-        const monday = config.monday_closed && new Date(`${bookingDate}T12:00:00`).getDay() === 1;
-        const used = await periods(pool, bookingDate, query.get('exclude_id') || 0);
-        const slots = [];
-        if (!monday)
-            for (let start = Number(config.opening_minutes); start + selectedService.minutes <= Number(config.closing_minutes); start += 30)
-                if (!overlap(start, start + selectedService.minutes, used)) slots.push(time(start));
+        const slots = await availableSlots(pool, bookingDate, selectedService.minutes, query.get('exclude_id') || 0);
         return send(response, 200, { slots, duration_minutes: selectedService.minutes });
     }
     if (request.method === 'GET' && query.has('id')) return send(response, 200, await appointment(pool, query.get('id')));

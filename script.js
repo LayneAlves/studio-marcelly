@@ -51,6 +51,7 @@ if (galleryGrid) {
 const SERVICES_API_URL = `http://${window.location.hostname || '127.0.0.1'}:3000/api/services`;
 const APPOINTMENTS_API_URL = `http://${window.location.hostname || '127.0.0.1'}:3000/api/appointments`;
 const ACCOUNT_API_URL = `http://${window.location.hostname || '127.0.0.1'}:3000/api/account`;
+const SCHEDULE_SETTINGS_API_URL = `http://${window.location.hostname || '127.0.0.1'}:3000/api/schedule-settings`;
 const MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
 
 const calDaysEl = document.getElementById('calDays');
@@ -61,6 +62,27 @@ const bookingSummary = document.getElementById('bookingSummary');
 const bookingForm = document.getElementById('bookingForm');
 const formMsg = document.getElementById('formMsg');
 const serviceSelect = document.getElementById('servico');
+const publicBusinessHours = document.getElementById('publicBusinessHours');
+
+const publicWeekDays = [
+    { id: 1, label: 'Segunda-feira' },
+    { id: 2, label: 'Terça-feira' },
+    { id: 3, label: 'Quarta-feira' },
+    { id: 4, label: 'Quinta-feira' },
+    { id: 5, label: 'Sexta-feira' },
+    { id: 6, label: 'Sábado' },
+    { id: 0, label: 'Domingo' },
+];
+
+let scheduleDays = new Map([
+    [1, { is_active: false, opening_time: '07:00', closing_time: '20:00' }],
+    [2, { is_active: true, opening_time: '07:00', closing_time: '20:00' }],
+    [3, { is_active: true, opening_time: '07:00', closing_time: '20:00' }],
+    [4, { is_active: true, opening_time: '07:00', closing_time: '20:00' }],
+    [5, { is_active: true, opening_time: '07:00', closing_time: '20:00' }],
+    [6, { is_active: true, opening_time: '08:00', closing_time: '18:00' }],
+    [0, { is_active: true, opening_time: '08:00', closing_time: '14:00' }],
+]);
 
 let calDate = new Date();
 let selectedDate = null;
@@ -82,6 +104,57 @@ function dateKey(date) {
 
 function formatCurrency(value) {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+}
+
+function scheduleDay(date) {
+    return scheduleDays.get(date.getDay()) || { is_active: false, opening_time: '', closing_time: '' };
+}
+
+function renderPublicBusinessHours() {
+    if (!publicBusinessHours) return;
+    publicBusinessHours.replaceChildren();
+    publicBusinessHours.setAttribute('aria-busy', 'false');
+
+    publicWeekDays.forEach((weekDay) => {
+        const day = scheduleDays.get(weekDay.id) || { is_active: false, opening_time: '', closing_time: '' };
+        const row = document.createElement('div');
+        row.className = 'business-hours-row';
+
+        const name = document.createElement('span');
+        name.className = 'business-hours-day';
+        name.textContent = weekDay.label;
+
+        const status = document.createElement('span');
+        status.className = `business-hours-status ${day.is_active ? 'is-open' : 'is-closed'}`;
+        status.textContent = day.is_active ? 'Aberto' : 'Fechado';
+
+        const hours = document.createElement('span');
+        hours.className = `business-hours-time${day.is_active ? '' : ' is-closed'}`;
+        hours.textContent = day.is_active ? `${day.opening_time} às ${day.closing_time}` : 'Fechado';
+
+        row.append(name, status, hours);
+        publicBusinessHours.append(row);
+    });
+}
+
+async function loadPublicBusinessHours() {
+    if (!publicBusinessHours) return;
+
+    try {
+        const response = await fetch(SCHEDULE_SETTINGS_API_URL, { cache: 'no-store' });
+        const settings = await response.json().catch(() => ({}));
+        if (!response.ok || !Array.isArray(settings.days)) throw new Error(settings.error || 'Não foi possível carregar os horários.');
+        scheduleDays = new Map(settings.days.map((day) => [Number(day.day_of_week), day]));
+        renderPublicBusinessHours();
+        renderCalendar();
+    } catch (error) {
+        publicBusinessHours.setAttribute('aria-busy', 'false');
+        publicBusinessHours.replaceChildren();
+        const message = document.createElement('p');
+        message.className = 'business-hours-error';
+        message.textContent = error.message;
+        publicBusinessHours.append(message);
+    }
 }
 
 async function appointmentRequest(path = '', options = {}) {
@@ -152,6 +225,12 @@ function renderCalendar() {
         calDaysEl.appendChild(empty);
     }
 
+    if (selectedDate && !scheduleDay(selectedDate).is_active) {
+        selectedDate = null;
+        selectedTime = null;
+        updateSummary();
+    }
+
     for (let day = 1; day <= daysInMonth; day++) {
         const date = new Date(year, month, day);
         const dayElement = document.createElement('div');
@@ -160,9 +239,9 @@ function renderCalendar() {
 
         if (isPast(date)) {
             dayElement.classList.add('past');
-        } else if (date.getDay() === 1) {
+        } else if (!scheduleDay(date).is_active) {
             dayElement.classList.add('blocked');
-            dayElement.title = 'O studio não atende às segundas-feiras';
+            dayElement.title = 'O studio não atende neste dia';
         } else {
             dayElement.addEventListener('click', () => selectDate(date, dayElement));
         }
@@ -300,6 +379,7 @@ if (bookingForm && calDaysEl && calMonthLabel && slotsGrid && slotsLabel && book
 
     renderCalendar();
     loadActiveServices();
+    loadPublicBusinessHours();
 }
 
 function currentSession() {
