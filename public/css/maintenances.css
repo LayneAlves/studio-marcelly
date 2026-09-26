@@ -1,0 +1,131 @@
+/* Manutenções: status, edição de data prevista e lembrete. */
+.maintenance-status-awaiting {
+    border-color: #ead590;
+    color: #816312;
+    background: #fff7d8;
+}
+
+.maintenance-status-reminder_sent,
+.maintenance-status-rescheduled {
+    border-color: #abd6bc;
+    color: #277343;
+    background: #e8f6ec;
+}
+
+.maintenance-status-cancelled {
+    border-color: #e2b5b5;
+    color: #a14747;
+    background: #fff0f0;
+}
+
+.maintenance-card .appointment-card-status {
+    display: flex;
+    align-items: flex-start;
+}
+
+.maintenance-detail-status {
+    margin-top: .5rem;
+}
+
+.maintenance-detail-date-card {
+    padding: 1.1rem 1.15rem;
+}
+
+.maintenance-detail-date-card .maintenance-date-form {
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.maintenance-date-form {
+    margin-top: 1.2rem;
+    padding-top: 1.2rem;
+    border-top: 1px solid var(--line);
+}
+
+.maintenance-date-form label {
+    display: block;
+    margin-bottom: .4rem;
+    color: var(--text-soft);
+    font-size: .8rem;
+}
+
+.maintenance-date-form>div {
+    display: flex;
+    gap: .6rem;
+}
+
+.maintenance-date-form input {
+    min-width: 0;
+    min-height: 40px;
+    flex: 1;
+    padding: .55rem .65rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    outline: none;
+    color: var(--text);
+    background: var(--bg);
+    font: 400 .84rem 'Jost', sans-serif;
+}
+
+.maintenance-date-save {
+    padding: .55rem .8rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    color: var(--text-soft);
+    background: var(--surface-2);
+    font: 500 .78rem 'Jost', sans-serif;
+    cursor: pointer;
+}
+
+.maintenance-reminder-action {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 1.6rem;
+    padding-top: 1.4rem;
+    border-top: 1px solid var(--line);
+    text-align: center;
+}
+
+.maintenance-reminder-button {
+    min-width: min(100%, 240px);
+    padding: .7rem 1.2rem;
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-pill);
+    color: var(--accent-contrast);
+    background: var(--accent);
+    font: 500 .84rem 'Jost', sans-serif;
+    cursor: pointer;
+    transition: opacity var(--transicao), transform var(--transicao);
+}
+
+.maintenance-reminder-button:hover,
+.maintenance-reminder-button:focus-visible {
+    outline: none;
+    opacity: .82;
+    transform: translateY(-1px);
+}
+
+.maintenance-reminder-button:disabled {
+    cursor: not-allowed;
+    opacity: .5;
+}
+
+.maintenance-reminder-action .appointment-feedback {
+    margin: .7rem 0 0;
+}
+
+@media (max-width: 560px) {
+    .maintenance-table .status-badge {
+        opacity: 1 !important;
+    }
+
+    .maintenance-date-form>div {
+        flex-direction: column;
+    }
+
+    .maintenance-date-save {
+        width: 100%;
+    }
+}

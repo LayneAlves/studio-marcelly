@@ -1,0 +1,26 @@
+.access-denied-page {
+    display: grid;
+    min-height: 100vh;
+    place-items: center;
+    padding: 8rem 1.5rem 3rem;
+    background: var(--bg);
+}
+
+.access-denied-card {
+    width: min(100%, 560px);
+    padding: clamp(2rem, 6vw, 3.5rem);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    box-shadow: var(--sombra);
+    text-align: center;
+}
+
+.access-denied-card .eyebrow { margin-bottom: .65rem; }
+.access-denied-card h1 { margin-bottom: .8rem; color: var(--text); }
+.access-denied-card p:not(.eyebrow) { max-width: 390px; margin-inline: auto; color: var(--text-soft); }
+.access-denied-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: .75rem; margin-top: 1.6rem; }
+
+@media (max-width: 420px) {
+    .access-denied-actions .btn { width: 100%; justify-content: center; }
+}

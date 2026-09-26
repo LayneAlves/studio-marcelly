@@ -11,14 +11,14 @@ const revealObserver = new IntersectionObserver((entries) => {
 revealEls.forEach((element) => revealObserver.observe(element));
 
 const galleryItems = [
-    { cat: 'mega-brasileiro', label: 'Mega Brasileiro', img: 'cilios-imagens/mega-brasileiro.png' },
-    { cat: 'volume-4D', label: 'Volume 4D', img: 'cilios-imagens/volume-4D.png' },
-    { cat: 'volume-6D', label: 'Volume 6D', img: 'cilios-imagens/volume-6D.png' },
-    { cat: 'volume-brasileiro', label: 'Volume Brasileiro', img: 'cilios-imagens/volume-brasileiro.png' },
-    { cat: 'volume-fox', label: 'Volume Fox', img: 'cilios-imagens/volume-fox.png' },
-    { cat: 'volume-hibrido', label: 'Volume Híbrido', img: 'cilios-imagens/volume-hibrido.png' },
-    { cat: 'volume-princesa', label: 'Volume Princesa', img: 'cilios-imagens/volume-princesa.png' },
-    { cat: 'volume-russo', label: 'Volume Russo', img: 'cilios-imagens/volume-russo.png' },
+    { cat: 'mega-brasileiro', label: 'Mega Brasileiro', img: '/images/cilios-imagens/mega-brasileiro.png' },
+    { cat: 'volume-4D', label: 'Volume 4D', img: '/images/cilios-imagens/volume-4D.png' },
+    { cat: 'volume-6D', label: 'Volume 6D', img: '/images/cilios-imagens/volume-6D.png' },
+    { cat: 'volume-brasileiro', label: 'Volume Brasileiro', img: '/images/cilios-imagens/volume-brasileiro.png' },
+    { cat: 'volume-fox', label: 'Volume Fox', img: '/images/cilios-imagens/volume-fox.png' },
+    { cat: 'volume-hibrido', label: 'Volume Híbrido', img: '/images/cilios-imagens/volume-hibrido.png' },
+    { cat: 'volume-princesa', label: 'Volume Princesa', img: '/images/cilios-imagens/volume-princesa.png' },
+    { cat: 'volume-russo', label: 'Volume Russo', img: '/images/cilios-imagens/volume-russo.png' },
 ];
 
 const galleryGrid = document.getElementById('galleryGrid');

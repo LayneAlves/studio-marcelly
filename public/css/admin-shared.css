@@ -1,0 +1,1177 @@
+/* Estrutura e componentes reutilizados por todas as páginas administrativas. */
+.admin-body {
+    min-width: 0;
+}
+
+.admin-panel {
+    min-height: 100vh;
+}
+
+.admin-sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    width: 272px;
+    padding: 2rem 1.15rem 1.15rem;
+    overflow-y: auto;
+    color: var(--on-ink);
+    background: radial-gradient(circle at 12% 93%, rgba(242, 241, 239, .12), transparent 30%), linear-gradient(165deg, var(--ink-soft), var(--ink) 52%, var(--ink));
+    border-right: 1px solid var(--ink-line);
+}
+
+.admin-sidebar-top {
+    padding: 0 .75rem;
+}
+
+.admin-brand,
+.admin-mobile-brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .7rem;
+    color: var(--on-ink);
+    font: 1.08rem/1.2 'Playfair Display', serif;
+}
+
+.admin-brand img,
+.admin-mobile-brand img {
+    width: auto;
+    height: 164px;
+}
+
+.admin-brand em,
+.admin-mobile-brand span {
+    color: var(--on-ink-soft);
+    font-style: italic;
+}
+
+.admin-brand-mark {
+    display: grid;
+    flex: 0 0 auto;
+    width: 36px;
+    height: 36px;
+    place-items: center;
+    border: 1px solid var(--ink-line);
+    border-radius: 50%;
+    font: 600 .68rem 'Jost', sans-serif;
+    letter-spacing: .08em;
+}
+
+.admin-brand-label {
+    margin: 1.6rem 0 0;
+    color: var(--on-ink-faint);
+    font-size: .68rem;
+    font-weight: 500;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+}
+
+.admin-menu {
+    display: grid;
+    gap: .35rem;
+    margin-top: 1.25rem;
+}
+
+.admin-menu-link {
+    display: flex;
+    align-items: center;
+    gap: .9rem;
+    min-height: 48px;
+    padding: .75rem;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    color: var(--on-ink-soft);
+    font-size: .96rem;
+    font-weight: 400;
+    letter-spacing: .01em;
+    transition: color var(--transicao), background var(--transicao), border-color var(--transicao), transform var(--transicao);
+}
+
+.admin-menu-link svg {
+    flex: 0 0 auto;
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.65;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.admin-menu-link:hover,
+.admin-menu-link:focus-visible {
+    border-color: rgba(242, 241, 239, .1);
+    outline: none;
+    color: var(--on-ink);
+    background: rgba(242, 241, 239, .08);
+}
+
+.admin-menu-link.is-active {
+    border-color: rgba(242, 241, 239, .14);
+    box-shadow: inset 3px 0 0 var(--on-ink);
+    color: var(--on-ink);
+    background: rgba(242, 241, 239, .14);
+}
+
+.admin-sidebar-footer {
+    display: grid;
+    gap: .35rem;
+    margin-top: auto;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--ink-line);
+}
+
+.admin-logout {
+    color: var(--on-ink-faint);
+}
+
+.admin-content {
+    display: block;
+    min-height: 100vh;
+    margin-left: 272px;
+    padding: clamp(2rem, 6vw, 5.5rem);
+    background: var(--bg);
+}
+
+/* Evita que o `header` fixo do site público alcance cabeçalhos internos do painel. */
+.admin-content header {
+    position: static;
+    inset: auto;
+    z-index: auto;
+    width: auto;
+    min-height: 0;
+    padding: 14px;
+    background: transparent;
+    box-shadow: none;
+    transition: none;
+}
+
+.admin-content.is-admin-view,
+.admin-content.is-dashboard-view {
+    display: block;
+}
+
+.admin-content h1 {
+    color: var(--text);
+    font-size: clamp(2rem, 4vw, 3.25rem);
+}
+
+.admin-page-heading {
+    display: flex;
+    justify-content: space-between;
+    gap: 1.5rem;
+    margin-bottom: 2.4rem;
+}
+
+.admin-page-heading h1 {
+    margin-bottom: .55rem;
+}
+
+.admin-page-heading p:last-child {
+    max-width: 550px;
+    color: var(--text-soft);
+}
+
+.admin-eyebrow {
+    margin-bottom: .5rem;
+    color: var(--text-soft);
+    font-size: .7rem;
+    font-weight: 500;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+}
+
+.admin-button {
+    display: inline-flex;
+    flex: 0 1 164px;
+    align-items: center;
+    justify-content: center;
+    max-width: 164px;
+    max-height: 64px;
+    margin-top: 48px;
+    padding: .7rem 1.1rem;
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-sm);
+    color: var(--accent-contrast);
+    background: var(--accent);
+    font: 500 .9rem 'Jost', sans-serif;
+    cursor: pointer;
+    transition: transform var(--transicao), opacity var(--transicao), background var(--transicao);
+}
+
+.admin-button:hover,
+.admin-button:focus-visible {
+    outline: none;
+    opacity: .82;
+    transform: translateY(-1px);
+}
+
+.admin-button-secondary {
+    border-color: var(--line);
+    color: var(--text);
+    background: transparent;
+}
+
+.service-empty-state {
+    padding: 2rem 1.25rem;
+    color: var(--text-soft);
+    text-align: center;
+}
+
+/* Componente reutilizado de menu de ações. */
+.action-dropdown {
+    position: relative;
+    display: inline-flex;
+    min-width: 126px;
+}
+
+.action-dropdown-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    min-height: 40px;
+    gap: .7rem;
+    padding: .55rem .75rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    background: rgba(255, 255, 255, .68);
+    font: 500 .78rem 'Jost', sans-serif;
+    cursor: pointer;
+    transition: background var(--transicao), border-color var(--transicao), box-shadow var(--transicao);
+}
+
+.action-dropdown-toggle>i {
+    color: var(--text-faint);
+    font-size: .65rem;
+    transition: transform var(--transicao);
+}
+
+.action-dropdown-toggle:hover,
+.action-dropdown-toggle:focus-visible,
+.action-dropdown.is-open .action-dropdown-toggle {
+    border-color: var(--text-soft);
+    outline: none;
+    background: var(--surface);
+    box-shadow: 0 0 0 3px var(--ring);
+}
+
+.action-dropdown.is-open .action-dropdown-toggle>i {
+    transform: rotate(180deg);
+}
+
+.action-dropdown-menu {
+    position: absolute;
+    z-index: 8;
+    top: calc(100% + .45rem);
+    right: 0;
+    display: grid;
+    min-width: 184px;
+    padding: .35rem;
+    border: 1px solid rgba(20, 20, 20, .12);
+    border-radius: var(--radius-sm);
+    color: var(--text-soft);
+    background: rgba(255, 255, 255, .92);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, .12);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-5px) scale(.98);
+    transform-origin: top right;
+    transition: opacity var(--transicao), transform var(--transicao), visibility var(--transicao);
+    visibility: hidden;
+    backdrop-filter: blur(14px);
+}
+
+.action-dropdown.is-open .action-dropdown-menu {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0) scale(1);
+    visibility: visible;
+}
+
+.action-dropdown-item {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 40px;
+    gap: .7rem;
+    padding: .55rem .65rem;
+    border: 0;
+    border-radius: calc(var(--radius-sm) - 2px);
+    color: var(--text-soft);
+    background: transparent;
+    font: 500 .78rem 'Jost', sans-serif;
+    text-align: left;
+    cursor: pointer;
+    transition: background var(--transicao), color var(--transicao), transform var(--transicao);
+}
+
+.action-dropdown-item>i {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    color: currentColor;
+    font-size: .82rem;
+}
+
+.action-dropdown-item:hover,
+.action-dropdown-item:focus-visible,
+.action-dropdown-item.is-active {
+    outline: none;
+    color: var(--text);
+    background: var(--surface-2);
+}
+
+.action-dropdown-item:active {
+    transform: scale(.98);
+}
+
+.action-dropdown-item--reschedule {
+    color: #3b619b;
+}
+
+.action-dropdown-item--reschedule:hover,
+.action-dropdown-item--reschedule:focus-visible {
+    color: #2b4d82;
+    background: #edf3ff;
+}
+
+.action-dropdown-item--danger {
+    color: #a14747;
+}
+
+.action-dropdown-item--danger:hover,
+.action-dropdown-item--danger:focus-visible {
+    color: #8a3636;
+    background: #fff0f0;
+}
+
+.action-dropdown-item--warning {
+    color: #a55c2b;
+}
+
+.action-dropdown-item--warning:hover,
+.action-dropdown-item--warning:focus-visible {
+    color: #89451e;
+    background: #fff3e8;
+}
+
+.action-dropdown-item--success {
+    color: #277343;
+}
+
+.action-dropdown-item--success:hover,
+.action-dropdown-item--success:focus-visible {
+    color: #1d5c34;
+    background: #e8f6ec;
+}
+
+.action-dropdown-toggle>span {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+}
+
+/* Card e status compartilhados entre Agendamentos, Clientes, Manutenções e Dashboard. */
+.admin-appointments {
+    width: min(100%, 1180px);
+    margin-inline: auto;
+    padding: clamp(2rem, 5vw, 4.5rem) 0;
+}
+
+.appointment-list-panel {
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    box-shadow: var(--sombra);
+}
+
+.appointment-cards {
+    display: grid;
+    gap: 1rem;
+    padding: 1rem;
+}
+
+.appointment-card {
+    position: relative;
+    overflow: visible;
+    border: 1px solid rgba(176, 176, 176, .622);
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, .035);
+}
+
+.appointment-card-header {
+    position: static;
+    top: auto;
+    z-index: auto;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    width: auto;
+    gap: 1rem;
+    padding: 1.05rem 1.1rem .9rem;
+}
+
+.appointment-card-client {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    gap: .75rem;
+}
+
+.appointment-card-avatar {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    color: var(--text);
+    background: #ededed;
+    font: 500 .93rem 'Jost', sans-serif;
+}
+
+.appointment-card-client h3 {
+    margin: 0;
+    overflow-wrap: anywhere;
+    color: var(--text);
+    font: 500 1rem 'Jost', sans-serif;
+}
+
+.appointment-card-client p {
+    margin: .14rem 0 0;
+    overflow-wrap: anywhere;
+    color: var(--text-soft);
+    font: 400 .78rem 'Jost', sans-serif;
+}
+
+.appointment-card-status {
+    flex: 0 0 auto;
+}
+
+.appointment-card-status .action-dropdown {
+    min-width: 0;
+}
+
+.appointment-card-status .appointment-status-toggle,
+.appointment-card-status .appointment-status-toggle.is-static {
+    min-height: 34px;
+    padding: .42rem .65rem;
+    font-size: .7rem;
+}
+
+.appointment-card-status .action-dropdown-toggle>span,
+.appointment-card-status .appointment-status-toggle.is-static>span {
+    gap: .35rem;
+}
+
+.appointment-card-divider {
+    height: 1px;
+    margin: 0 1.1rem;
+    background: #ececec;
+}
+
+.appointment-card-body {
+    position: relative;
+    padding: 1rem 1.1rem;
+    overflow: hidden;
+}
+
+.appointment-card-data {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .9rem 1.25rem;
+}
+
+.appointment-card-data-item {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    gap: .65rem;
+}
+
+.appointment-card-icon {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    color: #171717;
+    background: #f0f0f0;
+    font-size: .78rem;
+}
+
+.appointment-card-data-item p {
+    margin: 0;
+    color: var(--text-faint);
+    font: 500 .6rem 'Jost', sans-serif;
+    letter-spacing: .11em;
+    text-transform: uppercase;
+}
+
+.appointment-card-data-item strong {
+    display: block;
+    margin-top: .18rem;
+    overflow-wrap: anywhere;
+    color: var(--text);
+    font: 500 .8rem 'Jost', sans-serif;
+}
+
+.appointment-card-lashes {
+    position: absolute;
+    z-index: 0;
+    right: -8px;
+    bottom: -8px;
+    width: 150px;
+    fill: none;
+    color: #e6e6e6;
+    opacity: .68;
+    pointer-events: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-width: 1.2;
+}
+
+.appointment-card-footer {
+    display: flex;
+    justify-content: center;
+    padding: .85rem 1.1rem 1rem;
+    background: transparent;
+}
+
+.appointment-card-details {
+    min-width: 140px;
+    padding: .56rem 1rem;
+    border: 1px solid #171717;
+    border-radius: var(--radius-pill);
+    color: #171717;
+    background: rgba(255, 255, 255, .72);
+    font: 500 .72rem 'Jost', sans-serif;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background var(--transicao), color var(--transicao), transform var(--transicao);
+}
+
+.appointment-card-details span {
+    margin-left: .2rem;
+    font-size: 1rem;
+    line-height: 0;
+}
+
+.appointment-card-details:hover,
+.appointment-card-details:focus-visible {
+    outline: none;
+    color: #fff;
+    background: #171717;
+    transform: translateY(-1px);
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    max-width: 176px;
+    padding: .28rem .55rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    font-size: .7rem;
+    white-space: nowrap;
+}
+
+.status-pending {
+    border-color: #ead590;
+    color: #816312;
+    background: #fff7d8;
+}
+
+.status-confirmed {
+    border-color: #bfd0ef;
+    color: #3b619b;
+    background: #edf3ff;
+}
+
+.status-in_progress {
+    border-color: #d5c2e9;
+    color: #765295;
+    background: #f5edfc;
+}
+
+.status-completed {
+    border-color: #abd6bc;
+    color: #277343;
+    background: #e8f6ec;
+}
+
+.status-cancelled {
+    border-color: #e2b5b5;
+    color: #a14747;
+    background: #fff0f0;
+}
+
+.status-no_show {
+    border-color: #edc6a7;
+    color: #a55c2b;
+    background: #fff3e8;
+}
+
+.appointment-status-toggle.is-static {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    min-height: 40px;
+    padding: .55rem .75rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    color: var(--text);
+    font: 500 .78rem 'Jost', sans-serif;
+}
+
+.appointment-status-toggle.is-static>span {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+}
+
+.appointment-status-toggle.is-static.status-pending {
+    border-color: #ead590;
+    color: #816312;
+    background: #fff7d8;
+}
+
+.appointment-status-toggle.is-static.status-confirmed {
+    border-color: #bfd0ef;
+    color: #3b619b;
+    background: #edf3ff;
+}
+
+.appointment-status-toggle.is-static.status-in_progress {
+    border-color: #d5c2e9;
+    color: #765295;
+    background: #f5edfc;
+}
+
+.appointment-status-toggle.is-static.status-completed {
+    border-color: #abd6bc;
+    color: #fff;
+    background: #277343;
+}
+
+.appointment-status-toggle.is-static.status-cancelled {
+    border-color: #e2b5b5;
+    color: #a14747;
+    background: #fff0f0;
+}
+
+.appointment-status-toggle.is-static.status-no_show {
+    border-color: #edc6a7;
+    color: #a55c2b;
+    background: #fff3e8;
+}
+
+/* Diálogos e detalhes compartilhados. */
+.appointment-dialog {
+    position: fixed;
+    inset: 0;
+    width: min(680px, calc(100vw - 2rem));
+    max-height: min(800px, calc(100vh - 2rem));
+    margin: auto;
+    padding: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    color: var(--text);
+    background: var(--surface);
+    box-shadow: var(--sombra);
+    -webkit-overflow-scrolling: touch;
+}
+
+.appointment-dialog::backdrop {
+    background: rgba(0, 0, 0, .55);
+}
+
+.appointment-dialog-inner {
+    position: relative;
+    padding: clamp(1.25rem, 4vw, 2rem);
+}
+
+.dialog-close {
+    position: absolute;
+    top: .8rem;
+    right: .8rem;
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    color: var(--text);
+    background: transparent;
+    font-size: 1.25rem;
+    cursor: pointer;
+}
+
+.appointment-dialog h2 {
+    margin-bottom: .35rem;
+}
+
+.appointment-dialog.is-appointment-details-dialog {
+    width: min(760px, calc(100vw - 2rem));
+    max-height: min(840px, calc(100vh - 1.5rem));
+    border: 0;
+    border-radius: 26px;
+    background: #fff;
+    box-shadow: 0 26px 70px rgba(0, 0, 0, .2);
+}
+
+.appointment-dialog.is-appointment-details-dialog::backdrop {
+    background: rgba(10, 10, 10, .58);
+    backdrop-filter: blur(5px);
+}
+
+.is-appointment-details-dialog .appointment-dialog-inner {
+    padding: clamp(1.35rem, 4vw, 2.35rem);
+}
+
+.is-appointment-details-dialog .dialog-close {
+    position: sticky;
+    z-index: 3;
+    top: .25rem;
+    float: right;
+    margin-top: -.25rem;
+    border-color: rgba(20, 20, 20, .16);
+    background: rgba(255, 255, 255, .9);
+    box-shadow: 0 3px 12px rgba(0, 0, 0, .06);
+}
+
+.booking-detail-modal {
+    display: grid;
+    clear: both;
+    gap: 1rem;
+}
+
+.booking-detail-header {
+    position: relative;
+    top: auto;
+    z-index: auto;
+    width: auto;
+    min-height: 94px;
+    padding: .2rem 4rem .45rem 0;
+}
+
+.booking-detail-eyebrow,
+.booking-detail-label,
+.booking-detail-section-title {
+    margin: 0;
+    color: var(--text-faint);
+    font: 500 .63rem 'Jost', sans-serif;
+    letter-spacing: .15em;
+    text-transform: uppercase;
+}
+
+.booking-detail-header h2 {
+    margin: .45rem 0 .25rem;
+    color: var(--text);
+    font: 600 clamp(1.7rem, 4vw, 2.3rem) / 1.05 'Playfair Display', serif;
+}
+
+.booking-detail-service {
+    margin: 0;
+    color: var(--text-soft);
+    font: 400 .92rem 'Jost', sans-serif;
+}
+
+.booking-detail-lashes {
+    position: absolute;
+    top: .55rem;
+    right: .5rem;
+    width: min(32vw, 142px);
+    fill: none;
+    color: #d8d8d8;
+    opacity: .72;
+    pointer-events: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-width: 1.25;
+}
+
+.booking-detail-card {
+    border: 1px solid rgba(176, 176, 176, .622);
+    border-radius: 16px;
+    background: #fcfcfc;
+}
+
+.booking-detail-client-card {
+    display: grid;
+    grid-template-columns: minmax(190px, .9fr) 1px minmax(220px, 1.1fr);
+    align-items: center;
+    min-height: 104px;
+    gap: 1rem;
+    padding: 1rem 1.15rem;
+}
+
+.booking-detail-client {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    gap: .8rem;
+}
+
+.booking-detail-avatar,
+.booking-detail-icon {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+    color: #6e6e6e;
+    background: #f0f0f0;
+    font-size: .85rem;
+}
+
+.booking-detail-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    color: var(--text);
+}
+
+.booking-detail-client strong,
+.booking-detail-info-row strong,
+.booking-detail-value strong,
+.booking-detail-created strong {
+    display: block;
+    margin-top: .22rem;
+    overflow-wrap: anywhere;
+    color: var(--text);
+    font: 500 .92rem 'Jost', sans-serif;
+}
+
+.booking-detail-meta-card .booking-detail-created {
+    justify-content: center;
+}
+
+.booking-detail-card-divider {
+    align-self: stretch;
+    background: var(--line);
+}
+
+.booking-detail-contact {
+    display: grid;
+    min-width: 0;
+    gap: .55rem;
+}
+
+.booking-detail-contact p,
+.booking-detail-created {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    margin: 0;
+    overflow-wrap: anywhere;
+    color: var(--text-soft);
+    font: 400 .82rem 'Jost', sans-serif;
+}
+
+.booking-detail-contact i,
+.booking-detail-created i {
+    width: 14px;
+    color: var(--text-faint);
+    text-align: center;
+}
+
+.booking-detail-info-card {
+    padding: 1.1rem 1.15rem .35rem;
+}
+
+.booking-detail-section-title {
+    margin-bottom: .75rem;
+}
+
+.booking-detail-info-list {
+    display: grid;
+}
+
+.booking-detail-info-row {
+    display: flex;
+    align-items: center;
+    min-height: 66px;
+    gap: .8rem;
+    padding: .7rem 0;
+}
+
+.booking-detail-info-row+.booking-detail-info-row {
+    border-top: 1px solid var(--line);
+}
+
+.booking-detail-info-row>div {
+    min-width: 0;
+    padding-left: .85rem;
+    border-left: 1px solid var(--line);
+}
+
+.booking-detail-values-card {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    padding: .45rem 0;
+}
+
+.booking-detail-value {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    gap: .7rem;
+    padding: .7rem 1rem;
+}
+
+.booking-detail-value+.booking-detail-value {
+    border-left: 1px solid var(--line);
+}
+
+.booking-detail-value strong {
+    font-size: .98rem;
+}
+
+.booking-detail-footer {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    background: transparent;
+}
+
+.booking-detail-meta-card {
+    display: grid;
+    align-content: center;
+    min-height: 94px;
+    padding: 1rem 1.15rem;
+}
+
+.booking-detail-status-control {
+    margin-top: .5rem;
+}
+
+.booking-detail-status-control .action-dropdown {
+    min-width: 154px;
+}
+
+.booking-detail-status-control .action-dropdown-toggle>span {
+    gap: .45rem;
+}
+
+.booking-detail-status-control .action-dropdown-toggle>span>i {
+    font-size: .76rem;
+}
+
+.booking-detail-status-control .appointment-status-toggle {
+    border-radius: var(--radius-pill);
+}
+
+.admin-mobile-bar,
+.admin-sidebar-backdrop,
+.admin-menu-toggle {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .admin-mobile-bar {
+        position: fixed;
+        inset: 0 0 auto;
+        z-index: 15;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 64px;
+        padding: .75rem 1rem;
+        color: var(--on-ink);
+        background: var(--ink);
+        border-bottom: 1px solid var(--ink-line);
+    }
+
+    .admin-mobile-brand {
+        font-size: .95rem;
+        white-space: nowrap;
+    }
+
+    .admin-mobile-actions {
+        display: flex;
+        align-items: center;
+        gap: .25rem;
+    }
+
+    .admin-menu-toggle {
+        display: inline-flex;
+        flex-direction: column;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        gap: 5px;
+        padding: 0 8px;
+        border: 1px solid transparent;
+        border-radius: 50%;
+        color: var(--on-ink);
+        background: transparent;
+        cursor: pointer;
+    }
+
+    .admin-menu-toggle span {
+        display: block;
+        width: 100%;
+        height: 1.5px;
+        background: currentColor;
+        transition: transform var(--transicao), opacity var(--transicao);
+    }
+
+    .admin-menu-toggle.is-open span:nth-child(1) {
+        transform: translateY(6.5px) rotate(45deg);
+    }
+
+    .admin-menu-toggle.is-open span:nth-child(2) {
+        opacity: 0;
+    }
+
+    .admin-menu-toggle.is-open span:nth-child(3) {
+        transform: translateY(-6.5px) rotate(-45deg);
+    }
+
+    .admin-sidebar {
+        width: min(82vw, 300px);
+        padding-top: 1.5rem;
+        transform: translateX(-100%);
+        transition: transform var(--transicao);
+        box-shadow: none;
+    }
+
+    .admin-sidebar.is-open {
+        transform: translateX(0);
+        box-shadow: 18px 0 45px rgba(0, 0, 0, .28);
+    }
+
+    .admin-sidebar-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 18;
+        width: 100%;
+        height: 100%;
+        border: 0;
+        opacity: 0;
+        pointer-events: none;
+        background: rgba(0, 0, 0, .42);
+        transition: opacity var(--transicao);
+    }
+
+    .admin-sidebar-backdrop.is-visible {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .admin-content {
+        min-height: 100svh;
+        margin-left: 0;
+        padding: 64px 1.25rem 1.25rem;
+    }
+
+    .appointment-dialog {
+        width: calc(100vw - 1.5rem);
+        max-height: calc(100dvh - 1.5rem);
+    }
+}
+
+@media (max-width: 640px) {
+    .appointment-dialog.is-appointment-details-dialog {
+        width: calc(100vw - 1rem);
+        max-height: calc(100vh - 1rem);
+        border-radius: 20px;
+    }
+
+    .is-appointment-details-dialog .appointment-dialog-inner {
+        padding: 1.15rem;
+    }
+
+    .booking-detail-header {
+        min-height: 112px;
+        padding-right: 2.7rem;
+    }
+
+    .booking-detail-lashes {
+        top: 2.5rem;
+        right: 0;
+        width: 104px;
+        opacity: .48;
+    }
+
+    .booking-detail-client-card,
+    .booking-detail-footer,
+    .booking-detail-values-card {
+        grid-template-columns: 1fr;
+    }
+
+    .booking-detail-client-card {
+        gap: .9rem;
+    }
+
+    .booking-detail-card-divider {
+        width: 100%;
+        height: 1px;
+    }
+
+    .booking-detail-value+.booking-detail-value {
+        border-top: 1px solid var(--line);
+        border-left: 0;
+    }
+
+    .booking-detail-footer {
+        gap: .75rem;
+        background: none;
+    }
+}
+
+@media (max-width: 560px) {
+    .admin-page-heading {
+        margin-bottom: 1.5rem;
+    }
+
+    .admin-button {
+        width: 100%;
+    }
+
+    .appointment-cards {
+        padding: .8rem;
+    }
+
+    .appointment-card-status .action-dropdown {
+        display: inline-flex;
+    }
+}
+
+@media (max-width: 420px) {
+    .appointment-card-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .appointment-card-status .action-dropdown,
+    .appointment-card-status .appointment-status-toggle.is-static {
+        width: 100%;
+    }
+
+    .appointment-card-data {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 380px) {
+    .admin-mobile-brand span {
+        display: none;
+    }
+}

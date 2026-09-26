@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head><%- include('../includes/head') %></head>
+
+<body class="admin-body" data-admin-module="dashboard">
+    <div class="admin-panel">
+        <%- include('../includes/header') %>
+            <%- include('../includes/admin-sidebar') %>
+                <main class="admin-content is-dashboard-view" id="dashboard">
+                    <section class="admin-dashboard-view" aria-labelledby="dashboardTitle">
+                        <header class="admin-page-heading dashboard-heading">
+                            <div>
+                                <p class="admin-eyebrow">Visão geral</p>
+                                <h1 id="dashboardTitle">Dashboard</h1>
+                                <p>Visão geral do Studio Marcelly Freitas.</p>
+                            </div>
+                        </header>
+                        <section class="dashboard-summary" aria-label="Resumo do studio">
+                            <article class="dashboard-summary-card"><span class="dashboard-summary-icon"
+                                    aria-hidden="true"><i class="fa-regular fa-calendar"></i></span>
+                                <div>
+                                    <p>Agendamentos hoje</p><strong id="dashboardAppointmentsToday">0</strong>
+                                </div>
+                            </article>
+                            <article class="dashboard-summary-card"><span class="dashboard-summary-icon"
+                                    aria-hidden="true"><i class="fa-solid fa-wallet"></i></span>
+                                <div>
+                                    <p>Faturamento do mês</p><strong id="dashboardBillingMonth">R$ 0,00</strong>
+                                </div>
+                            </article>
+                            <article class="dashboard-summary-card"><span class="dashboard-summary-icon"
+                                    aria-hidden="true"><i class="fa-regular fa-user"></i></span>
+                                <div>
+                                    <p>Clientes</p><strong id="dashboardClientsCount">0</strong>
+                                </div>
+                            </article>
+                            <article class="dashboard-summary-card"><span class="dashboard-summary-icon"
+                                    aria-hidden="true"><i class="fa-regular fa-star"></i></span>
+                                <div>
+                                    <p>Serviços ativos</p><strong id="dashboardActiveServices">0</strong>
+                                </div>
+                            </article>
+                        </section>
+                        <section class="dashboard-panel dashboard-upcoming-panel"
+                            aria-labelledby="dashboardUpcomingTitle">
+                            <header class="dashboard-section-heading">
+                                <div>
+                                    <h2 id="dashboardUpcomingTitle">Próximos agendamentos</h2>
+                                    <p>Os cinco próximos horários da agenda.</p>
+                                </div><a class="dashboard-section-link" href="/agendamentos.html">Ver todos <i
+                                        class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+                            </header>
+                            <div class="dashboard-upcoming-list" id="dashboardUpcomingList"></div>
+                            <p class="dashboard-empty-state" id="dashboardUpcomingEmpty">Nenhum próximo agendamento.</p>
+                        </section>
+                        <section class="dashboard-panel dashboard-financial-panel"
+                            aria-labelledby="dashboardFinancialTitle">
+                            <header class="dashboard-section-heading">
+                                <div>
+                                    <h2 id="dashboardFinancialTitle">Resumo financeiro do mês</h2>
+                                    <p>Valores calculados a partir dos agendamentos registrados.</p>
+                                </div><a class="dashboard-section-link" href="/faturamento.html">Ver faturamento <i
+                                        class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+                            </header>
+                            <div class="dashboard-financial-summary">
+                                <div class="dashboard-financial-item">
+                                    <p>Total previsto</p><strong id="dashboardForecasted">R$ 0,00</strong>
+                                </div>
+                                <div class="dashboard-financial-item">
+                                    <p>Total recebido</p><strong id="dashboardReceived">R$ 0,00</strong>
+                                </div>
+                                <div class="dashboard-financial-item">
+                                    <p>Total pendente</p><strong id="dashboardPending">R$ 0,00</strong>
+                                </div>
+                            </div>
+                        </section>
+                        <p class="dashboard-feedback" id="dashboardFeedback" role="status" aria-live="polite"></p>
+                    </section>
+                </main>
+    </div>
+    <dialog class="appointment-dialog" id="appointmentDialog">
+        <div class="appointment-dialog-inner"><button class="dialog-close" id="appointmentDialogClose" type="button"
+                aria-label="Fechar">×</button>
+            <div id="appointmentDialogContent"></div>
+        </div>
+    </dialog>
+    <%- include('../includes/footer') %>
+        <script src="/js/admin-shared.js"></script>
+        <script src="/js/dashboard.js"></script>
+</body>
+
+</html>

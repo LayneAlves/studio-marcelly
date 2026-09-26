@@ -1,0 +1,322 @@
+/* Serviços: formulário, catálogo, status e ações. */
+.admin-services {
+    width: min(100%, 1080px);
+    margin-inline: auto;
+    padding: clamp(2rem, 5vw, 4.5rem) 0;
+}
+
+.service-form-panel,
+.service-list-panel {
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    box-shadow: var(--sombra);
+}
+
+.service-form-panel {
+    padding: clamp(1.25rem, 3vw, 2rem);
+}
+
+.service-form-panel h2,
+.service-list-heading h2 {
+    font: 500 1.05rem 'Jost', sans-serif;
+}
+
+.service-form {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.1rem;
+    margin-top: 1.35rem;
+}
+
+.service-field {
+    min-width: 0;
+}
+
+.service-field-wide {
+    grid-column: span 3;
+}
+
+.service-field label {
+    display: block;
+    margin-bottom: .45rem;
+    color: var(--text-soft);
+    font-size: .82rem;
+}
+
+.service-field label span {
+    color: var(--text);
+}
+
+.service-field input,
+.service-field select {
+    width: 100%;
+    min-height: 46px;
+    padding: .7rem .85rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    outline: none;
+    color: var(--text);
+    background: var(--bg);
+    font: 400 .94rem 'Jost', sans-serif;
+    transition: border-color var(--transicao), box-shadow var(--transicao), background var(--transicao);
+}
+
+.service-field input::placeholder {
+    color: var(--text-faint);
+}
+
+.service-field input:focus,
+.service-field select:focus {
+    border-color: var(--text-soft);
+    background: var(--surface);
+    box-shadow: 0 0 0 3px var(--ring);
+}
+
+.service-form-actions {
+    display: flex;
+    align-items: end;
+    grid-column: span 3;
+    gap: .7rem;
+    padding-top: .25rem;
+}
+
+.service-feedback {
+    min-height: 1.4rem;
+    margin-top: .9rem;
+    color: var(--text-soft);
+    font-size: .84rem;
+}
+
+.service-feedback.is-error {
+    color: #a14747;
+}
+
+.service-list-panel {
+    margin-top: 1.4rem;
+    overflow: hidden;
+}
+
+.service-list-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.25rem clamp(1.25rem, 3vw, 2rem);
+    border-bottom: 1px solid var(--line);
+}
+
+.service-count {
+    color: var(--text-soft);
+    font-size: .8rem;
+}
+
+.service-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.service-table th,
+.service-table td {
+    padding: 1rem clamp(.85rem, 1.6vw, 1.25rem);
+    border-bottom: 1px solid var(--line);
+    vertical-align: middle;
+}
+
+.service-table th {
+    color: var(--text-soft);
+    font-size: .68rem;
+    font-weight: 500;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+}
+
+.service-table td {
+    color: var(--text-soft);
+    font-size: .88rem;
+}
+
+.service-table td:first-child {
+    color: var(--text);
+    font-weight: 500;
+}
+
+.service-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.service-table tbody tr.is-inactive td {
+    color: var(--text-faint);
+}
+
+.service-table tbody tr.is-inactive td:first-child {
+    color: var(--text-soft);
+}
+
+.service-status {
+    display: inline-flex;
+    align-items: center;
+    gap: .55rem;
+    color: var(--text-soft);
+    font-size: .8rem;
+    white-space: nowrap;
+}
+
+.service-switch {
+    position: relative;
+    display: inline-flex;
+    flex: 0 0 auto;
+    width: 34px;
+    height: 20px;
+}
+
+.service-switch input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+}
+
+.service-switch-track {
+    width: 100%;
+    height: 100%;
+    border-radius: var(--radius-pill);
+    background: var(--surface-2);
+    box-shadow: inset 0 0 0 1px var(--line);
+    cursor: pointer;
+    transition: background var(--transicao);
+}
+
+.service-switch-track::after {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--text-soft);
+    content: '';
+    transition: transform var(--transicao), background var(--transicao);
+}
+
+.service-switch input:checked+.service-switch-track {
+    background: var(--accent);
+}
+
+.service-switch input:checked+.service-switch-track::after {
+    background: var(--accent-contrast);
+    transform: translateX(14px);
+}
+
+.service-switch input:focus-visible+.service-switch-track {
+    outline: 2px solid var(--ring);
+    outline-offset: 3px;
+}
+
+.service-actions {
+    display: flex;
+    align-items: center;
+    gap: .7rem;
+}
+
+.service-action-button {
+    padding: 0;
+    border: 0;
+    color: var(--text-soft);
+    background: transparent;
+    font: 500 .82rem 'Jost', sans-serif;
+    cursor: pointer;
+    transition: color var(--transicao);
+}
+
+.service-action-button:hover,
+.service-action-button:focus-visible {
+    outline: none;
+    color: var(--text);
+}
+
+.service-action-button-delete:hover,
+.service-action-button-delete:focus-visible {
+    color: #a14747;
+}
+
+@media (max-width: 768px) {
+    .admin-services {
+        padding: 2rem 0;
+    }
+
+    .service-form {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .service-field-wide,
+    .service-form-actions {
+        grid-column: span 2;
+    }
+}
+
+@media (max-width: 560px) {
+
+    .service-form,
+    .service-field-wide,
+    .service-form-actions {
+        grid-template-columns: 1fr;
+        grid-column: auto;
+    }
+
+    .service-form-actions {
+        align-items: stretch;
+    }
+
+    .service-table thead {
+        display: none;
+    }
+
+    .service-table,
+    .service-table tbody,
+    .service-table tr,
+    .service-table td {
+        display: block;
+        width: 100%;
+    }
+
+    .service-table tbody {
+        display: grid;
+        gap: .8rem;
+        padding: .8rem;
+    }
+
+    .service-table tr {
+        padding: .25rem .85rem;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-sm);
+    }
+
+    .service-table th,
+    .service-table td {
+        display: grid;
+        grid-template-columns: minmax(98px, .9fr) minmax(0, 1.1fr);
+        gap: .8rem;
+        padding: .68rem 0;
+        border-bottom: 1px solid var(--line);
+    }
+
+    .service-table td::before {
+        color: var(--text-faint);
+        font-size: .64rem;
+        font-weight: 500;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        content: attr(data-label);
+    }
+
+    .service-table tbody tr:last-child td:last-child {
+        border-bottom: 0;
+    }
+
+    .service-status,
+    .service-actions {
+        justify-content: flex-start;
+    }
+}

@@ -11,7 +11,7 @@
 <header id="siteHeader">
     <nav>
         <div class="logo">
-            <a href="/index.html#index"><img src="/cilios-imagens/logos/logotipo.png" alt="Studio Marcelly Freitas"></a>
+            <a href="/index.html#index"><img src="/images/cilios-imagens/logos/logotipo.png" alt="Studio Marcelly Freitas"></a>
         </div>
         <ul class="nav-menu" id="navMenu">
             <li><a href="/index.html#index">Início</a></li>
@@ -20,6 +20,9 @@
             <li><a href="/index.html#agendamento">Agendamento</a></li>
             <li><a href="/curso.html">Curso</a></li>
             <li><a href="/index.html#contato">Contato</a></li>
+            <% if (typeof user !== 'undefined' && user && user.role === 'master') { %>
+            <li><a href="/admin/dashboard">Painel Administrativo</a></li>
+            <% } %>
             <li>
                 <a href="/minha-conta.html" id="accountHeaderLink" aria-label="Minha Conta">
                     <i class="fa-regular fa-user" aria-hidden="true"></i>

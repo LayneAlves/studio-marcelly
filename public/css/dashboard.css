@@ -1,0 +1,276 @@
+/* Dashboard: visão geral, indicadores e próximos atendimentos. */
+.admin-dashboard-view {
+    width: min(100%, 1180px);
+    margin-inline: auto;
+    padding: clamp(2rem, 5vw, 4.5rem) 0;
+}
+
+.dashboard-heading {
+    margin-bottom: 2rem;
+}
+
+.dashboard-summary {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.dashboard-summary-card,
+.dashboard-panel {
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    box-shadow: var(--sombra);
+}
+
+.dashboard-summary-card {
+    display: flex;
+    align-items: center;
+    min-height: 116px;
+    gap: .85rem;
+    padding: 1.15rem;
+}
+
+.dashboard-summary-icon {
+    display: inline-grid;
+    flex: 0 0 auto;
+    width: 2.5rem;
+    aspect-ratio: 1;
+    place-items: center;
+    border-radius: 50%;
+    color: var(--text);
+    background: var(--surface-2);
+}
+
+.dashboard-summary-card p,
+.dashboard-financial-item p {
+    margin: 0 0 .25rem;
+    color: var(--text-soft);
+    font-size: .78rem;
+}
+
+.dashboard-summary-card strong,
+.dashboard-financial-item strong {
+    color: var(--text);
+    font-size: clamp(1.15rem, 2vw, 1.45rem);
+    line-height: 1.1;
+}
+
+.dashboard-panel {
+    padding: clamp(1.2rem, 3vw, 1.7rem);
+}
+
+.dashboard-upcoming-panel {
+    margin-bottom: 1rem;
+}
+
+.dashboard-section-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.15rem;
+}
+
+.dashboard-section-heading h2 {
+    margin: 0 0 .25rem;
+    color: var(--text);
+    font: 1.05rem 'Jost', sans-serif;
+}
+
+.dashboard-section-heading p {
+    margin: 0;
+    color: var(--text-soft);
+    font-size: .88rem;
+}
+
+.dashboard-section-link {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: .45rem;
+    color: var(--text);
+    font-size: .82rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.dashboard-section-link:hover,
+.dashboard-section-link:focus-visible {
+    outline: none;
+    color: var(--accent);
+}
+
+.dashboard-upcoming-list {
+    display: grid;
+    gap: .65rem;
+}
+
+.dashboard-upcoming-item {
+    display: grid;
+    grid-template-columns: auto minmax(150px, 1fr) minmax(110px, auto) minmax(88px, auto) auto;
+    align-items: center;
+    gap: 1rem;
+    padding: .85rem;
+    border: 1px solid var(--line);
+    border-radius: calc(var(--radius-md) - 4px);
+    background: var(--surface-2);
+}
+
+.dashboard-upcoming-avatar {
+    display: inline-grid;
+    width: 2.35rem;
+    aspect-ratio: 1;
+    place-items: center;
+    border-radius: 50%;
+    color: var(--text);
+    background: var(--surface);
+    font-weight: 600;
+}
+
+.dashboard-upcoming-client {
+    min-width: 0;
+}
+
+.dashboard-upcoming-client strong,
+.dashboard-upcoming-client span,
+.dashboard-upcoming-date,
+.dashboard-upcoming-time {
+    display: block;
+}
+
+.dashboard-upcoming-client strong {
+    overflow: hidden;
+    color: var(--text);
+    font-size: .94rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dashboard-upcoming-client span,
+.dashboard-upcoming-date,
+.dashboard-upcoming-time {
+    margin-top: .12rem;
+    color: var(--text-soft);
+    font-size: .78rem;
+}
+
+.dashboard-upcoming-time {
+    margin-top: 0;
+    color: var(--text);
+    font-weight: 500;
+}
+
+.dashboard-details-button {
+    min-height: 2.2rem;
+    padding: .42rem .75rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    color: var(--text);
+    background: transparent;
+    font: 600 .78rem 'Jost', sans-serif;
+    cursor: pointer;
+}
+
+.dashboard-details-button:hover,
+.dashboard-details-button:focus-visible {
+    border-color: var(--text);
+    outline: none;
+    background: var(--surface);
+}
+
+.dashboard-empty-state {
+    margin: 0;
+    padding: 1.6rem 1rem;
+    border: 1px dashed var(--line);
+    border-radius: calc(var(--radius-md) - 4px);
+    color: var(--text-soft);
+    text-align: center;
+}
+
+.dashboard-financial-summary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.dashboard-financial-item {
+    padding: .35rem clamp(1rem, 3vw, 2rem);
+}
+
+.dashboard-financial-item+.dashboard-financial-item {
+    border-left: 1px solid var(--line);
+}
+
+.dashboard-feedback {
+    min-height: 1.2rem;
+    margin: .7rem 0 0;
+    color: var(--text-soft);
+    font-size: .85rem;
+    text-align: center;
+}
+
+.dashboard-feedback.is-error {
+    color: #a33d3d;
+}
+
+@media (max-width: 1200px) {
+    .dashboard-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 560px) {
+    .admin-dashboard-view {
+        padding: 2rem 0;
+    }
+
+    .dashboard-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-summary-card {
+        min-height: 92px;
+    }
+
+    .dashboard-section-heading {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .dashboard-upcoming-item {
+        grid-template-columns: auto minmax(0, 1fr);
+        gap: .75rem;
+    }
+
+    .dashboard-upcoming-date,
+    .dashboard-upcoming-time {
+        grid-column: 2;
+        margin: -.45rem 0 0;
+    }
+
+    .dashboard-upcoming-item .action-dropdown,
+    .dashboard-upcoming-item .appointment-status-toggle.is-static {
+        grid-column: 1 / -1;
+        justify-self: start;
+        margin-top: .15rem;
+    }
+
+    .dashboard-details-button {
+        grid-column: 1 / -1;
+        width: 100%;
+    }
+
+    .dashboard-financial-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-financial-item {
+        padding: .9rem 0;
+    }
+
+    .dashboard-financial-item+.dashboard-financial-item {
+        border-top: 1px solid var(--line);
+        border-left: 0;
+    }
+}

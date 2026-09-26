@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head><%- include('../includes/head') %></head>
+
+<body class="admin-body" data-admin-module="schedule-settings">
+    <div class="admin-panel"><%- include('../includes/header') %><%- include('../includes/admin-sidebar') %>
+                <main class="admin-content is-admin-view">
+                    <section class="admin-schedule-settings" aria-labelledby="scheduleSettingsTitle">
+                        <div class="schedule-settings-header">
+                            <!-- <button class="schedule-back-button"
+                                id="scheduleBackButton" type="button" aria-label="Voltar ao painel"><i
+                                    class="fa-solid fa-arrow-left" aria-hidden="true"></i><button> -->
+                            <div>
+                                <p class="admin-eyebrow">Studio Marcelly Freitas · Administração</p>
+                                <h1 id="scheduleSettingsTitle">Configurações da agenda</h1>
+                                <p>Defina os dias e horários de funcionamento do atendimento</p>
+                            </div>
+                        </div>
+                        <section class="schedule-card business-hours-card" aria-labelledby="businessHoursTitle">
+                            <div class="schedule-card-heading"><span class="schedule-heading-icon"><i
+                                        class="fa-regular fa-clock" aria-hidden="true"></i></span>
+                                <div>
+                                    <h2 id="businessHoursTitle">Dias e horários de funcionamento</h2>
+                                    <p>Escolha quais dias a agenda estará disponível e defina os horários.</p>
+                                </div>
+                            </div>
+                            <form id="scheduleSettingsForm">
+                                <div class="schedule-days" id="businessHoursList"></div>
+                                <p class="schedule-feedback" id="scheduleSettingsFeedback" role="status"
+                                    aria-live="polite"></p>
+                                <div class="schedule-form-actions"><button class="schedule-save-button" type="submit"><i
+                                            class="fa-solid fa-check" aria-hidden="true"></i> Salvar
+                                        configurações</button></div>
+                            </form>
+                        </section>
+                        <section class="schedule-card manual-blocks-card" aria-labelledby="manualBlocksTitle">
+                            <div class="schedule-card-heading"><span class="schedule-heading-icon"><i
+                                        class="fa-regular fa-clock" aria-hidden="true"></i></span>
+                                <div>
+                                    <h2 id="manualBlocksTitle">Bloqueios manuais</h2>
+                                    <p>Reserve horários que não devem aparecer como disponíveis para novos agendamentos.
+                                    </p>
+                                </div>
+                            </div>
+                            <form class="schedule-block-form" id="scheduleBlockForm">
+                                <div class="schedule-field"><label for="scheduleBlockDate">Data</label><input
+                                        id="scheduleBlockDate" type="date" required></div>
+                                <div class="schedule-field"><label for="scheduleBlockStart">Início</label><input
+                                        id="scheduleBlockStart" type="time" required></div>
+                                <div class="schedule-field"><label for="scheduleBlockEnd">Fim</label><input
+                                        id="scheduleBlockEnd" type="time" required></div>
+                                <div class="schedule-field schedule-field-reason"><label
+                                        for="scheduleBlockReason">Motivo <span>(opcional)</span></label><input
+                                        id="scheduleBlockReason" type="text" maxlength="255"
+                                        placeholder="Ex.: Pausa para almoço"></div><button
+                                    class="schedule-secondary-button" type="submit"><i class="fa-solid fa-plus"
+                                        aria-hidden="true"></i> Bloquear horário</button>
+                            </form>
+                            <p class="schedule-feedback" id="scheduleBlockFeedback" role="status" aria-live="polite">
+                            </p>
+                            <div class="schedule-blocks-heading">
+                                <h3>Próximos bloqueios</h3><span id="scheduleBlockCount">0 bloqueios</span>
+                            </div>
+                            <div class="schedule-blocks-list" id="scheduleBlockList"></div>
+                            <p class="schedule-blocks-empty" id="scheduleBlockEmptyState">Nenhum bloqueio manual
+                                cadastrado.</p>
+                        </section>
+                    </section>
+                </main>
+    </div>
+    <dialog class="appointment-dialog" id="appointmentDialog">
+        <div class="appointment-dialog-inner"><button class="dialog-close" id="appointmentDialogClose" type="button"
+                aria-label="Fechar">×</button>
+            <div id="appointmentDialogContent"></div>
+        </div>
+    </dialog><%- include('../includes/footer') %>
+        <script src="/js/admin-shared.js"></script>
+        <script src="/js/schedule-settings.js"></script>
+</body>
+
+</html>

@@ -37,8 +37,24 @@ const viewRoutes = {
     '/curso': 'curso',
     '/minha-conta.html': 'minha-conta',
     '/minha-conta': 'minha-conta',
-    '/admin.html': 'admin',
-    '/admin': 'admin',
+    '/admin.html': 'dashboard',
+    '/admin': 'dashboard',
+    '/admin/dashboard': 'dashboard',
+    '/admin/dashboard.html': 'dashboard',
+    '/dashboard.html': 'dashboard',
+    '/dashboard': 'dashboard',
+    '/agendamentos.html': 'agendamentos',
+    '/agendamentos': 'agendamentos',
+    '/servicos.html': 'servicos',
+    '/servicos': 'servicos',
+    '/configuracoes-agenda.html': 'configuracoes-agenda',
+    '/configuracoes-agenda': 'configuracoes-agenda',
+    '/faturamento.html': 'faturamento',
+    '/faturamento': 'faturamento',
+    '/manutencoes.html': 'manutencoes',
+    '/manutencoes': 'manutencoes',
+    '/relatorios.html': 'relatorios',
+    '/relatorios': 'relatorios',
     '/clientes.html': 'clientes',
     '/clientes': 'clientes',
 };
@@ -53,22 +69,34 @@ const viewOptions = {
         title: 'Curso de Lash Design Iniciante — Studio Marcelly Freitas',
         description: 'Curso de Lash Design Iniciante do Studio Marcelly Freitas.',
         layout: 'public',
-        pageStyles: ['curso.css'],
+        pageStyles: ['css/curso.css'],
     },
-    'minha-conta': { title: 'Minha Conta | Studio Marcelly Freitas', description: '', layout: 'public', pageStyles: ['minha-conta.css'] },
-    admin: {
+    'minha-conta': { title: 'Minha Conta | Studio Marcelly Freitas', description: '', layout: 'public', pageStyles: ['css/minha-conta.css'] },
+    dashboard: {
         title: 'Painel Administrativo | Studio Marcelly Freitas',
         description: 'Painel administrativo do Studio Marcelly Freitas.',
         layout: 'admin',
         adminPage: 'dashboard',
-        pageStyles: ['admin.css?v=20260926-dashboard'],
+        pageStyles: ['css/admin-shared.css?v=20260926-header-flow', 'css/dashboard.css?v=20260926-module-split'],
     },
+    agendamentos: { title: 'Agendamentos | Studio Marcelly Freitas', description: '', layout: 'admin', adminPage: 'appointments', pageStyles: ['css/admin-shared.css?v=20260926-header-flow', 'css/appointments.css?v=20260926-module-split'] },
+    servicos: { title: 'Serviços | Studio Marcelly Freitas', description: '', layout: 'admin', adminPage: 'services', pageStyles: ['css/admin-shared.css?v=20260926-header-flow', 'css/services.css?v=20260926-module-split'] },
+    'configuracoes-agenda': { title: 'Configurações da Agenda | Studio Marcelly Freitas', description: '', layout: 'admin', adminPage: 'schedule-settings', pageStyles: ['css/admin-shared.css?v=20260926-header-flow', 'css/schedule-settings.css?v=20260926-module-split'] },
+    faturamento: { title: 'Faturamento | Studio Marcelly Freitas', description: '', layout: 'admin', adminPage: 'billing', pageStyles: ['css/admin-shared.css?v=20260926-header-flow', 'css/billing.css?v=20260926-module-split'] },
+    manutencoes: { title: 'Manutenções | Studio Marcelly Freitas', description: '', layout: 'admin', adminPage: 'maintenances', pageStyles: ['css/admin-shared.css?v=20260926-header-flow', 'css/maintenances.css?v=20260926-module-split'] },
+    relatorios: { title: 'Relatórios | Studio Marcelly Freitas', description: '', layout: 'admin', adminPage: 'reports', pageStyles: ['css/admin-shared.css?v=20260926-header-flow', 'css/reports.css?v=20260926-module-split'] },
     clientes: {
         title: 'Clientes | Studio Marcelly Freitas',
         description: '',
         layout: 'admin',
         adminPage: 'clients',
-        pageStyles: ['admin.css?v=20260924-billing', 'clientes.css'],
+        pageStyles: ['css/admin-shared.css?v=20260926-header-flow', 'css/clientes.css?v=20260926-module-split'],
+    },
+    forbidden: {
+        title: 'Acesso não autorizado | Studio Marcelly Freitas',
+        description: '',
+        layout: 'public',
+        pageStyles: ['css/access-denied.css'],
     },
 };
 const assetTypes = {
@@ -82,21 +110,22 @@ const assetTypes = {
     '.ico': 'image/x-icon',
 };
 
-function sendHtml(response, status, html) {
-    response.writeHead(status, { 'Content-Type': 'text/html; charset=utf-8' });
+function sendHtml(response, status, html, headers = {}) {
+    response.writeHead(status, { 'Content-Type': 'text/html; charset=utf-8', ...headers });
     response.end(html);
 }
-async function renderView(response, name) {
-    const html = await ejs.renderFile(path.join(__dirname, 'views', `${name}.ejs`), viewOptions[name]);
-    sendHtml(response, 200, html);
+async function renderView(response, name, user = null, status = 200) {
+    const html = await ejs.renderFile(path.join(__dirname, 'views', `${name}.ejs`), { ...viewOptions[name], user });
+    sendHtml(response, status, html);
 }
 async function serveAsset(response, requestPath) {
     const extension = path.extname(requestPath).toLowerCase();
     if (!assetTypes[extension]) return false;
     const relativePath = decodeURIComponent(requestPath).replace(/^[/\\]+/, '');
-    const absolutePath = path.resolve(__dirname, relativePath);
-    const workspace = `${path.resolve(__dirname)}${path.sep}`;
-    if (!absolutePath.startsWith(workspace)) return false;
+    const publicDirectory = path.resolve(__dirname, 'public');
+    const absolutePath = path.resolve(publicDirectory, relativePath);
+    const publicPrefix = `${publicDirectory}${path.sep}`;
+    if (!absolutePath.startsWith(publicPrefix)) return false;
     try {
         const info = await fs.promises.stat(absolutePath);
         if (!info.isFile()) return false;
@@ -108,12 +137,13 @@ async function serveAsset(response, requestPath) {
     }
 }
 
-function send(response, status, data) {
+function send(response, status, data, headers = {}) {
     response.writeHead(status, {
         'Content-Type': 'application/json; charset=utf-8',
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Headers': 'Content-Type, Authorization',
         'Access-Control-Allow-Methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
+        ...headers,
     });
     response.end(JSON.stringify(data));
 }
@@ -153,17 +183,69 @@ async function createSession(clientId) {
     ]);
     return token;
 }
+function readCookie(request, name) {
+    const cookies = String(request.headers.cookie || '').split(';');
+    const entry = cookies.find((item) => item.trim().startsWith(`${name}=`));
+    return entry ? decodeURIComponent(entry.slice(entry.indexOf('=') + 1).trim()) : '';
+}
+
+function sessionToken(request) {
+    const bearer = String(request.headers.authorization || '').replace(/^Bearer\s+/i, '').trim();
+    return bearer || readCookie(request, 'smf_session');
+}
+
+function sessionCookie(token, maxAge = 60 * 60 * 24 * 30) {
+    const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';
+    return `smf_session=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}${secure}`;
+}
+
+function accountPayload(client) {
+    return {
+        id: String(client.id),
+        name: client.name,
+        phone: client.phone,
+        email: client.email,
+        role: client.role || 'user',
+        isOwner: Boolean(client.isOwner),
+    };
+}
+
 async function authenticatedClient(request) {
-    const token = String(request.headers.authorization || '').replace(/^Bearer\s+/i, '');
+    const token = sessionToken(request);
     if (!token) fail(401, 'Faça login para acessar sua conta.');
     const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
     const [rows] = await pool.execute(
-        'SELECT c.id,c.name,c.phone,c.email FROM client_sessions s JOIN clients c ON c.id=s.client_id WHERE s.token_hash=? AND s.expires_at>NOW()',
+        "SELECT c.id,c.name,c.phone,c.email,COALESCE(c.role,'user') AS role,COALESCE(c.is_owner,0) AS isOwner FROM client_sessions s JOIN clients c ON c.id=s.client_id WHERE s.token_hash=? AND s.expires_at>NOW()",
         [tokenHash],
     );
     if (!rows[0]) fail(401, 'Sua sessão expirou. Faça login novamente.');
     return rows[0];
 }
+async function optionalAuthenticatedClient(request) {
+    if (!sessionToken(request)) return null;
+    try {
+        return await authenticatedClient(request);
+    } catch (error) {
+        if (error.status === 401) return null;
+        throw error;
+    }
+}
+
+async function requireAuth(request) {
+    return authenticatedClient(request);
+}
+
+async function requireMaster(request) {
+    const client = await requireAuth(request);
+    if (client.role !== 'master') fail(403, 'Você não possui permissão para acessar esta área.');
+    return client;
+}
+
+function redirectToLogin(response) {
+    response.writeHead(302, { Location: '/index.html?auth=account' });
+    response.end();
+}
+
 function duration(value) {
     const hours = Number((value.match(/(\d+)\s*hora/i) || [])[1] || 0);
     const mins = Number((value.match(/(\d+)\s*minuto/i) || [])[1] || 0);
@@ -564,13 +646,48 @@ function formatScheduleBlock(row) {
     };
 }
 
+async function renderRoute(request, response, name) {
+    const options = viewOptions[name];
+    if (options.layout === 'admin') {
+        try {
+            const user = await requireMaster(request);
+            return renderView(response, name, accountPayload(user));
+        } catch (error) {
+            if (error.status === 401) return redirectToLogin(response);
+            if (error.status === 403) return renderView(response, 'forbidden', null, 403);
+            throw error;
+        }
+    }
+
+    if (name === 'minha-conta') {
+        try {
+            const user = await requireAuth(request);
+            return renderView(response, name, accountPayload(user));
+        } catch (error) {
+            if (error.status === 401) return redirectToLogin(response);
+            throw error;
+        }
+    }
+
+    const user = await optionalAuthenticatedClient(request);
+    return renderView(response, name, user ? accountPayload(user) : null);
+}
+
+function isMasterApi(path, query) {
+    if (path.startsWith('/api/admin/')) return true;
+    if (path === '/api/billing' || path === '/api/maintenances') return true;
+    if (path === '/api/clients' || /^\/api\/clients\/\d+$/.test(path)) return true;
+    return path === '/api/appointments' && !query.has('availability');
+}
+
 async function handler(request, response) {
     const url = new URL(request.url, `http://${request.headers.host}`);
     const path = url.pathname;
     const query = url.searchParams;
-    if (request.method === 'GET' && viewRoutes[path]) return renderView(response, viewRoutes[path]);
+    if (request.method === 'GET' && viewRoutes[path]) return renderRoute(request, response, viewRoutes[path]);
     if (request.method === 'GET' && (await serveAsset(response, path))) return;
     if (request.method === 'OPTIONS') return send(response, 204, {});
+    if (isMasterApi(path, query)) await requireMaster(request);
     if (path === '/api/admin/schedule-settings' || path === '/api/schedule-settings') {
         if (request.method === 'GET') return send(response, 200, await scheduleSettings(pool));
         if (path === '/api/schedule-settings') return fail(405, 'Método não permitido.');
@@ -676,7 +793,7 @@ async function handler(request, response) {
         if (matches[0]) {
             if (matches[0].password_hash) fail(409, 'Esta cliente já possui uma conta. Faça login.');
             clientId = matches[0].id;
-            await pool.execute('UPDATE clients SET name=?,phone=?,email=?,password_hash=? WHERE id=?', [
+            await pool.execute("UPDATE clients SET name=?,phone=?,email=?,password_hash=?,role='user',is_owner=0 WHERE id=?", [
                 name,
                 phone,
                 email,
@@ -684,7 +801,7 @@ async function handler(request, response) {
                 clientId,
             ]);
         } else {
-            const [result] = await pool.execute('INSERT INTO clients (name,phone,email,password_hash) VALUES (?,?,?,?)', [
+            const [result] = await pool.execute("INSERT INTO clients (name,phone,email,password_hash,role,is_owner) VALUES (?,?,?,?, 'user', 0)", [
                 name,
                 phone,
                 email,
@@ -693,23 +810,23 @@ async function handler(request, response) {
             clientId = result.insertId;
         }
         const token = await createSession(clientId);
-        return send(response, 201, { token, client: { id: String(clientId), name, phone, email } });
+        return send(response, 201, { token, client: { id: String(clientId), name, phone, email, role: 'user', isOwner: false } }, { 'Set-Cookie': sessionCookie(token) });
     }
     if (request.method === 'POST' && path === '/api/account/login') {
         const data = await body(request);
         const identifier = String(data.identifier || '').trim();
         const password = String(data.password || '');
-        const [rows] = await pool.execute('SELECT id,name,phone,email,password_hash FROM clients WHERE phone=? OR LOWER(email)=? LIMIT 1', [
+        const [rows] = await pool.execute("SELECT id,name,phone,email,password_hash,COALESCE(role,'user') AS role,COALESCE(is_owner,0) AS isOwner FROM clients WHERE phone=? OR LOWER(email)=? LIMIT 1", [
             phoneKey(identifier),
             identifier.toLowerCase(),
         ]);
         if (!rows[0] || !(await passwordMatches(password, rows[0].password_hash))) fail(401, 'Dados de acesso inválidos.');
         const token = await createSession(rows[0].id);
-        return send(response, 200, { token, client: { ...rows[0], id: String(rows[0].id), password_hash: undefined } });
+        return send(response, 200, { token, client: accountPayload(rows[0]) }, { 'Set-Cookie': sessionCookie(token) });
     }
     if (path === '/api/account/me') {
         const client = await authenticatedClient(request);
-        if (request.method === 'GET') return send(response, 200, { ...client, id: String(client.id) });
+        if (request.method === 'GET') return send(response, 200, accountPayload(client));
         if (request.method === 'PUT') {
             const data = await body(request);
             const name = data.name?.trim();
@@ -723,14 +840,14 @@ async function handler(request, response) {
             );
             if (duplicates[0]) fail(409, 'Telefone ou e-mail já pertencem a outra cliente.');
             await pool.execute('UPDATE clients SET name=?,phone=?,email=? WHERE id=?', [name, phone, email, client.id]);
-            return send(response, 200, { id: String(client.id), name, phone, email });
+            return send(response, 200, { ...accountPayload(client), name, phone, email });
         }
     }
     if (path === '/api/account/logout' && request.method === 'POST') {
-        const token = String(request.headers.authorization || '').replace(/^Bearer\s+/i, '');
+        const token = sessionToken(request);
         if (token)
             await pool.execute('DELETE FROM client_sessions WHERE token_hash=?', [crypto.createHash('sha256').update(token).digest('hex')]);
-        return send(response, 200, { success: true });
+        return send(response, 200, { success: true }, { 'Set-Cookie': sessionCookie('', 0) });
     }
     if (path === '/api/account/availability' && request.method === 'GET') {
         const client = await authenticatedClient(request);
@@ -1011,7 +1128,7 @@ async function handler(request, response) {
                 [phone, email, email],
             );
             if (duplicates[0]) fail(409, 'Já existe uma cliente cadastrada com este telefone ou e-mail.');
-            const [result] = await pool.execute('INSERT INTO clients (name,phone,email) VALUES (?,?,?)', [name, phone, email]);
+            const [result] = await pool.execute("INSERT INTO clients (name,phone,email,role,is_owner) VALUES (?,?,?, 'user', 0)", [name, phone, email]);
             return send(response, 201, { id: String(result.insertId), name, phone, email });
         }
     }
@@ -1083,7 +1200,7 @@ async function handler(request, response) {
                 if (!client) fail(422, 'Cliente não encontrada.');
             } else {
                 if (!data.client_name?.trim() || !data.phone?.trim()) fail(422, 'Selecione uma cliente ou informe nome e telefone.');
-                const [result] = await connection.execute('INSERT INTO clients (name,phone,email) VALUES (?,?,?)', [
+                const [result] = await connection.execute("INSERT INTO clients (name,phone,email,role,is_owner) VALUES (?,?,?, 'user', 0)", [
                     data.client_name.trim(),
                     data.phone.trim(),
                     data.email?.trim() || null,

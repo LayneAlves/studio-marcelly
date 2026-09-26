@@ -1899,13 +1899,22 @@ footer span {
 
 /* Evita que o conteúdo retorne para a área visual da foto em desktops amplos. */
 @media (min-width: 1367px) {
+  .hero {
+        justify-content: center;
+    }
+
+    .hero-content {
+        margin-left: 218px;
+        flex: 0 1 auto;
+        column-gap: clamp(2rem, 14vw, 9rem);
+    }
+
     .hero-copy {
         box-sizing: border-box;
         min-width: 0;
-        padding-left: clamp(9rem, 11vw, 13rem);
+        padding-left: clamp(6rem, 8vw, 10rem);
     }
 }
-
 /* 480px */
 @media (max-width: 480px) {
     .booking-auth-dialog {

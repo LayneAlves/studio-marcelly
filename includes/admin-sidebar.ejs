@@ -1,28 +1,28 @@
-<% const clientsPage = adminPage === 'clients'; const adminHref = clientsPage ? '/admin.html' : ''; %>
+<% const clientsPage = adminPage === 'clients'; const isPage = (page) => adminPage === page; %>
 <button class="admin-sidebar-backdrop" id="<%= clientsPage ? 'clientsBackdrop' : 'adminSidebarBackdrop' %>" type="button" aria-label="Fechar menu"></button>
 
 <aside class="admin-sidebar" id="<%= clientsPage ? 'clientsSidebar' : 'adminSidebar' %>" aria-label="Navegação administrativa">
     <div class="admin-sidebar-top">
         <a class="admin-brand" href="/index.html" aria-label="Voltar para o site Studio Marcelly Freitas">
-            <img src="/cilios-imagens/logos/simbolo.png" alt="">
+            <img src="/images/cilios-imagens/logos/simbolo.png" alt="">
         </a>
         <p class="admin-brand-label">Área administrativa</p>
     </div>
 
     <nav class="admin-menu" aria-label="Módulos do painel">
-        <a class="admin-menu-link <%= clientsPage ? '' : 'is-active' %>" href="<%= adminHref %>#dashboard" <%- clientsPage ? '' : 'aria-current="page"' %>>
+        <a class="admin-menu-link <%= isPage('dashboard') ? 'is-active' : '' %>" href="/admin.html" <%- isPage('dashboard') ? 'aria-current="page"' : '' %>>
             <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="6.5" height="6.5" rx="1"></rect><rect x="14" y="3.5" width="6.5" height="6.5" rx="1"></rect><rect x="3.5" y="14" width="6.5" height="6.5" rx="1"></rect><rect x="14" y="14" width="6.5" height="6.5" rx="1"></rect></svg>
             <span>Dashboard</span>
         </a>
-        <a class="admin-menu-link" href="<%= adminHref %>#agendamentos">
+        <a class="admin-menu-link <%= isPage('appointments') ? 'is-active' : '' %>" href="/agendamentos.html" <%- isPage('appointments') ? 'aria-current="page"' : '' %>>
             <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="1.5"></rect><path d="M7.5 3v4M16.5 3v4M3.5 10h17"></path></svg>
             <span>Agendamentos</span>
         </a>
-        <a class="admin-menu-link" href="<%= adminHref %>#configuracoes-agenda">
+        <a class="admin-menu-link <%= isPage('schedule-settings') ? 'is-active' : '' %>" href="/configuracoes-agenda.html" <%- isPage('schedule-settings') ? 'aria-current="page"' : '' %>>
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"></circle><path d="M12 2.8v2.1M12 19.1v2.1M21.2 12h-2.1M4.9 12H2.8M18.5 5.5 17 7M7 17l-1.5 1.5M18.5 18.5 17 17M7 7 5.5 5.5"></path></svg>
             <span>Configurações da agenda</span>
         </a>
-        <a class="admin-menu-link" href="<%= adminHref %>#faturamento">
+        <a class="admin-menu-link <%= isPage('billing') ? 'is-active' : '' %>" href="/faturamento.html" <%- isPage('billing') ? 'aria-current="page"' : '' %>>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"></path></svg>
             <span>Faturamento</span>
         </a>
@@ -30,15 +30,15 @@
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"></circle><path d="M3.5 20c.4-3.6 2.4-5.5 5.5-5.5s5.1 1.9 5.5 5.5M16 5.5a3 3 0 0 1 0 5.8M17.2 14.7c2 .7 3.1 2.4 3.3 5.3"></path></svg>
             <span>Clientes</span>
         </a>
-        <a class="admin-menu-link" href="<%= adminHref %>#servicos">
+        <a class="admin-menu-link <%= isPage('services') ? 'is-active' : '' %>" href="/servicos.html" <%- isPage('services') ? 'aria-current="page"' : '' %>>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4.5h11l5 5v10H4z"></path><circle cx="9" cy="10" r="1.2"></circle><path d="M15 4.5v5h5"></path></svg>
             <span>Serviços</span>
         </a>
-        <a class="admin-menu-link" href="<%= adminHref %>#manutencoes">
+        <a class="admin-menu-link <%= isPage('maintenances') ? 'is-active' : '' %>" href="/manutencoes.html" <%- isPage('maintenances') ? 'aria-current="page"' : '' %>>
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 7v5l3.2 2M5.5 5.5l-2 2M18.5 5.5l2 2"></path></svg>
             <span>Manutenções</span>
         </a>
-        <a class="admin-menu-link" href="<%= adminHref %>#relatorios">
+        <a class="admin-menu-link <%= isPage('reports') ? 'is-active' : '' %>" href="/relatorios.html" <%- isPage('reports') ? 'aria-current="page"' : '' %>>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h9l3 3V20.5H6z"></path><path d="M15 3.5v3h3M9 11h6M9 15h6"></path></svg>
             <span>Relatórios</span>
         </a>

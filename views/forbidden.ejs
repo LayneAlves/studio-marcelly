@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="pt-BR">
+<head><%- include('../includes/head') %></head>
+<body>
+    <%- include('../includes/header') %>
+    <main class="access-denied-page">
+        <section class="access-denied-card" aria-labelledby="accessDeniedTitle">
+            <p class="eyebrow">Área restrita</p>
+            <h1 id="accessDeniedTitle">Acesso não autorizado</h1>
+            <p>Você não possui permissão para acessar esta área.</p>
+            <div class="access-denied-actions">
+                <a class="btn btn-primary on-light" href="/index.html">Ir para Início</a>
+                <a class="btn btn-outline on-light" href="/minha-conta.html">Minha Conta</a>
+            </div>
+        </section>
+    </main>
+    <%- include('../includes/footer') %>
+</body>
+</html>

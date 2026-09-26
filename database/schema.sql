@@ -22,12 +22,16 @@ CREATE TABLE IF NOT EXISTS clients (
     name VARCHAR(120) NOT NULL,
     phone VARCHAR(30) NOT NULL,
     email VARCHAR(160) NULL,
+    password_hash VARCHAR(255) NULL,
+    role ENUM('user','master') NOT NULL DEFAULT 'user',
+    is_owner TINYINT(1) NOT NULL DEFAULT 0,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     KEY idx_clients_name (name),
     KEY idx_clients_phone (phone),
-    KEY idx_clients_email (email)
+    KEY idx_clients_email (email),
+    KEY idx_clients_role (role,is_owner)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS business_settings (

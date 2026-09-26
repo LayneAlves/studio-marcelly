@@ -1,0 +1,18 @@
+/* Relatórios: área reservada para os relatórios futuros do painel. */
+.reports-module {
+    width: min(100%, 1080px);
+    margin-inline: auto;
+    padding: clamp(2rem, 5vw, 4.5rem) 0;
+}
+
+.reports-panel {
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    box-shadow: var(--sombra);
+}
+
+.reports-empty {
+    padding: 1.4rem;
+    color: var(--text-soft);
+}
