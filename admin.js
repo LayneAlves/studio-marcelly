@@ -4,10 +4,33 @@ const adminSidebarBackdrop = document.getElementById('adminSidebarBackdrop');
 const adminMenuLinks = document.querySelectorAll('.admin-menu-link');
 const adminContent = document.querySelector('.admin-content');
 const dashboardView = document.getElementById('dashboardView');
+const dashboardAppointmentsToday = document.getElementById('dashboardAppointmentsToday');
+const dashboardBillingMonth = document.getElementById('dashboardBillingMonth');
+const dashboardClientsCount = document.getElementById('dashboardClientsCount');
+const dashboardActiveServices = document.getElementById('dashboardActiveServices');
+const dashboardForecasted = document.getElementById('dashboardForecasted');
+const dashboardReceived = document.getElementById('dashboardReceived');
+const dashboardPending = document.getElementById('dashboardPending');
+const dashboardUpcomingList = document.getElementById('dashboardUpcomingList');
+const dashboardUpcomingEmpty = document.getElementById('dashboardUpcomingEmpty');
+const dashboardFeedback = document.getElementById('dashboardFeedback');
 const servicesView = document.getElementById('servicos');
 const appointmentsView = document.getElementById('agendamentos');
 const maintenancesView = document.getElementById('manutencoes');
 const scheduleSettingsView = document.getElementById('configuracoes-agenda');
+const billingView = document.getElementById('faturamento');
+const billingForecasted = document.getElementById('billingForecasted');
+const billingReceived = document.getElementById('billingReceived');
+const billingPending = document.getElementById('billingPending');
+const billingPaidCount = document.getElementById('billingPaidCount');
+const billingPendingCount = document.getElementById('billingPendingCount');
+const billingCustomRange = document.getElementById('billingCustomRange');
+const billingStartDate = document.getElementById('billingStartDate');
+const billingEndDate = document.getElementById('billingEndDate');
+const billingList = document.getElementById('billingList');
+const billingEmptyState = document.getElementById('billingEmptyState');
+const billingFeedback = document.getElementById('billingFeedback');
+const billingPeriodLabel = document.getElementById('billingPeriodLabel');
 const scheduleSettingsForm = document.getElementById('scheduleSettingsForm');
 const businessHoursList = document.getElementById('businessHoursList');
 const scheduleSettingsFeedback = document.getElementById('scheduleSettingsFeedback');
@@ -64,20 +87,26 @@ function showAdminView(hash) {
     const isAppointmentsView = hash === '#agendamentos';
     const isMaintenancesView = hash === '#manutencoes';
     const isScheduleSettingsView = hash === '#configuracoes-agenda';
+    const isBillingView = hash === '#faturamento';
+    const isDashboardView = !isServicesView && !isAppointmentsView && !isMaintenancesView && !isScheduleSettingsView && !isBillingView;
 
     setActiveAdminLink(selectedLink);
-    dashboardView.hidden = isServicesView || isAppointmentsView || isMaintenancesView || isScheduleSettingsView;
+    dashboardView.hidden = !isDashboardView;
     servicesView.hidden = !isServicesView;
     appointmentsView.hidden = !isAppointmentsView;
     maintenancesView.hidden = !isMaintenancesView;
     scheduleSettingsView.hidden = !isScheduleSettingsView;
-    adminContent.classList.toggle('is-services-view', isServicesView || isMaintenancesView || isScheduleSettingsView);
-    adminContent.classList.toggle('is-admin-view', isServicesView || isAppointmentsView || isMaintenancesView || isScheduleSettingsView);
+    billingView.hidden = !isBillingView;
+    adminContent.classList.toggle('is-services-view', isServicesView || isMaintenancesView || isScheduleSettingsView || isBillingView);
+    adminContent.classList.toggle('is-admin-view', isServicesView || isAppointmentsView || isMaintenancesView || isScheduleSettingsView || isBillingView);
+    adminContent.classList.toggle('is-dashboard-view', isDashboardView);
 
+    if (isDashboardView) loadDashboard();
     if (isServicesView) loadServices();
     if (isAppointmentsView) loadAppointments();
     if (isMaintenancesView) loadMaintenances();
     if (isScheduleSettingsView) loadScheduleSettings();
+    if (isBillingView) loadBilling();
 }
 
 function showServiceFeedback(message = '', isError = false) {
@@ -420,17 +449,132 @@ const ADMIN_API_URL = `http://${window.location.hostname || '127.0.0.1'}:3000/ap
 const APPOINTMENTS_API_URL = `${ADMIN_API_URL}/appointments`;
 const CLIENTS_API_URL = `${ADMIN_API_URL}/clients`;
 const MAINTENANCES_API_URL = `${ADMIN_API_URL}/maintenances`;
+const BILLING_API_URL = `${ADMIN_API_URL}/billing`;
+const DASHBOARD_API_URL = `${ADMIN_API_URL}/admin/dashboard`;
 const statusLabels = { pending: 'Pendente', confirmed: 'Confirmado', in_progress: 'Em atendimento', completed: 'Concluído', cancelled: 'Cancelado', no_show: 'Não compareceu' };
 let appointments = [];
 let appointmentServices = [];
 let appointmentQuickFilter = '';
 let appointmentViewMode = 'list';
 let appointmentSearchTimer;
+let billingPeriod = 'month';
+let billingRecords = [];
 
 function escapeHtml(value = '') { const element = document.createElement('div'); element.textContent = value ?? ''; return element.innerHTML; }
 function appointmentDateLabel(value) { return new Date(`${value}T12:00:00`).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' }); }
 function appointmentRequest(path = '', options = {}) { return requestJson(`${APPOINTMENTS_API_URL}${path}`, options); }
 async function requestJson(url, options = {}) { const response = await fetch(url, { headers: { 'Content-Type': 'application/json' }, ...options }); const data = await response.json().catch(() => ({})); if (!response.ok) throw new Error(data.error || 'Não foi possível concluir a operação.'); return data; }
+
+function billingRequest(path = '', options = {}) { return requestJson(`${BILLING_API_URL}${path}`, options); }
+const billingPeriodLabels = { today: 'Hoje', week: 'Esta semana', month: 'Este mês', custom: 'Período personalizado' };
+
+function showBillingFeedback(message = '', isError = false) {
+    billingFeedback.textContent = message;
+    billingFeedback.classList.toggle('is-error', isError);
+}
+
+function billingStatus(record) {
+    const isPaid = record.payment_status === 'paid';
+    return `<span class="billing-status billing-status--${isPaid ? 'paid' : 'pending'}"><i class="fa-solid fa-${isPaid ? 'check' : 'clock'}" aria-hidden="true"></i>${isPaid ? 'Pago' : 'Pendente'}</span>`;
+}
+
+function billingActions(record) {
+    const items = [];
+    if (record.payment_status !== 'paid') items.push({ action: 'mark_paid', label: 'Marcar como pago', tone: 'success' });
+    items.push({ action: 'edit_payment', label: 'Editar valor pago', tone: 'reschedule' }, { action: 'details', label: 'Ver detalhes' });
+    return actionDropdown({ id: record.id, context: 'billing', label: `Ações financeiras para ${record.client_name}`, items });
+}
+
+function billingCell(label, content, className = '') {
+    return `<td class="${className}" data-label="${label}">${content}</td>`;
+}
+
+function renderBilling(data) {
+    const summary = data.summary || {};
+    billingForecasted.textContent = formatCurrency(summary.forecasted || 0);
+    billingReceived.textContent = formatCurrency(summary.received || 0);
+    billingPending.textContent = formatCurrency(summary.pending || 0);
+    billingPaidCount.textContent = String(summary.paid_count || 0);
+    billingPendingCount.textContent = String(summary.pending_count || 0);
+    billingRecords = Array.isArray(data.records) ? data.records : [];
+    billingEmptyState.hidden = billingRecords.length > 0;
+    billingList.replaceChildren();
+
+    billingRecords.forEach((record) => {
+        const row = document.createElement('tr');
+        row.innerHTML = [
+            billingCell('Cliente', `<strong>${escapeHtml(record.client_name)}</strong>`, 'billing-client'),
+            billingCell('Serviço', escapeHtml(record.service_name)),
+            billingCell('Data', appointmentDateLabel(record.date)),
+            billingCell('Valor do serviço', formatCurrency(record.price)),
+            billingCell('Sinal', record.deposit === null ? 'Não informado' : formatCurrency(record.deposit)),
+            billingCell('Valor pago', formatCurrency(record.paid)),
+            billingCell('Valor restante', formatCurrency(record.remaining), 'billing-remaining'),
+            billingCell('Status', billingStatus(record)),
+            billingCell('Ações', `<div class="billing-actions">${billingActions(record)}</div>`),
+        ].join('');
+        billingList.append(row);
+    });
+
+    const range = data.start && data.end ? ` · ${appointmentDateLabel(data.start)} a ${appointmentDateLabel(data.end)}` : '';
+    billingPeriodLabel.textContent = `${billingPeriodLabels[data.period] || 'Período'}${range}`;
+}
+
+async function loadBilling() {
+    try {
+        const params = new URLSearchParams({ period: billingPeriod });
+        if (billingPeriod === 'custom') {
+            params.set('start', billingStartDate.value);
+            params.set('end', billingEndDate.value);
+        }
+        renderBilling(await billingRequest(`?${params}`));
+        showBillingFeedback();
+    } catch (error) {
+        billingRecords = [];
+        billingList.replaceChildren();
+        billingEmptyState.hidden = false;
+        billingEmptyState.textContent = error.message;
+        showBillingFeedback(error.message, true);
+    }
+}
+
+function openBillingPaymentDialog(id) {
+    const record = billingRecords.find((item) => item.id === String(id));
+    if (!record) return;
+    openDialog(`<article class="billing-payment-modal"><p class="admin-eyebrow">Faturamento</p><h2>Editar valor pago</h2><p class="billing-payment-description"><strong>${escapeHtml(record.client_name)}</strong> · ${escapeHtml(record.service_name)}</p><form class="billing-payment-form" id="billingPaymentForm"><label for="billingPaidAmount">Valor pago<input id="billingPaidAmount" type="text" inputmode="numeric" autocomplete="off" value="${formatCurrency(record.paid)}" required></label><p>Valor do serviço: <strong>${formatCurrency(record.price)}</strong></p><div><button class="admin-button" type="submit">Salvar pagamento</button><button class="admin-button admin-button-secondary" id="billingPaymentCancel" type="button">Cancelar</button></div><p class="appointment-feedback" id="billingPaymentFeedback" role="status"></p></form></article>`);
+    const input = document.getElementById('billingPaidAmount');
+    input.addEventListener('input', () => formatCurrencyTyping(input));
+    document.getElementById('billingPaymentCancel').addEventListener('click', closeDialog);
+    document.getElementById('billingPaymentForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const paid = parseCurrency(input.value);
+        const feedback = document.getElementById('billingPaymentFeedback');
+        if (paid === null) {
+            feedback.textContent = 'Informe um valor pago válido.';
+            feedback.classList.add('is-error');
+            return;
+        }
+        try {
+            await billingRequest(`?id=${encodeURIComponent(record.id)}`, { method: 'PATCH', body: JSON.stringify({ paid_amount: paid }) });
+            closeDialog();
+            await loadBilling();
+        } catch (error) {
+            feedback.textContent = error.message;
+            feedback.classList.add('is-error');
+        }
+    });
+}
+
+async function markBillingPaid(id) {
+    const record = billingRecords.find((item) => item.id === String(id));
+    if (!record || !window.confirm(`Marcar o agendamento de ${record.client_name} como pago?`)) return;
+    try {
+        await billingRequest(`?id=${encodeURIComponent(record.id)}`, { method: 'PATCH', body: JSON.stringify({ action: 'mark_paid' }) });
+        await loadBilling();
+    } catch (error) {
+        showBillingFeedback(error.message, true);
+    }
+}
 
 function maintenanceRequest(path = '', options = {}) { return requestJson(`${MAINTENANCES_API_URL}${path}`, options); }
 
@@ -456,6 +600,8 @@ async function loadAppointments() {
 
 const actionMenuIcons = {
     details: 'fa-regular fa-file-lines',
+    mark_paid: 'fa-solid fa-check',
+    edit_payment: 'fa-regular fa-pen-to-square',
     reschedule: 'fa-regular fa-calendar-days',
     cancelled: 'fa-solid fa-xmark',
     no_show: 'fa-solid fa-triangle-exclamation',
@@ -498,6 +644,55 @@ function appointmentStatusControl(appointment, { includeDetails = false, include
     if (includeReschedule && ['pending', 'confirmed'].includes(status)) items.splice(includeDetails ? 1 : 0, 0, { action: 'reschedule', label: 'Remarcar', tone: 'reschedule' });
     if (!items.length) return `<span class="appointment-status-toggle is-static status-${status}">${triggerContent}</span>`;
     return actionDropdown({ id: appointment.id, context: 'appointment', label: `Alterar status: ${label}`, items, triggerContent, triggerClass: `appointment-status-toggle status-${status}`, menuKey });
+}
+
+function dashboardNumber(value) {
+    const number = Number(value);
+    return Number.isFinite(number) && number >= 0 ? number : 0;
+}
+
+function renderDashboard(data = {}) {
+    const summary = data.summary || {};
+    const financial = data.financial_summary || {};
+    const upcoming = Array.isArray(data.upcoming) ? data.upcoming : [];
+
+    dashboardAppointmentsToday.textContent = String(dashboardNumber(summary.appointments_today));
+    dashboardBillingMonth.textContent = formatCurrency(dashboardNumber(summary.billing_month));
+    dashboardClientsCount.textContent = String(dashboardNumber(summary.clients));
+    dashboardActiveServices.textContent = String(dashboardNumber(summary.active_services));
+    dashboardForecasted.textContent = formatCurrency(dashboardNumber(financial.forecasted));
+    dashboardReceived.textContent = formatCurrency(dashboardNumber(financial.received));
+    dashboardPending.textContent = formatCurrency(dashboardNumber(financial.pending));
+
+    dashboardUpcomingList.replaceChildren();
+    dashboardUpcomingEmpty.hidden = upcoming.length > 0;
+    dashboardUpcomingEmpty.textContent = 'Nenhum próximo agendamento.';
+
+    upcoming.forEach((appointment) => {
+        const item = document.createElement('article');
+        const initial = String(appointment.client_name || '?').trim().charAt(0).toUpperCase() || '?';
+        item.className = 'dashboard-upcoming-item';
+        item.innerHTML = `<span class="dashboard-upcoming-avatar" aria-hidden="true">${escapeHtml(initial)}</span><div class="dashboard-upcoming-client"><strong>${escapeHtml(appointment.client_name || 'Cliente não informado')}</strong><span>${escapeHtml(appointment.service_name || 'Serviço não informado')}</span></div><span class="dashboard-upcoming-date">${escapeHtml(appointmentDateLabel(appointment.date))}</span><span class="dashboard-upcoming-time">${escapeHtml(appointment.start_time || '--:--')}</span>${appointmentStatusControl(appointment, { menuKey: 'dashboard-status' })}<button class="dashboard-details-button" type="button" data-dashboard-appointment-details="${escapeHtml(appointment.id)}">Ver detalhes</button>`;
+        dashboardUpcomingList.append(item);
+    });
+}
+
+async function loadDashboard() {
+    dashboardFeedback.textContent = '';
+    dashboardFeedback.classList.remove('is-error');
+    try {
+        renderDashboard(await requestJson(DASHBOARD_API_URL));
+    } catch (error) {
+        renderDashboard();
+        dashboardUpcomingEmpty.hidden = false;
+        dashboardUpcomingEmpty.textContent = 'Não foi possível carregar os próximos agendamentos.';
+        dashboardFeedback.textContent = error.message;
+        dashboardFeedback.classList.add('is-error');
+    }
+}
+
+async function refreshDashboardIfVisible() {
+    if (!dashboardView.hidden) await loadDashboard();
 }
 
 function renderAppointments() {
@@ -643,7 +838,7 @@ async function showAppointmentDetails(id) {
 
 async function changeAppointmentStatus(id, status) {
     const label = statusLabels[status].toLowerCase(); if (status === 'cancelled' && !window.confirm('Cancelar este agendamento? O registro será mantido no histórico.')) return;
-    try { await appointmentRequest(`?id=${id}`, { method: 'PATCH', body: JSON.stringify({ status }) }); await loadAppointments(); closeDialog(); } catch (error) { alert(error.message); }
+    try { await appointmentRequest(`?id=${id}`, { method: 'PATCH', body: JSON.stringify({ status }) }); await loadAppointments(); await refreshDashboardIfVisible(); closeDialog(); } catch (error) { alert(error.message); }
 }
 
 function handleAppointmentAction(action, id) {
@@ -698,6 +893,17 @@ appointmentList.addEventListener('click', (event) => {
     const button = event.target.closest('[data-appointment-details]');
     if (button) showAppointmentDetails(button.dataset.appointmentDetails);
 });
+dashboardUpcomingList.addEventListener('click', (event) => {
+    const actionButton = event.target.closest('[data-appointment-action]');
+    if (actionButton) {
+        closeActionDropdowns();
+        const { appointmentAction: action, appointmentId: id } = actionButton.dataset;
+        if (['cancelled', 'no_show', 'completed'].includes(action)) changeAppointmentStatus(id, action);
+        return;
+    }
+    const button = event.target.closest('[data-dashboard-appointment-details]');
+    if (button) showAppointmentDetails(button.dataset.dashboardAppointmentDetails);
+});
 maintenanceList.addEventListener('click', (event) => {
     const actionButton = event.target.closest('[data-maintenance-action]');
     if (actionButton) {
@@ -713,6 +919,39 @@ document.querySelectorAll('[data-quick]').forEach((button) => button.addEventLis
 [appointmentDateFilter, appointmentServiceFilter, appointmentStatusFilter].forEach((field) => field.addEventListener('change', () => { appointmentQuickFilter = ''; document.querySelectorAll('[data-quick]').forEach((item) => item.classList.remove('is-active')); loadAppointments(); }));
 appointmentSearch.addEventListener('input', () => { clearTimeout(appointmentSearchTimer); appointmentSearchTimer = setTimeout(loadAppointments, 250); });
 document.querySelectorAll('[data-appointment-view]').forEach((button) => button.addEventListener('click', () => { appointmentViewMode = button.dataset.appointmentView; document.querySelectorAll('[data-appointment-view]').forEach((item) => item.classList.toggle('is-active', item === button)); appointmentsListView.hidden = appointmentViewMode !== 'list'; appointmentsCalendarView.hidden = appointmentViewMode !== 'calendar'; }));
+
+document.querySelectorAll('[data-billing-period]').forEach((button) => button.addEventListener('click', () => {
+    billingPeriod = button.dataset.billingPeriod;
+    document.querySelectorAll('[data-billing-period]').forEach((item) => item.classList.toggle('is-active', item === button));
+    billingCustomRange.hidden = billingPeriod !== 'custom';
+    if (billingPeriod === 'custom') {
+        const currentDate = new Date();
+        const current = new Date(currentDate.getTime() - currentDate.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+        if (!billingStartDate.value) billingStartDate.value = current;
+        if (!billingEndDate.value) billingEndDate.value = current;
+        return;
+    }
+    loadBilling();
+}));
+
+billingCustomRange.addEventListener('submit', (event) => {
+    event.preventDefault();
+    if (billingStartDate.value > billingEndDate.value) {
+        showBillingFeedback('A data inicial deve ser anterior ou igual à data final.', true);
+        return;
+    }
+    loadBilling();
+});
+
+billingList.addEventListener('click', (event) => {
+    const actionButton = event.target.closest('[data-billing-action]');
+    if (!actionButton) return;
+    closeActionDropdowns();
+    const { billingAction: action, billingId: id } = actionButton.dataset;
+    if (action === 'mark_paid') markBillingPaid(id);
+    if (action === 'edit_payment') openBillingPaymentDialog(id);
+    if (action === 'details') showAppointmentDetails(id);
+});
 
 scheduleSettingsForm.addEventListener('submit', async (event) => {
     event.preventDefault();

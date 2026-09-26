@@ -61,14 +61,14 @@ const viewOptions = {
         description: 'Painel administrativo do Studio Marcelly Freitas.',
         layout: 'admin',
         adminPage: 'dashboard',
-        pageStyles: ['admin.css?v=20260920-schedule-settings'],
+        pageStyles: ['admin.css?v=20260926-dashboard'],
     },
     clientes: {
         title: 'Clientes | Studio Marcelly Freitas',
         description: '',
         layout: 'admin',
         adminPage: 'clients',
-        pageStyles: ['admin.css?v=20260920-schedule-settings', 'clientes.css'],
+        pageStyles: ['admin.css?v=20260924-billing', 'clientes.css'],
     },
 };
 const assetTypes = {
@@ -304,15 +304,134 @@ function format(row) {
         duration_minutes: Number(row.duration_minutes),
         price: Number(row.price),
         deposit: row.deposit == null ? null : Number(row.deposit),
+        paid: Number(row.paid || 0),
     };
 }
 async function appointment(connection, id) {
     const [rows] = await connection.execute(
-        `SELECT a.id,a.client_id,a.client_name,a.client_phone AS phone,c.email,a.service_id,a.service_name,DATE_FORMAT(a.booking_date,'%Y-%m-%d') AS date,TIME_FORMAT(a.start_time,'%H:%i') AS start_time,TIME_FORMAT(a.end_time,'%H:%i') AS end_time,a.duration_minutes,a.service_price AS price,a.deposit_amount AS deposit,a.notes,a.status,a.cancellation_reason,a.completed_at,a.created_at FROM appointments a LEFT JOIN clients c ON c.id=a.client_id WHERE a.id=?`,
+        `SELECT a.id,a.client_id,a.client_name,a.client_phone AS phone,c.email,a.service_id,a.service_name,DATE_FORMAT(a.booking_date,'%Y-%m-%d') AS date,TIME_FORMAT(a.start_time,'%H:%i') AS start_time,TIME_FORMAT(a.end_time,'%H:%i') AS end_time,a.duration_minutes,a.service_price AS price,a.deposit_amount AS deposit,a.paid_amount AS paid,a.notes,a.status,a.cancellation_reason,a.completed_at,a.created_at FROM appointments a LEFT JOIN clients c ON c.id=a.client_id WHERE a.id=?`,
         [Number(id)],
     );
     if (!rows[0]) fail(404, 'Agendamento não encontrado.');
     return format(rows[0]);
+}
+function calendarDate(value) {
+    const local = new Date(value.getTime() - value.getTimezoneOffset() * 60000);
+    return local.toISOString().slice(0, 10);
+}
+function billingRange(query) {
+    const period = query.get('period') || 'month';
+    const today = new Date();
+    let start;
+    let end;
+
+    if (period === 'today') {
+        start = calendarDate(today);
+        end = start;
+    } else if (period === 'week') {
+        const firstDay = new Date(today);
+        firstDay.setHours(0, 0, 0, 0);
+        firstDay.setDate(firstDay.getDate() - firstDay.getDay());
+        const lastDay = new Date(firstDay);
+        lastDay.setDate(firstDay.getDate() + 6);
+        start = calendarDate(firstDay);
+        end = calendarDate(lastDay);
+    } else if (period === 'month') {
+        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+        const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        start = calendarDate(firstDay);
+        end = calendarDate(lastDay);
+    } else if (period === 'custom') {
+        start = date(query.get('start'));
+        end = date(query.get('end'));
+        if (start > end) fail(422, 'A data inicial deve ser anterior ou igual à data final.');
+    } else {
+        fail(422, 'Período de faturamento inválido.');
+    }
+
+    return { period, start, end };
+}
+function money(value) {
+    return Math.round((Number(value) + Number.EPSILON) * 100) / 100;
+}
+function formatBillingRecord(row) {
+    const price = money(row.price);
+    const paid = money(row.paid || 0);
+    const remaining = money(Math.max(price - paid, 0));
+    return {
+        id: String(row.id),
+        client_id: row.client_id == null ? null : String(row.client_id),
+        client_name: row.client_name,
+        service_name: row.service_name,
+        date: row.date,
+        price,
+        deposit: row.deposit == null ? null : money(row.deposit),
+        paid,
+        remaining,
+        payment_status: remaining === 0 ? 'paid' : 'pending',
+    };
+}
+function billingSummary(records) {
+    const totals = records.reduce(
+        (summary, record) => ({
+            forecasted: summary.forecasted + record.price,
+            received: summary.received + record.paid,
+            pending: summary.pending + record.remaining,
+            paid_count: summary.paid_count + (record.payment_status === 'paid' ? 1 : 0),
+            pending_count: summary.pending_count + (record.payment_status === 'pending' ? 1 : 0),
+        }),
+        { forecasted: 0, received: 0, pending: 0, paid_count: 0, pending_count: 0 },
+    );
+    return {
+        ...totals,
+        forecasted: money(totals.forecasted),
+        received: money(totals.received),
+        pending: money(totals.pending),
+    };
+}
+async function billingRecords(connection, range) {
+    const [rows] = await connection.execute(
+        `SELECT a.id,a.client_id,a.client_name,a.service_name,DATE_FORMAT(a.booking_date,'%Y-%m-%d') AS date,
+            a.service_price AS price,a.deposit_amount AS deposit,
+            CASE WHEN a.payment_recorded_manually=1 THEN a.paid_amount ELSE 0 END AS paid
+        FROM appointments a
+        WHERE a.booking_date BETWEEN ? AND ? AND a.status NOT IN ('cancelled','no_show')
+        ORDER BY a.booking_date DESC,a.start_time DESC`,
+        [range.start, range.end],
+    );
+    return rows.map(formatBillingRecord);
+}
+async function dashboardData(connection) {
+    const monthRange = billingRange(new URLSearchParams({ period: 'month' }));
+    const [todayRows, clientRows, serviceRows, upcomingRows, financialRecords] = await Promise.all([
+        connection.query("SELECT COUNT(*) AS total FROM appointments WHERE booking_date=CURDATE() AND status NOT IN ('cancelled','no_show')"),
+        connection.query('SELECT COUNT(*) AS total FROM clients'),
+        connection.query('SELECT COUNT(*) AS total FROM services WHERE active=1'),
+        connection.query(
+            `SELECT a.id,a.client_id,a.client_name,a.client_phone AS phone,a.service_id,a.service_name,
+                DATE_FORMAT(a.booking_date,'%Y-%m-%d') AS date,
+                TIME_FORMAT(a.start_time,'%H:%i') AS start_time,TIME_FORMAT(a.end_time,'%H:%i') AS end_time,
+                a.duration_minutes,a.service_price AS price,a.deposit_amount AS deposit,a.paid_amount AS paid,a.status,a.created_at
+            FROM appointments a
+            WHERE (a.booking_date>CURDATE() OR (a.booking_date=CURDATE() AND a.start_time>=CURTIME()))
+                AND a.status NOT IN ('cancelled','completed','no_show')
+            ORDER BY a.booking_date ASC,a.start_time ASC
+            LIMIT 5`,
+        ),
+        billingRecords(connection, monthRange),
+    ]);
+    const financialSummary = billingSummary(financialRecords);
+
+    return {
+        summary: {
+            appointments_today: Number(todayRows[0][0]?.total || 0),
+            billing_month: financialSummary.received,
+            clients: Number(clientRows[0][0]?.total || 0),
+            active_services: Number(serviceRows[0][0]?.total || 0),
+        },
+        financial_summary: financialSummary,
+        upcoming: upcomingRows[0].map(format),
+    };
 }
 async function createMaintenanceRecord(connection, completedAppointment) {
     if (!completedAppointment.client_id) return;
@@ -639,7 +758,7 @@ async function handler(request, response) {
             const start = minutes(data.start_time);
             const end = await validateSlot(connection, bookingDate, start, selected.minutes, 0, false, true);
             const [result] = await connection.execute(
-                "INSERT INTO appointments (client_id,client_name,client_phone,service_id,service_name,booking_date,start_time,end_time,duration_minutes,service_price,deposit_amount,notes,status) VALUES (?,?,?,?,?,?,?,?,?,?,?,?, 'pending')",
+                "INSERT INTO appointments (client_id,client_name,client_phone,service_id,service_name,booking_date,start_time,end_time,duration_minutes,service_price,deposit_amount,paid_amount,payment_recorded_manually,notes,status) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?, 'pending')",
                 [
                     client.id,
                     client.name,
@@ -652,6 +771,8 @@ async function handler(request, response) {
                     selected.minutes,
                     selected.price,
                     selected.deposit,
+                    0,
+                    0,
                     data.notes?.trim() || null,
                 ],
             );
@@ -720,6 +841,9 @@ async function handler(request, response) {
         }
         fail(422, 'Ação inválida.');
     }
+    if (path === '/api/admin/dashboard' && request.method === 'GET') {
+        return send(response, 200, await dashboardData(pool));
+    }
     if (path === '/api/admin/services') {
         const id = Number(query.get('id'));
         if (request.method === 'GET') {
@@ -761,6 +885,31 @@ async function handler(request, response) {
             const [result] = await pool.execute('DELETE FROM services WHERE id=?', [id]);
             if (!result.affectedRows) fail(404, 'Serviço não encontrado.');
             return send(response, 200, { success: true });
+        }
+        return fail(405, 'Método não permitido.');
+    }
+    if (path === '/api/billing') {
+        if (request.method === 'GET') {
+            const range = billingRange(query);
+            const records = await billingRecords(pool, range);
+            return send(response, 200, { ...range, summary: billingSummary(records), records });
+        }
+        if (request.method === 'PATCH') {
+            const id = Number(query.get('id'));
+            if (!Number.isInteger(id) || id < 1) fail(422, 'Registro financeiro inválido.');
+            const data = await body(request);
+            const [rows] = await pool.execute('SELECT id,service_price,status FROM appointments WHERE id=?', [id]);
+            const current = rows[0];
+            if (!current) fail(404, 'Agendamento não encontrado.');
+            if (['cancelled', 'no_show'].includes(current.status)) fail(422, 'Este agendamento não possui faturamento ativo.');
+
+            const price = money(current.service_price);
+            const paid = data.action === 'mark_paid' ? price : Number(data.paid_amount);
+            if (!Number.isFinite(paid) || paid < 0 || paid > price || Math.round(paid * 100) !== paid * 100)
+                fail(422, 'Informe um valor pago entre zero e o valor total do serviço.');
+
+            await pool.execute('UPDATE appointments SET paid_amount=?,payment_recorded_manually=1 WHERE id=?', [paid, id]);
+            return send(response, 200, { success: true, id: String(id), paid_amount: paid });
         }
         return fail(405, 'Método não permitido.');
     }
@@ -946,7 +1095,7 @@ async function handler(request, response) {
             const start = minutes(data.start_time);
             const end = await validateSlot(connection, bookingDate, start, selectedService.minutes, 0, Boolean(data.allow_override), true);
             const [result] = await connection.execute(
-                "INSERT INTO appointments (client_id,client_name,client_phone,service_id,service_name,booking_date,start_time,end_time,duration_minutes,service_price,deposit_amount,notes,status) VALUES (?,?,?,?,?,?,?,?,?,?,?,?, 'pending')",
+                "INSERT INTO appointments (client_id,client_name,client_phone,service_id,service_name,booking_date,start_time,end_time,duration_minutes,service_price,deposit_amount,paid_amount,payment_recorded_manually,notes,status) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?, 'pending')",
                 [
                     client.id,
                     client.name,
@@ -959,6 +1108,8 @@ async function handler(request, response) {
                     selectedService.minutes,
                     selectedService.price,
                     selectedService.deposit,
+                    0,
+                    0,
                     data.notes?.trim() || null,
                 ],
             );

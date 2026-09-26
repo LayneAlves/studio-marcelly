@@ -86,6 +86,8 @@ CREATE TABLE IF NOT EXISTS appointments (
     duration_minutes SMALLINT UNSIGNED NOT NULL,
     service_price DECIMAL(10,2) NOT NULL,
     deposit_amount DECIMAL(10,2) NULL,
+    paid_amount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    payment_recorded_manually TINYINT(1) NOT NULL DEFAULT 0,
     notes TEXT NULL,
     status VARCHAR(20) NOT NULL DEFAULT 'confirmed',
     cancellation_reason VARCHAR(500) NULL,

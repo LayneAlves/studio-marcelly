@@ -35,3 +35,9 @@ Desktop.ini
 *.swp
 *.swo
 *~
+
+# Perfis e capturas locais usados apenas em validações visuais
+.chrome-*/
+chrome-hero-profile-*/
+hero-*-check.png
+hero-*-after.png

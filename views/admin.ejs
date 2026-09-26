@@ -12,8 +12,82 @@
             <%- include('../includes/admin-sidebar') %>
 
             <main class="admin-content" id="dashboard">
-                <section class="admin-dashboard-view" id="dashboardView">
-                    <h1>Painel Administrativo</h1>
+                <section class="admin-dashboard-view" id="dashboardView" aria-labelledby="dashboardTitle">
+                    <header class="admin-page-heading dashboard-heading">
+                        <div>
+                            <p class="admin-eyebrow">Visão geral</p>
+                            <h1 id="dashboardTitle">Dashboard</h1>
+                            <p>Visão geral do Studio Marcelly Freitas.</p>
+                        </div>
+                    </header>
+
+                    <section class="dashboard-summary" aria-label="Resumo do studio">
+                        <article class="dashboard-summary-card">
+                            <span class="dashboard-summary-icon" aria-hidden="true"><i class="fa-regular fa-calendar"></i></span>
+                            <div>
+                                <p>Agendamentos hoje</p>
+                                <strong id="dashboardAppointmentsToday">0</strong>
+                            </div>
+                        </article>
+                        <article class="dashboard-summary-card">
+                            <span class="dashboard-summary-icon" aria-hidden="true"><i class="fa-solid fa-wallet"></i></span>
+                            <div>
+                                <p>Faturamento do mês</p>
+                                <strong id="dashboardBillingMonth">R$ 0,00</strong>
+                            </div>
+                        </article>
+                        <article class="dashboard-summary-card">
+                            <span class="dashboard-summary-icon" aria-hidden="true"><i class="fa-regular fa-user"></i></span>
+                            <div>
+                                <p>Clientes</p>
+                                <strong id="dashboardClientsCount">0</strong>
+                            </div>
+                        </article>
+                        <article class="dashboard-summary-card">
+                            <span class="dashboard-summary-icon" aria-hidden="true"><i class="fa-regular fa-star"></i></span>
+                            <div>
+                                <p>Serviços ativos</p>
+                                <strong id="dashboardActiveServices">0</strong>
+                            </div>
+                        </article>
+                    </section>
+
+                    <section class="dashboard-panel dashboard-upcoming-panel" aria-labelledby="dashboardUpcomingTitle">
+                        <header class="dashboard-section-heading">
+                            <div>
+                                <h2 id="dashboardUpcomingTitle">Próximos agendamentos</h2>
+                                <p>Os cinco próximos horários da agenda.</p>
+                            </div>
+                            <a class="dashboard-section-link" href="#agendamentos">Ver todos <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+                        </header>
+                        <div class="dashboard-upcoming-list" id="dashboardUpcomingList"></div>
+                        <p class="dashboard-empty-state" id="dashboardUpcomingEmpty">Nenhum próximo agendamento.</p>
+                    </section>
+
+                    <section class="dashboard-panel dashboard-financial-panel" aria-labelledby="dashboardFinancialTitle">
+                        <header class="dashboard-section-heading">
+                            <div>
+                                <h2 id="dashboardFinancialTitle">Resumo financeiro do mês</h2>
+                                <p>Valores calculados a partir dos agendamentos registrados.</p>
+                            </div>
+                            <a class="dashboard-section-link" href="#faturamento">Ver faturamento <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+                        </header>
+                        <div class="dashboard-financial-summary">
+                            <div class="dashboard-financial-item">
+                                <p>Total previsto</p>
+                                <strong id="dashboardForecasted">R$ 0,00</strong>
+                            </div>
+                            <div class="dashboard-financial-item">
+                                <p>Total recebido</p>
+                                <strong id="dashboardReceived">R$ 0,00</strong>
+                            </div>
+                            <div class="dashboard-financial-item">
+                                <p>Total pendente</p>
+                                <strong id="dashboardPending">R$ 0,00</strong>
+                            </div>
+                        </div>
+                    </section>
+                    <p class="dashboard-feedback" id="dashboardFeedback" role="status" aria-live="polite"></p>
                 </section>
 
                 <section class="admin-appointments" id="agendamentos" hidden aria-labelledby="appointmentsTitle">
@@ -116,6 +190,50 @@
                         <div class="schedule-blocks-heading"><h3>Próximos bloqueios</h3><span id="scheduleBlockCount">0 bloqueios</span></div>
                         <div class="schedule-blocks-list" id="scheduleBlockList"></div>
                         <p class="schedule-blocks-empty" id="scheduleBlockEmptyState">Nenhum bloqueio manual cadastrado.</p>
+                    </section>
+                </section>
+
+                <section class="admin-billing" id="faturamento" hidden aria-labelledby="billingTitle">
+                    <div class="admin-page-heading billing-header">
+                        <div>
+                            <p class="admin-eyebrow">Financeiro</p>
+                            <h1 id="billingTitle">Faturamento</h1>
+                            <p>Acompanhe valores recebidos, pendentes e totais por período.</p>
+                        </div>
+                    </div>
+
+                    <section class="billing-summary" aria-label="Resumo do faturamento">
+                        <article class="billing-summary-card"><p>Total previsto</p><strong id="billingForecasted">R$ 0,00</strong></article>
+                        <article class="billing-summary-card"><p>Total recebido</p><strong id="billingReceived">R$ 0,00</strong></article>
+                        <article class="billing-summary-card"><p>Total pendente</p><strong id="billingPending">R$ 0,00</strong></article>
+                        <article class="billing-summary-card"><p>Agendamentos pagos</p><strong id="billingPaidCount">0</strong></article>
+                        <article class="billing-summary-card"><p>Agendamentos pendentes</p><strong id="billingPendingCount">0</strong></article>
+                    </section>
+
+                    <section class="billing-filters" aria-label="Filtros de faturamento">
+                        <div class="billing-period-filters" role="group" aria-label="Selecionar período">
+                            <button type="button" data-billing-period="today">Hoje</button>
+                            <button type="button" data-billing-period="week">Esta semana</button>
+                            <button class="is-active" type="button" data-billing-period="month">Este mês</button>
+                            <button type="button" data-billing-period="custom">Personalizado</button>
+                        </div>
+                        <form class="billing-custom-range" id="billingCustomRange" hidden>
+                            <label>Data inicial<input id="billingStartDate" type="date" required></label>
+                            <label>Data final<input id="billingEndDate" type="date" required></label>
+                            <button class="admin-button" type="submit">Filtrar</button>
+                        </form>
+                        <p class="billing-feedback" id="billingFeedback" role="status" aria-live="polite"></p>
+                    </section>
+
+                    <section class="billing-list" aria-labelledby="billingListTitle">
+                        <div class="billing-list-heading"><h2 id="billingListTitle">Registros financeiros</h2><span id="billingPeriodLabel">Este mês</span></div>
+                        <div class="billing-table-wrap">
+                            <table class="billing-table">
+                                <thead><tr><th scope="col">Cliente</th><th scope="col">Serviço</th><th scope="col">Data</th><th scope="col">Valor</th><th scope="col">Sinal</th><th scope="col">Pago</th><th scope="col">Restante</th><th scope="col">Status</th><th scope="col">Ações</th></tr></thead>
+                                <tbody id="billingList"></tbody>
+                            </table>
+                        </div>
+                        <p class="service-empty-state" id="billingEmptyState">Nenhum agendamento encontrado neste período.</p>
                     </section>
                 </section>
 
@@ -231,7 +349,7 @@
 
     <%- include('../includes/footer') %>
         <script src="phone-mask.js"></script>
-        <script src="admin.js?v=20260920-schedule-settings"></script>
+        <script src="admin.js?v=20260926-dashboard"></script>
 </body>
 
 </html>
