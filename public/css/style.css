@@ -2359,7 +2359,7 @@ footer span {
 
     /* Impede que a marca d'água vertical alcance o header no Safari mobile. */
     #home.hero .retangulo-watermark {
-        font-size: clamp(6.2rem,
+        font-size: clamp(2.2rem,
                 min(18vw,
                     calc((100svh - 6.75rem - var(--mobile-bottom-nav-space)) / 4)),
                 6rem);
