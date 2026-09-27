@@ -1,4 +1,4 @@
-const CLIENTS_API = `http://${window.location.hostname || '127.0.0.1'}:3000/api/clients`;
+const CLIENTS_API = '/api/clients';
 const clientsList = document.getElementById('clientsList');
 const clientsSearch = document.getElementById('clientsSearch');
 const clientsEmpty = document.getElementById('clientsEmptyState');

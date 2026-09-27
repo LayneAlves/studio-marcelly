@@ -1,5 +1,96 @@
-<!DOCTYPE html>
-<html lang="pt-BR"><head><%- include('../includes/head') %></head>
-<body class="admin-body" data-admin-module="reports"><div class="admin-panel"><%- include('../includes/header') %><%- include('../includes/admin-sidebar') %>
-<main class="admin-content is-admin-view"><section class="reports-module" aria-labelledby="reportsTitle"><div class="admin-page-heading"><div><p class="admin-eyebrow">Visão analítica</p><h1 id="reportsTitle">Relatórios</h1><p>Os relatórios do studio serão organizados nesta área.</p></div></div><div class="reports-panel reports-empty"><p>Este módulo está pronto para receber os próximos relatórios.</p></div></section></main></div>
-<dialog class="appointment-dialog" id="appointmentDialog"><div class="appointment-dialog-inner"><button class="dialog-close" id="appointmentDialogClose" type="button" aria-label="Fechar">×</button><div id="appointmentDialogContent"></div></div></dialog><%- include('../includes/footer') %><script src="/js/admin-shared.js"></script><script src="/js/reports.js"></script></body></html>
+<!doctype html>
+<html lang="pt-BR">
+<head><%- include('../includes/head') %></head>
+<body class="admin-body" data-admin-module="reports">
+    <div class="admin-panel">
+        <%- include('../includes/header') %>
+        <%- include('../includes/admin-sidebar') %>
+        <main class="admin-content is-admin-view">
+            <section class="reports-module" aria-labelledby="reportsTitle">
+                <header class="admin-page-heading reports-header">
+                    <div>
+                        <p class="admin-eyebrow">Visão analítica</p>
+                        <h1 id="reportsTitle">Relatórios</h1>
+                        <p>Acompanhe o desempenho dos atendimentos e do faturamento por período.</p>
+                    </div>
+                </header>
+
+                <section class="reports-filters" aria-label="Filtro por período">
+                    <div class="reports-period-filters" role="group" aria-label="Selecionar período">
+                        <button type="button" data-report-period="today">Hoje</button>
+                        <button type="button" data-report-period="week">Esta semana</button>
+                        <button class="is-active" type="button" data-report-period="month">Este mês</button>
+                        <button type="button" data-report-period="custom">Personalizado</button>
+                    </div>
+                    <form class="reports-custom-range" id="reportsCustomRange" hidden>
+                        <label>Data inicial<input id="reportsStartDate" type="date" required></label>
+                        <label>Data final<input id="reportsEndDate" type="date" required></label>
+                        <button class="reports-generate-button" type="submit">Gerar relatório</button>
+                    </form>
+                    <p class="reports-feedback" id="reportsFeedback" role="status" aria-live="polite"></p>
+                </section>
+
+                <section class="reports-summary" aria-label="Resumo do período">
+                    <article class="reports-summary-card"><p>Total de agendamentos</p><strong id="reportsTotalAppointments">0</strong></article>
+                    <article class="reports-summary-card"><p>Concluídos</p><strong id="reportsCompleted">0</strong></article>
+                    <article class="reports-summary-card"><p>Cancelados</p><strong id="reportsCancelled">0</strong></article>
+                    <article class="reports-summary-card"><p>Não compareceram</p><strong id="reportsNoShow">0</strong></article>
+                    <article class="reports-summary-card"><p>Faturamento recebido</p><strong id="reportsReceived">R$ 0,00</strong></article>
+                    <article class="reports-summary-card"><p>Faturamento pendente</p><strong id="reportsPending">R$ 0,00</strong></article>
+                </section>
+
+                <div class="reports-grid">
+                    <section class="reports-panel" aria-labelledby="reportsStatusTitle">
+                        <header class="reports-section-heading"><div><h2 id="reportsStatusTitle">Agendamentos por status</h2><p>Distribuição dos atendimentos no período.</p></div></header>
+                        <div class="reports-status-grid">
+                            <article><span>Pendentes</span><strong id="reportsStatusPending">0</strong></article>
+                            <article><span>Confirmados</span><strong id="reportsStatusConfirmed">0</strong></article>
+                            <article><span>Concluídos</span><strong id="reportsStatusCompleted">0</strong></article>
+                            <article><span>Cancelados</span><strong id="reportsStatusCancelled">0</strong></article>
+                            <article><span>Não compareceram</span><strong id="reportsStatusNoShow">0</strong></article>
+                        </div>
+                    </section>
+
+                    <section class="reports-panel" aria-labelledby="reportsServicesTitle">
+                        <header class="reports-section-heading"><div><h2 id="reportsServicesTitle">Serviços mais realizados</h2><p>Atendimentos concluídos, do maior para o menor.</p></div></header>
+                        <ol class="reports-ranked-list" id="reportsServicesList"></ol>
+                        <p class="reports-empty" id="reportsServicesEmpty">Nenhum serviço concluído neste período.</p>
+                    </section>
+
+                    <section class="reports-panel reports-financial-panel" aria-labelledby="reportsFinancialTitle">
+                        <header class="reports-section-heading"><div><h2 id="reportsFinancialTitle">Resumo financeiro</h2><p>Calculado com a mesma regra do Faturamento.</p></div></header>
+                        <div class="reports-financial-grid">
+                            <article><span>Total previsto</span><strong id="reportsForecasted">R$ 0,00</strong></article>
+                            <article><span>Total recebido</span><strong id="reportsFinancialReceived">R$ 0,00</strong></article>
+                            <article><span>Total pendente</span><strong id="reportsFinancialPending">R$ 0,00</strong></article>
+                        </div>
+                    </section>
+
+                    <section class="reports-panel" aria-labelledby="reportsClientsTitle">
+                        <header class="reports-section-heading"><div><h2 id="reportsClientsTitle">Clientes no período</h2><p>Indicadores calculados sem duplicar clientes.</p></div></header>
+                        <div class="reports-client-grid">
+                            <article><span>Clientes atendidos</span><strong id="reportsClientsAttended">0</strong></article>
+                            <article><span>Novos clientes</span><strong id="reportsClientsNew">0</strong></article>
+                            <article><span>Clientes recorrentes</span><strong id="reportsClientsRecurring">0</strong></article>
+                        </div>
+                    </section>
+                </div>
+
+                <section class="reports-panel reports-records-panel" aria-labelledby="reportsRecordsTitle">
+                    <header class="reports-section-heading"><div><h2 id="reportsRecordsTitle">Lista detalhada</h2><p id="reportsPeriodLabel">Este mês</p></div></header>
+                    <div class="reports-table-wrap">
+                        <table class="reports-table">
+                            <thead><tr><th>Data</th><th>Cliente</th><th>Serviço</th><th>Status</th><th>Valor do serviço</th><th>Valor pago</th><th>Valor restante</th></tr></thead>
+                            <tbody id="reportsRecords"></tbody>
+                        </table>
+                    </div>
+                    <p class="reports-empty" id="reportsRecordsEmpty">Nenhum dado encontrado para este período.</p>
+                </section>
+            </section>
+        </main>
+    </div>
+    <%- include('../includes/footer') %>
+    <script src="/js/admin-shared.js"></script>
+    <script src="/js/reports.js"></script>
+</body>
+</html>

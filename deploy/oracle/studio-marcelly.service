@@ -1,0 +1,18 @@
+[Unit]
+Description=Studio Marcelly Freitas - Node.js
+After=network.target mysql.service
+
+[Service]
+Type=simple
+User=studio
+Group=studio
+WorkingDirectory=/opt/studio-marcelly
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/node /opt/studio-marcelly/server.js
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

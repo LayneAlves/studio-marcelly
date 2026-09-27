@@ -36,7 +36,6 @@ function renderGallery(filter) {
         requestAnimationFrame(() => card.classList.add('show'));
     });
 }
-
 if (galleryGrid) {
     renderGallery('todas');
     document.querySelectorAll('.tab-btn').forEach((button) => {
@@ -48,10 +47,10 @@ if (galleryGrid) {
     });
 }
 
-const SERVICES_API_URL = `http://${window.location.hostname || '127.0.0.1'}:3000/api/services`;
-const APPOINTMENTS_API_URL = `http://${window.location.hostname || '127.0.0.1'}:3000/api/appointments`;
-const ACCOUNT_API_URL = `http://${window.location.hostname || '127.0.0.1'}:3000/api/account`;
-const SCHEDULE_SETTINGS_API_URL = `http://${window.location.hostname || '127.0.0.1'}:3000/api/schedule-settings`;
+const SERVICES_API_URL = '/api/services';
+const APPOINTMENTS_API_URL = '/api/appointments';
+const ACCOUNT_API_URL = '/api/account';
+const SCHEDULE_SETTINGS_API_URL = '/api/schedule-settings';
 const MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
 
 const calDaysEl = document.getElementById('calDays');
@@ -62,6 +61,10 @@ const bookingSummary = document.getElementById('bookingSummary');
 const bookingForm = document.getElementById('bookingForm');
 const formMsg = document.getElementById('formMsg');
 const serviceSelect = document.getElementById('servico');
+const bookingServiceDropdown = document.getElementById('bookingServiceDropdown');
+const bookingServiceToggle = document.getElementById('bookingServiceToggle');
+const bookingServiceValue = document.getElementById('bookingServiceValue');
+const bookingServiceMenu = document.getElementById('bookingServiceMenu');
 const publicBusinessHours = document.getElementById('publicBusinessHours');
 
 const publicWeekDays = [
@@ -181,9 +184,75 @@ async function accountRequest(path = '', options = {}) {
         }
         const error = new Error(data.error || 'Não foi possível concluir esta ação.');
         error.status = response.status;
+        error.fields = data.fields || {};
         throw error;
     }
     return data;
+}
+
+function closeBookingServiceDropdown() {
+    if (!bookingServiceDropdown || !bookingServiceToggle) return;
+    bookingServiceDropdown.classList.remove('is-open');
+    bookingServiceToggle.setAttribute('aria-expanded', 'false');
+}
+
+function syncBookingServiceDropdown() {
+    if (!bookingServiceDropdown || !bookingServiceToggle || !bookingServiceValue || !bookingServiceMenu || !serviceSelect) return;
+
+    const selectedId = serviceSelect.value;
+    const selectedServiceItem = activeServices.find((service) => String(service.id) === selectedId);
+    const placeholder = serviceSelect.options[0]?.textContent || 'Selecione um serviço';
+    bookingServiceValue.textContent = selectedServiceItem
+        ? `${selectedServiceItem.name} — ${formatCurrency(selectedServiceItem.value)}`
+        : placeholder;
+
+    bookingServiceToggle.disabled = serviceSelect.disabled;
+    bookingServiceDropdown.classList.toggle('is-disabled', serviceSelect.disabled);
+    bookingServiceMenu.replaceChildren();
+
+    activeServices.forEach((service) => {
+        const option = document.createElement('button');
+        const isSelected = String(service.id) === selectedId;
+        option.type = 'button';
+        option.className = 'booking-service-dropdown-item';
+        option.dataset.serviceId = service.id;
+        option.setAttribute('role', 'option');
+        option.setAttribute('aria-selected', String(isSelected));
+        option.classList.toggle('is-active', isSelected);
+        option.textContent = `${service.name} — ${formatCurrency(service.value)}`;
+        bookingServiceMenu.append(option);
+    });
+}
+
+function selectBookingService(serviceId) {
+    if (!serviceSelect || serviceSelect.disabled) return;
+    serviceSelect.value = String(serviceId);
+    serviceSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    closeBookingServiceDropdown();
+}
+
+function initializeBookingServiceDropdown() {
+    if (!bookingServiceDropdown || !bookingServiceToggle || !bookingServiceMenu) return;
+
+    bookingServiceToggle.addEventListener('click', () => {
+        if (bookingServiceToggle.disabled) return;
+        const willOpen = !bookingServiceDropdown.classList.contains('is-open');
+        bookingServiceDropdown.classList.toggle('is-open', willOpen);
+        bookingServiceToggle.setAttribute('aria-expanded', String(willOpen));
+    });
+
+    bookingServiceMenu.addEventListener('click', (event) => {
+        const option = event.target.closest('[data-service-id]');
+        if (option) selectBookingService(option.dataset.serviceId);
+    });
+
+    document.addEventListener('click', (event) => {
+        if (!bookingServiceDropdown.contains(event.target)) closeBookingServiceDropdown();
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') closeBookingServiceDropdown();
+    });
 }
 
 async function loadActiveServices() {
@@ -200,6 +269,7 @@ async function loadActiveServices() {
             serviceSelect.add(new Option(`${service.name} — ${formatCurrency(service.value)}`, service.id));
         });
         serviceSelect.disabled = activeServices.length === 0;
+        syncBookingServiceDropdown();
         if (activeServices.length === 0) {
             serviceSelect.options[0].textContent = 'Nenhum serviço disponível';
             formMsg.textContent = 'Não há serviços ativos disponíveis para agendamento.';
@@ -207,6 +277,7 @@ async function loadActiveServices() {
     } catch (error) {
         serviceSelect.replaceChildren(new Option('Não foi possível carregar os serviços', ''));
         serviceSelect.disabled = true;
+        syncBookingServiceDropdown();
         formMsg.textContent = error.message;
     }
 }
@@ -332,9 +403,10 @@ if (bookingForm && calDaysEl && calMonthLabel && slotsGrid && slotsLabel && book
         renderCalendar();
     });
     serviceSelect.addEventListener('change', () => {
-        selectedService = activeServices.find((service) => service.id === serviceSelect.value) || null;
+        selectedService = activeServices.find((service) => String(service.id) === serviceSelect.value) || null;
         selectedTime = null;
         formMsg.textContent = '';
+        syncBookingServiceDropdown();
         renderCalendar();
         renderSlots();
         updateSummary();
@@ -377,6 +449,7 @@ if (bookingForm && calDaysEl && calMonthLabel && slotsGrid && slotsLabel && book
         }
     });
 
+    initializeBookingServiceDropdown();
     renderCalendar();
     loadActiveServices();
     loadPublicBusinessHours();
@@ -430,23 +503,110 @@ function bookingSnapshot() {
     };
 }
 
-function updateAuthModalContent(source) {
+function updateAuthModalContent(source, view = 'login') {
     const isBooking = source === 'booking';
-    document.getElementById('bookingAuthTitle').textContent = isBooking ? 'Entre para finalizar' : 'Acesse sua conta';
-    document.querySelector('.booking-auth-description').textContent = isBooking
+    const title = document.getElementById('bookingAuthTitle');
+    const description = document.querySelector('.booking-auth-description');
+    const tabs = document.querySelector('.booking-auth-tabs');
+    const isAccessView = view === 'login' || view === 'register';
+
+    tabs.hidden = !isAccessView;
+    if (view === 'reset-request') {
+        title.textContent = 'Recupere sua senha';
+        description.textContent = 'Informe seu e-mail para receber um link seguro de recuperação.';
+        return;
+    }
+    if (view === 'reset-confirm') {
+        title.textContent = 'Crie uma nova senha';
+        description.textContent = 'Escolha uma senha nova para acessar sua conta.';
+        return;
+    }
+
+    title.textContent = isBooking ? 'Entre para finalizar' : 'Acesse sua conta';
+    description.textContent = isBooking
         ? 'Acesse sua conta para salvar seu agendamento.'
         : 'Entre ou crie sua conta para acessar sua área.';
     document.getElementById('bookingLoginSubmit').textContent = isBooking ? 'Entrar e confirmar' : 'Entrar';
     document.getElementById('bookingRegisterSubmit').textContent = isBooking ? 'Criar conta e confirmar' : 'Criar conta';
 }
 
-function openAuthenticationDialog(source = 'booking') {
+function authFieldKey(input) {
+    if (input.id.includes('Identifier')) return 'identifier';
+    if (input.id.includes('Phone')) return 'phone';
+    if (input.id.includes('Email')) return 'email';
+    if (input.id.includes('Name')) return 'name';
+    if (input.id.includes('PasswordConfirm')) return 'passwordConfirm';
+    if (input.id.includes('Password')) return 'password';
+    return input.id;
+}
+
+function authFieldMessage(input) {
+    const value = input.value.trim();
+    const key = authFieldKey(input);
+    if (key === 'name') return value.length >= 2 ? '' : 'Informe seu nome completo.';
+    if (key === 'phone') return value.replace(/\D/g, '').length >= 10 ? '' : 'Informe um telefone válido com DDD.';
+    if (key === 'email') return /^\S+@\S+\.\S+$/.test(value) ? '' : 'Informe um e-mail válido.';
+    if (key === 'identifier') {
+        const digits = value.replace(/\D/g, '');
+        return /^\S+@\S+\.\S+$/.test(value) || digits.length >= 10 ? '' : 'Informe um telefone com DDD ou e-mail válido.';
+    }
+    if (key === 'password') return value.length >= 6 ? '' : 'A senha deve ter ao menos 6 caracteres.';
+    if (key === 'passwordConfirm') {
+        const original = input.id.startsWith('bookingReset') ? document.getElementById('bookingResetPassword') : document.getElementById('bookingRegisterPassword');
+        return value && value === original.value ? '' : 'As senhas não coincidem.';
+    }
+    return '';
+}
+
+function setAuthFieldState(input, state = '', text = '') {
+    const field = input.closest('.booking-auth-field');
+    const feedback = document.querySelector(`[data-auth-feedback-for="${input.id}"]`);
+    input.classList.toggle('is-valid', state === 'valid');
+    input.classList.toggle('is-invalid', state === 'error');
+    input.setAttribute('aria-invalid', state === 'error' ? 'true' : 'false');
+    field?.classList.toggle('has-error', state === 'error');
+    if (feedback) feedback.textContent = state === 'error' ? text : '';
+}
+
+function clearAuthValidation(scope = document) {
+    scope.querySelectorAll?.('.booking-auth-form input').forEach((input) => setAuthFieldState(input));
+}
+
+function validateAuthInput(input, showError = true) {
+    const message = authFieldMessage(input);
+    if (message) {
+        if (showError) setAuthFieldState(input, 'error', message);
+        return false;
+    }
+    if (input.id === 'bookingLoginPassword') {
+        setAuthFieldState(input); // correção só é confirmada pelo servidor — não pinta de verde aqui
+    } else {
+        setAuthFieldState(input, 'valid');
+    }
+    return true;
+}
+
+function validateAuthForm(form) {
+    return [...form.querySelectorAll('input[required]')].map((input) => validateAuthInput(input)).every(Boolean);
+}
+
+function applyAuthFieldErrors(form, fields = {}) {
+    Object.entries(fields).forEach(([key, message]) => {
+        let input;
+        if (key === 'passwordConfirm') input = form.querySelector('[id$="PasswordConfirm"]');
+        else if (key === 'identifier') input = form.querySelector('#bookingLoginIdentifier');
+        else input = form.querySelector(`[id*="${key[0].toUpperCase()}${key.slice(1)}"]`);
+        if (input) setAuthFieldState(input, 'error', message);
+    });
+}
+
+function openAuthenticationDialog(source = 'booking', resetToken = '') {
     const dialog = document.getElementById('bookingAuthDialog');
     if (!dialog) return false;
 
     const isBooking = source === 'booking';
     const snapshot = isBooking ? bookingSnapshot() : null;
-    authModalContext = { source: isBooking ? 'booking' : 'account', booking: snapshot };
+    authModalContext = { source: isBooking ? 'booking' : 'account', booking: snapshot, resetToken };
 
     document.getElementById('bookingRegisterName').value = snapshot?.name || '';
     document.getElementById('bookingRegisterPhone').value = snapshot ? formatBrazilianPhone(snapshot.phone) : '';
@@ -455,19 +615,31 @@ function openAuthenticationDialog(source = 'booking') {
     document.getElementById('bookingRegisterPassword').value = '';
     document.getElementById('bookingRegisterPasswordConfirm').value = '';
     document.getElementById('bookingRegisterEmail').value = '';
-    updateAuthModalContent(authModalContext.source);
-    setBookingAuthView('login');
+    document.getElementById('bookingResetEmail').value = '';
+    document.getElementById('bookingResetPassword').value = '';
+    document.getElementById('bookingResetPasswordConfirm').value = '';
+    clearAuthValidation();
+    document.querySelectorAll('.booking-auth-form input').forEach((input) => {
+        if (input.value) validateAuthInput(input, false);
+    });
+    setBookingAuthView(resetToken ? 'reset-confirm' : 'login');
     if (!dialog.open) dialog.showModal();
     return true;
 }
 
 window.openBookingAuthDialogForAccount = () => openAuthenticationDialog('account');
 
-function setBookingAuthView(view) {
-    document.getElementById('bookingLoginForm').hidden = view !== 'login';
-    document.getElementById('bookingRegisterForm').hidden = view !== 'register';
+function setBookingAuthView(view, preserveFeedback = false) {
+    const forms = {
+        login: document.getElementById('bookingLoginForm'),
+        register: document.getElementById('bookingRegisterForm'),
+        'reset-request': document.getElementById('bookingPasswordResetRequestForm'),
+        'reset-confirm': document.getElementById('bookingPasswordResetConfirmForm'),
+    };
+    Object.entries(forms).forEach(([name, form]) => { form.hidden = name !== view; });
     document.querySelectorAll('[data-booking-auth-view]').forEach((button) => button.classList.toggle('is-active', button.dataset.bookingAuthView === view));
-    setAuthFeedback();
+    updateAuthModalContent(authModalContext.source, view);
+    if (!preserveFeedback) setAuthFeedback();
 }
 
 function setAuthFeedback(text = '', state = '') {
@@ -475,6 +647,7 @@ function setAuthFeedback(text = '', state = '') {
     message.textContent = text;
     message.classList.toggle('is-pending', state === 'pending');
     message.classList.toggle('is-error', state === 'error');
+    message.classList.toggle('is-success', state === 'success');
 }
 
 async function finishAuthentication(response) {
@@ -508,14 +681,42 @@ if (bookingForm) {
 if (document.getElementById('bookingAuthDialog')) {
     document.querySelectorAll('[data-booking-auth-view]').forEach((button) => button.addEventListener('click', () => setBookingAuthView(button.dataset.bookingAuthView)));
     document.getElementById('bookingAuthClose').addEventListener('click', () => document.getElementById('bookingAuthDialog').close());
+    document.querySelector('[data-booking-auth-forgot]').addEventListener('click', () => {
+        const identifier = document.getElementById('bookingLoginIdentifier').value.trim();
+        if (/^\S+@\S+\.\S+$/.test(identifier)) document.getElementById('bookingResetEmail').value = identifier;
+        setBookingAuthView('reset-request');
+    });
+    document.querySelectorAll('[data-booking-auth-back]').forEach((button) => button.addEventListener('click', () => setBookingAuthView('login')));
+    document.querySelectorAll('.booking-auth-form input').forEach((input) => {
+        input.addEventListener('input', () => {
+            if (input.value) validateAuthInput(input, false);
+            else setAuthFieldState(input);
+            if (input.id.endsWith('Password')) {
+                const confirmation = input.id.startsWith('bookingReset') ? document.getElementById('bookingResetPasswordConfirm') : document.getElementById('bookingRegisterPasswordConfirm');
+                if (confirmation.value) validateAuthInput(confirmation, false);
+            }
+        });
+        input.addEventListener('blur', () => validateAuthInput(input));
+    });
     document.getElementById('bookingLoginForm').addEventListener('submit', async (event) => {
         event.preventDefault();
-        const submitButton = event.currentTarget.querySelector('[type="submit"]');
+        const form = event.currentTarget;
+        if (!validateAuthForm(form)) {
+            setAuthFeedback('Revise os campos destacados.', 'error');
+            return;
+        }
+        const submitButton = form.querySelector('[type="submit"]');
         submitButton.disabled = true;
         setAuthFeedback('Entrando...', 'pending');
         try {
             await finishAuthentication(await accountRequest('/login', { method: 'POST', body: JSON.stringify({ identifier: document.getElementById('bookingLoginIdentifier').value, password: document.getElementById('bookingLoginPassword').value }) }));
         } catch (error) {
+            const hasFieldErrors = error.fields && Object.keys(error.fields).length > 0;
+            if (hasFieldErrors) {
+                applyAuthFieldErrors(form, error.fields);
+            } else {
+                setAuthFieldState(document.getElementById('bookingLoginPassword'), 'error', error.message);
+            }
             setAuthFeedback(error.message, 'error');
         } finally {
             submitButton.disabled = false;
@@ -525,8 +726,8 @@ if (document.getElementById('bookingAuthDialog')) {
         event.preventDefault();
         const submitButton = event.currentTarget.querySelector('[type="submit"]');
         const password = document.getElementById('bookingRegisterPassword').value;
-        if (password !== document.getElementById('bookingRegisterPasswordConfirm').value) {
-            setAuthFeedback('As senhas não coincidem.', 'error');
+        if (!validateAuthForm(event.currentTarget)) {
+            setAuthFeedback('Revise os campos destacados.', 'error');
             return;
         }
         submitButton.disabled = true;
@@ -534,13 +735,80 @@ if (document.getElementById('bookingAuthDialog')) {
         try {
             await finishAuthentication(await accountRequest('/register', { method: 'POST', body: JSON.stringify({ name: document.getElementById('bookingRegisterName').value.trim(), phone: document.getElementById('bookingRegisterPhone').value.trim(), email: document.getElementById('bookingRegisterEmail').value.trim(), password }) }));
         } catch (error) {
+            applyAuthFieldErrors(event.currentTarget, error.fields);
             setAuthFeedback(error.message, 'error');
         } finally {
             submitButton.disabled = false;
         }
     });
 
-    if (new URLSearchParams(window.location.search).get('auth') === 'account') {
+    document.getElementById('bookingPasswordResetRequestForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        if (!validateAuthForm(event.currentTarget)) {
+            setAuthFeedback('Revise o e-mail informado.', 'error');
+            return;
+        }
+        const submitButton = event.currentTarget.querySelector('[type="submit"]');
+        submitButton.disabled = true;
+        setAuthFeedback('Enviando link de recuperação...', 'pending');
+        try {
+            const response = await accountRequest('/password-reset/request', {
+                method: 'POST',
+                body: JSON.stringify({ email: document.getElementById('bookingResetEmail').value.trim() }),
+            });
+            setAuthFeedback(response.message, 'success');
+        } catch (error) {
+            applyAuthFieldErrors(event.currentTarget, error.fields);
+            setAuthFeedback(error.message, 'error');
+        } finally {
+            submitButton.disabled = false;
+        }
+    });
+
+    document.getElementById('bookingPasswordResetConfirmForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        if (!validateAuthForm(event.currentTarget)) {
+            setAuthFeedback('Revise os campos destacados.', 'error');
+            return;
+        }
+        const submitButton = event.currentTarget.querySelector('[type="submit"]');
+        submitButton.disabled = true;
+        setAuthFeedback('Salvando nova senha...', 'pending');
+        try {
+            await accountRequest('/password-reset/confirm', {
+                method: 'POST',
+                body: JSON.stringify({ token: authModalContext.resetToken, password: document.getElementById('bookingResetPassword').value }),
+            });
+            authModalContext.resetToken = '';
+            window.history.replaceState({}, '', '/index.html');
+            document.getElementById('bookingLoginPassword').value = '';
+            setBookingAuthView('login', true);
+            setAuthFeedback('Senha atualizada. Entre com sua nova senha.', 'success');
+        } catch (error) {
+            applyAuthFieldErrors(event.currentTarget, error.fields);
+            setAuthFeedback(error.message, 'error');
+        } finally {
+            submitButton.disabled = false;
+        }
+    });
+
+    document.querySelectorAll('[data-password-toggle]').forEach((toggle) => {
+        toggle.addEventListener('click', () => {
+            const input = toggle.closest('.booking-auth-password')?.querySelector('input');
+            if (!input) return;
+            const willShow = input.type === 'password';
+            input.type = willShow ? 'text' : 'password';
+            toggle.classList.toggle('is-visible', willShow);
+            toggle.setAttribute('aria-pressed', String(willShow));
+            toggle.setAttribute('aria-label', willShow ? 'Ocultar senha' : 'Mostrar senha');
+        });
+    });
+
+    const authQuery = new URLSearchParams(window.location.search);
+    const resetToken = authQuery.get('reset');
+    if (resetToken) {
+        openAuthenticationDialog('account', resetToken);
+    } else if (authQuery.get('auth') === 'account') {
         window.history.replaceState({}, '', '/index.html');
         openAuthenticationDialog('account');
     }

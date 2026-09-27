@@ -34,12 +34,20 @@ function updateSharedAccountLink() {
     if (icon) icon.hidden = Boolean(name);
 }
 
+function setSharedNavState(isOpen) {
+    if (!sharedNavToggle || !sharedNavMenu) return;
+    sharedNavToggle.classList.toggle('open', isOpen);
+    sharedNavMenu.classList.toggle('open', isOpen);
+    sharedNavToggle.setAttribute('aria-expanded', String(isOpen));
+    sharedNavToggle.setAttribute('aria-label', isOpen ? 'Fechar menu' : 'Abrir menu');
+}
+
 if (sharedNavToggle && sharedNavMenu) {
-    sharedNavToggle.addEventListener('click', () => {
-        sharedNavToggle.classList.toggle('open');
-        sharedNavMenu.classList.toggle('open');
+    sharedNavToggle.addEventListener('click', () => setSharedNavState(!sharedNavMenu.classList.contains('open')));
+    sharedNavMenu.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => setSharedNavState(false)));
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') setSharedNavState(false);
     });
-    sharedNavMenu.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => sharedNavMenu.classList.remove('open')));
 }
 
 if (sharedHeader) {
@@ -53,8 +61,7 @@ if (sharedAccountLink) {
         if (hasSharedAccountSession()) return;
 
         event.preventDefault();
-        sharedNavToggle?.classList.remove('open');
-        sharedNavMenu?.classList.remove('open');
+        setSharedNavState(false);
 
         if (typeof window.openBookingAuthDialogForAccount === 'function' && window.openBookingAuthDialogForAccount()) return;
 

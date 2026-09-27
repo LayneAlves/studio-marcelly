@@ -20,7 +20,7 @@
         </a>
         <a class="admin-menu-link <%= isPage('schedule-settings') ? 'is-active' : '' %>" href="/configuracoes-agenda.html" <%- isPage('schedule-settings') ? 'aria-current="page"' : '' %>>
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"></circle><path d="M12 2.8v2.1M12 19.1v2.1M21.2 12h-2.1M4.9 12H2.8M18.5 5.5 17 7M7 17l-1.5 1.5M18.5 18.5 17 17M7 7 5.5 5.5"></path></svg>
-            <span>Configurações da agenda</span>
+            <span>Horários de Funcionamento</span>
         </a>
         <a class="admin-menu-link <%= isPage('billing') ? 'is-active' : '' %>" href="/faturamento.html" <%- isPage('billing') ? 'aria-current="page"' : '' %>>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"></path></svg>
@@ -42,6 +42,12 @@
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h9l3 3V20.5H6z"></path><path d="M15 3.5v3h3M9 11h6M9 15h6"></path></svg>
             <span>Relatórios</span>
         </a>
+        <% if (user && user.isOwner) { %>
+        <a class="admin-menu-link <%= isPage('administrators') ? 'is-active' : '' %>" href="/administradores.html" <%- isPage('administrators') ? 'aria-current="page"' : '' %>>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3"></circle><path d="M5 20c.4-3.5 2.6-5.4 7-5.4s6.6 1.9 7 5.4M18.2 8.5h3.3M19.85 6.85v3.3"></path></svg>
+            <span>Administradores</span>
+        </a>
+        <% } %>
     </nav>
 
     <div class="admin-sidebar-footer">

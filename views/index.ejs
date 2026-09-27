@@ -13,10 +13,8 @@
 
             <section id="home" class="hero">
                 <div class="retangulo retangulo--hero" aria-hidden="true">
-                    <!-- <div class="retangulo-olhar">
-                        <img src="/images/cilios-imagens/zoomHero.png" alt="">
-                    </div> -->
-                    <img src="/images/cilios-imagens/hero.png" alt="" class="retangulo-foto">
+                    <img src="/images/cilios-imagens/hero.png"
+                    alt="" class="retangulo-foto">
                     <span class="retangulo-watermark">LASH DESIGN</span>
                 </div>
 
@@ -24,7 +22,8 @@
                     <div class="hero-copy">
                         <span class="eyebrow" style="color:var(--on-ink-soft)">Studio de extensão de cílios</span>
                         <h2>Seu olhar, <em>a sua</em> assinatura</h2>
-                        <p>Volume Russo, Fio a Fio, Híbrido, Egípcio e Boneca aplicados fio a fio, com técnica, cuidado com
+                        <p>Volume Russo, Fio a Fio, Híbrido, Egípcio e Boneca aplicados fio a fio, com técnica, cuidado
+                            com
                             a
                             saúde do cílio natural e respeito pelo seu tempo.</p>
                         <div class="hero-actions">
@@ -38,10 +37,14 @@
                         </div>
                     </div>
 
-                    <div class="studio-benefit-cards studio-benefit-cards--hero" aria-label="Diferenciais do Studio Marcelly Freitas">
+                    <div class="studio-benefit-cards studio-benefit-cards--hero"
+                        aria-label="Diferenciais do Studio Marcelly Freitas">
                         <article class="included-card included-card--compact">
                             <span class="icon-circle" aria-hidden="true">
-                                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 7v5.2l3.5 2"></path></svg>
+                                <svg viewBox="0 0 24 24">
+                                    <circle cx="12" cy="12" r="8.5"></circle>
+                                    <path d="M12 7v5.2l3.5 2"></path>
+                                </svg>
                             </span>
                             <div class="included-card--compact-content">
                                 <h3>Atendimento rápido</h3>
@@ -51,7 +54,14 @@
 
                         <article class="included-card included-card--compact">
                             <span class="icon-circle" aria-hidden="true">
-                                <svg viewBox="0 0 24 24"><path d="M12 3.2c.6 3.8 2.9 6.1 6.7 6.7-3.8.6-6.1 2.9-6.7 6.7-.6-3.8-2.9-6.1-6.7-6.7 3.8-.6 6.1-2.9 6.7-6.7Z"></path><path d="M18.4 15.2c.2 1.4 1 2.2 2.4 2.4-1.4.2-2.2 1-2.4 2.4-.2-1.4-1-2.2-2.4-2.4 1.4-.2 2.2-1 2.4-2.4Z"></path></svg>
+                                <svg viewBox="0 0 24 24">
+                                    <path
+                                        d="M12 3.2c.6 3.8 2.9 6.1 6.7 6.7-3.8.6-6.1 2.9-6.7 6.7-.6-3.8-2.9-6.1-6.7-6.7 3.8-.6 6.1-2.9 6.7-6.7Z">
+                                    </path>
+                                    <path
+                                        d="M18.4 15.2c.2 1.4 1 2.2 2.4 2.4-1.4.2-2.2 1-2.4 2.4-.2-1.4-1-2.2-2.4-2.4 1.4-.2 2.2-1 2.4-2.4Z">
+                                    </path>
+                                </svg>
                             </span>
                             <div class="included-card--compact-content">
                                 <h3>Resultado sofisticado</h3>
@@ -61,7 +71,11 @@
 
                         <article class="included-card included-card--compact">
                             <span class="icon-circle" aria-hidden="true">
-                                <svg viewBox="0 0 24 24"><path d="M20.2 8.4c0 5-8.2 10.1-8.2 10.1S3.8 13.4 3.8 8.4A4.2 4.2 0 0 1 12 7a4.2 4.2 0 0 1 8.2 1.4Z"></path></svg>
+                                <svg viewBox="0 0 24 24">
+                                    <path
+                                        d="M20.2 8.4c0 5-8.2 10.1-8.2 10.1S3.8 13.4 3.8 8.4A4.2 4.2 0 0 1 12 7a4.2 4.2 0 0 1 8.2 1.4Z">
+                                    </path>
+                                </svg>
                             </span>
                             <div class="included-card--compact-content">
                                 <h3>Técnica e cuidado</h3>
@@ -217,7 +231,17 @@
 
                             <div class="form-group">
                                 <label for="servico">Serviço</label>
-                                <select id="servico" required disabled>
+                                <div class="booking-service-dropdown" id="bookingServiceDropdown">
+                                    <button class="booking-service-dropdown-toggle" id="bookingServiceToggle" type="button"
+                                        disabled aria-haspopup="listbox" aria-expanded="false"
+                                        aria-controls="bookingServiceMenu" aria-label="Selecione um serviço">
+                                        <span id="bookingServiceValue">Carregando serviços...</span>
+                                        <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+                                    </button>
+                                    <div class="booking-service-dropdown-menu" id="bookingServiceMenu" role="listbox"
+                                        aria-label="Selecione um serviço"></div>
+                                </div>
+                                <select id="servico" class="booking-service-native-select" aria-hidden="true" tabindex="-1" disabled>
                                     <option value="">Carregando serviços...</option>
                                 </select>
                             </div>
@@ -297,28 +321,95 @@
                 <button class="is-active btn-auth-tab-login" type="button" data-booking-auth-view="login">Login</button>
                 <button class="btn-auth-tab-cadastro" type="button" data-booking-auth-view="register">Cadastro</button>
             </div>
-            <form id="bookingLoginForm" class="booking-auth-form">
-                <label for="bookingLoginIdentifier">Telefone ou e-mail</label>
-                <input id="bookingLoginIdentifier" required autocomplete="username">
-                <label for="bookingLoginPassword">Senha</label>
-                <input id="bookingLoginPassword" type="password" minlength="6" required autocomplete="current-password">
+            <form id="bookingLoginForm" class="booking-auth-form" novalidate>
+                <div class="booking-auth-field">
+                    <label for="bookingLoginIdentifier">Telefone ou e-mail</label>
+                    <input id="bookingLoginIdentifier" required autocomplete="username">
+                    <small class="booking-field-feedback" data-auth-feedback-for="bookingLoginIdentifier"></small>
+                </div>
+                <div class="booking-auth-field">
+                    <label for="bookingLoginPassword">Senha</label>
+                    <div class="booking-auth-password">
+                        <input id="bookingLoginPassword" type="password" minlength="6" required
+                            autocomplete="current-password">
+                        <button type="button" class="booking-auth-password-toggle" data-password-toggle
+                            aria-label="Mostrar senha" aria-pressed="false">
+                            <svg class="icon-eye" viewBox="0 0 24 24" width="20" height="20" fill="none"
+                                stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                            <svg class="icon-eye-off" viewBox="0 0 24 24" width="20" height="20" fill="none"
+                                stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                <path
+                                    d="M1 12s4-7 11-7c2.09 0 3.94.55 5.5 1.36M23 12s-4 7-11 7c-2.09 0-3.94-.55-5.5-1.36">
+                                </path>
+                                <path d="M3 3l18 18"></path>
+                                <path d="M9.53 9.53a3 3 0 0 0 4.24 4.24"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <small class="booking-field-feedback" data-auth-feedback-for="bookingLoginPassword"></small>
+                </div>
                 <button class="btn btn-primary on-light btn-auth-entrar" id="bookingLoginSubmit" type="submit">Entrar e
                     confirmar</button>
+                <button class="booking-auth-forgot" type="button" data-booking-auth-forgot>Esqueci minha senha</button>
             </form>
-            <form id="bookingRegisterForm" class="booking-auth-form" hidden>
-                <label for="bookingRegisterName">Nome</label>
-                <input id="bookingRegisterName" required autocomplete="name">
-                <label for="bookingRegisterPhone">Telefone</label>
-                <input id="bookingRegisterPhone" type="tel" data-phone-mask required autocomplete="tel">
-                <label for="bookingRegisterEmail">E-mail</label>
-                <input id="bookingRegisterEmail" type="email" required autocomplete="email">
-                <label for="bookingRegisterPassword">Senha</label>
-                <input id="bookingRegisterPassword" type="password" minlength="6" required autocomplete="new-password">
-                <label for="bookingRegisterPasswordConfirm">Confirme a senha</label>
-                <input id="bookingRegisterPasswordConfirm" type="password" minlength="6" required
-                    autocomplete="new-password">
+            <form id="bookingRegisterForm" class="booking-auth-form" hidden novalidate>
+                <div class="booking-auth-field">
+                    <label for="bookingRegisterName">Nome</label>
+                    <input id="bookingRegisterName" required autocomplete="name">
+                    <small class="booking-field-feedback" data-auth-feedback-for="bookingRegisterName"></small>
+                </div>
+                <div class="booking-auth-field">
+                    <label for="bookingRegisterPhone">Telefone</label>
+                    <input id="bookingRegisterPhone" type="tel" data-phone-mask required autocomplete="tel">
+                    <small class="booking-field-feedback" data-auth-feedback-for="bookingRegisterPhone"></small>
+                </div>
+                <div class="booking-auth-field">
+                    <label for="bookingRegisterEmail">E-mail</label>
+                    <input id="bookingRegisterEmail" type="email" required autocomplete="email">
+                    <small class="booking-field-feedback" data-auth-feedback-for="bookingRegisterEmail"></small>
+                </div>
+                <div class="booking-auth-field">
+                    <label for="bookingRegisterPassword">Senha</label>
+                    <input id="bookingRegisterPassword" type="password" minlength="6" required
+                        autocomplete="new-password">
+                    <small class="booking-field-feedback" data-auth-feedback-for="bookingRegisterPassword"></small>
+                </div>
+                <div class="booking-auth-field">
+                    <label for="bookingRegisterPasswordConfirm">Confirme a senha</label>
+                    <input id="bookingRegisterPasswordConfirm" type="password" minlength="6" required
+                        autocomplete="new-password">
+                    <small class="booking-field-feedback"
+                        data-auth-feedback-for="bookingRegisterPasswordConfirm"></small>
+                </div>
                 <button class="btn btn-primary on-light btn-auth-criar-conta" id="bookingRegisterSubmit"
                     type="submit">Criar conta e confirmar</button>
+            </form>
+            <form id="bookingPasswordResetRequestForm" class="booking-auth-form" hidden novalidate>
+                <div class="booking-auth-field">
+                    <label for="bookingResetEmail">E-mail cadastrado</label>
+                    <input id="bookingResetEmail" type="email" required autocomplete="email">
+                    <small class="booking-field-feedback" data-auth-feedback-for="bookingResetEmail"></small>
+                </div>
+                <button class="btn btn-primary on-light" type="submit">Enviar link de recuperação</button>
+                <button class="booking-auth-back" type="button" data-booking-auth-back>Voltar para login</button>
+            </form>
+            <form id="bookingPasswordResetConfirmForm" class="booking-auth-form" hidden novalidate>
+                <div class="booking-auth-field">
+                    <label for="bookingResetPassword">Nova senha</label>
+                    <input id="bookingResetPassword" type="password" minlength="6" required autocomplete="new-password">
+                    <small class="booking-field-feedback" data-auth-feedback-for="bookingResetPassword"></small>
+                </div>
+                <div class="booking-auth-field">
+                    <label for="bookingResetPasswordConfirm">Confirme a nova senha</label>
+                    <input id="bookingResetPasswordConfirm" type="password" minlength="6" required
+                        autocomplete="new-password">
+                    <small class="booking-field-feedback" data-auth-feedback-for="bookingResetPasswordConfirm"></small>
+                </div>
+                <button class="btn btn-primary on-light" type="submit">Salvar nova senha</button>
+                <button class="booking-auth-back" type="button" data-booking-auth-back>Voltar para login</button>
             </form>
             <p class="form-msg" id="bookingAuthMsg" aria-live="polite"></p>
         </dialog>
@@ -326,7 +417,7 @@
         <%- include('../includes/footer') %>
 
             <script src="/js/phone-mask.js"></script>
-            <script src="/js/script.js?v=20260920-business-hours"></script>
+            <script src="/js/script.js?v=20260927-service-dropdown"></script>
 </body>
 
 </html>

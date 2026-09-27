@@ -1,5 +1,5 @@
 (() => {
-    const apiBaseUrl = `http://${window.location.hostname || '127.0.0.1'}:3000/api`;
+    const apiBaseUrl = '/api';
     const appointmentDialog = document.getElementById('appointmentDialog');
     const appointmentDialogContent = document.getElementById('appointmentDialogContent');
     const adminSidebar = document.getElementById('adminSidebar');

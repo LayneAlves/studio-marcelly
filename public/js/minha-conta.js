@@ -1,4 +1,4 @@
-const API = `http://${location.hostname || '127.0.0.1'}:3000/api/account`;
+const API = '/api/account';
 let account = JSON.parse(localStorage.getItem('smf-account') || 'null');
 
 const auth = document.getElementById('accountAuth');

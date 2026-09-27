@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="pt-BR">
+<head><%- include('../includes/head') %></head>
+<body class="admin-body" data-admin-module="administrators">
+    <div class="admin-panel">
+        <%- include('../includes/header') %>
+        <%- include('../includes/admin-sidebar') %>
+        <main class="admin-content is-admin-view">
+            <section class="administrators-module" aria-labelledby="administratorsTitle">
+                <header class="admin-page-heading administrators-header">
+                    <div>
+                        <p class="admin-eyebrow">Acesso administrativo</p>
+                        <h1 id="administratorsTitle">Administradores</h1>
+                        <p>Defina quem pode acessar e gerenciar o painel administrativo.</p>
+                    </div>
+                    <button class="admin-button" id="newAdministratorButton" type="button">Adicionar administradora</button>
+                </header>
+
+                <section class="administrators-panel" aria-labelledby="administratorsListTitle">
+                    <header class="administrators-panel-heading">
+                        <div>
+                            <h2 id="administratorsListTitle">Acessos ativos</h2>
+                            <p>Somente a proprietária pode alterar estas permissões.</p>
+                        </div>
+                        <span class="administrators-count" id="administratorsCount">0 administradoras</span>
+                    </header>
+                    <div class="administrators-list" id="administratorsList"></div>
+                    <p class="administrators-empty" id="administratorsEmpty">Nenhuma administradora encontrada.</p>
+                </section>
+            </section>
+        </main>
+    </div>
+
+    <dialog class="appointment-dialog administrators-dialog" id="administratorDialog" aria-labelledby="administratorDialogTitle">
+        <div class="appointment-dialog-inner">
+            <button class="dialog-close" id="administratorDialogClose" type="button" aria-label="Fechar">×</button>
+            <div id="administratorDialogContent"></div>
+        </div>
+    </dialog>
+    <%- include('../includes/footer') %>
+    <script src="/js/admin-shared.js"></script>
+    <script src="/js/administrators.js"></script>
+</body>
+</html>

@@ -16,11 +16,13 @@ try {
 } catch {}
 
 const port = Number(process.env.PORT || 3000);
+const serverHost = process.env.SERVER_HOST || '127.0.0.1';
 const pool = mysql.createPool({
-    host: '127.0.0.1',
-    user: 'root',
-    password: '',
-    database: 'studio_marcelly',
+    host: process.env.DB_HOST || '127.0.0.1',
+    port: Number(process.env.DB_PORT || 3306),
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || '',
+    database: process.env.DB_NAME || 'studio_marcelly',
     waitForConnections: true,
     connectionLimit: 10,
     timezone: '-03:00',
@@ -55,6 +57,8 @@ const viewRoutes = {
     '/manutencoes': 'manutencoes',
     '/relatorios.html': 'relatorios',
     '/relatorios': 'relatorios',
+    '/administradores.html': 'administradores',
+    '/administradores': 'administradores',
     '/clientes.html': 'clientes',
     '/clientes': 'clientes',
 };
@@ -85,6 +89,14 @@ const viewOptions = {
     faturamento: { title: 'Faturamento | Studio Marcelly Freitas', description: '', layout: 'admin', adminPage: 'billing', pageStyles: ['css/admin-shared.css?v=20260926-header-flow', 'css/billing.css?v=20260926-module-split'] },
     manutencoes: { title: 'Manutenções | Studio Marcelly Freitas', description: '', layout: 'admin', adminPage: 'maintenances', pageStyles: ['css/admin-shared.css?v=20260926-header-flow', 'css/maintenances.css?v=20260926-module-split'] },
     relatorios: { title: 'Relatórios | Studio Marcelly Freitas', description: '', layout: 'admin', adminPage: 'reports', pageStyles: ['css/admin-shared.css?v=20260926-header-flow', 'css/reports.css?v=20260926-module-split'] },
+    administradores: {
+        title: 'Administradores | Studio Marcelly Freitas',
+        description: '',
+        layout: 'admin',
+        adminPage: 'administrators',
+        ownerOnly: true,
+        pageStyles: ['css/admin-shared.css?v=20260926-header-flow', 'css/administrators.css?v=20260927-owner-management'],
+    },
     clientes: {
         title: 'Clientes | Studio Marcelly Freitas',
         description: '',
@@ -147,9 +159,10 @@ function send(response, status, data, headers = {}) {
     });
     response.end(JSON.stringify(data));
 }
-function fail(status, error) {
+function fail(status, error, fields = null) {
     const result = new Error(error);
     result.status = status;
+    if (fields) result.fields = fields;
     throw result;
 }
 function minutes(time) {
@@ -238,6 +251,11 @@ async function requireAuth(request) {
 async function requireMaster(request) {
     const client = await requireAuth(request);
     if (client.role !== 'master') fail(403, 'Você não possui permissão para acessar esta área.');
+    return client;
+}
+async function requireOwner(request) {
+    const client = await requireMaster(request);
+    if (!client.isOwner) fail(403, 'Somente a proprietária pode gerenciar administradoras.');
     return client;
 }
 
@@ -483,6 +501,102 @@ async function billingRecords(connection, range) {
     );
     return rows.map(formatBillingRecord);
 }
+
+function formatReportRecord(row) {
+    return { ...formatBillingRecord(row), status: row.status };
+}
+
+async function reportData(connection, query) {
+    const range = billingRange(query);
+    const [statusResult, servicesResult, clientsResult, recordsResult, financialRecords] = await Promise.all([
+        connection.execute(
+            'SELECT status,COUNT(*) AS total FROM appointments WHERE booking_date BETWEEN ? AND ? GROUP BY status',
+            [range.start, range.end],
+        ),
+        connection.execute(
+            `SELECT service_id,service_name,COUNT(*) AS total
+            FROM appointments
+            WHERE booking_date BETWEEN ? AND ? AND status='completed'
+            GROUP BY service_id,service_name
+            ORDER BY total DESC,service_name ASC`,
+            [range.start, range.end],
+        ),
+        connection.execute(
+            `SELECT
+                COUNT(DISTINCT CASE WHEN a.status='completed' THEN a.client_id END) AS attended,
+                COUNT(DISTINCT CASE
+                    WHEN a.status='completed' AND (
+                        DATE(c.created_at) BETWEEN ? AND ? OR NOT EXISTS (
+                            SELECT 1 FROM appointments previous
+                            WHERE previous.client_id=a.client_id
+                                AND previous.status='completed'
+                                AND previous.booking_date < ?
+                        )
+                    ) THEN a.client_id END
+                ) AS new_clients,
+                COUNT(DISTINCT CASE
+                    WHEN a.status='completed'
+                        AND DATE(c.created_at) < ?
+                        AND EXISTS (
+                            SELECT 1 FROM appointments previous
+                            WHERE previous.client_id=a.client_id
+                                AND previous.status='completed'
+                                AND previous.booking_date < ?
+                        )
+                    THEN a.client_id END
+                ) AS recurring_clients
+            FROM appointments a
+            LEFT JOIN clients c ON c.id=a.client_id
+            WHERE a.booking_date BETWEEN ? AND ?`,
+            [range.start, range.end, range.start, range.start, range.start, range.start, range.end],
+        ),
+        connection.execute(
+            `SELECT a.id,a.client_id,a.client_name,a.service_name,DATE_FORMAT(a.booking_date,'%Y-%m-%d') AS date,
+                a.service_price AS price,a.deposit_amount AS deposit,a.status,
+                CASE WHEN a.payment_recorded_manually=1 THEN a.paid_amount ELSE 0 END AS paid
+            FROM appointments a
+            WHERE a.booking_date BETWEEN ? AND ?
+            ORDER BY a.booking_date DESC,a.start_time DESC`,
+            [range.start, range.end],
+        ),
+        billingRecords(connection, range),
+    ]);
+
+    const byStatus = Object.fromEntries(statusResult[0].map((row) => [row.status, Number(row.total)]));
+    const statusesSummary = {
+        pending: byStatus.pending || 0,
+        confirmed: byStatus.confirmed || 0,
+        completed: byStatus.completed || 0,
+        cancelled: byStatus.cancelled || 0,
+        no_show: byStatus.no_show || 0,
+    };
+    const clientSummary = clientsResult[0][0] || {};
+    const records = recordsResult[0].map(formatReportRecord);
+
+    return {
+        ...range,
+        appointments: {
+            total: records.length,
+            completed: statusesSummary.completed,
+            cancelled: statusesSummary.cancelled,
+            no_show: statusesSummary.no_show,
+        },
+        statuses: statusesSummary,
+        financial: billingSummary(financialRecords),
+        services: servicesResult[0].map((row) => ({
+            service_id: String(row.service_id),
+            service_name: row.service_name,
+            total: Number(row.total),
+        })),
+        clients: {
+            attended: Number(clientSummary.attended || 0),
+            new: Number(clientSummary.new_clients || 0),
+            recurring: Number(clientSummary.recurring_clients || 0),
+        },
+        records,
+    };
+}
+
 async function dashboardData(connection) {
     const monthRange = billingRange(new URLSearchParams({ period: 'month' }));
     const [todayRows, clientRows, serviceRows, upcomingRows, financialRecords] = await Promise.all([
@@ -563,9 +677,7 @@ async function maintenanceRecord(connection, id) {
     return formatMaintenance(rows[0]);
 }
 function smtpIsConfigured() {
-    return Boolean(
-        process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS && process.env.SMTP_FROM && process.env.ADMIN_EMAIL,
-    );
+    return Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS && process.env.SMTP_FROM);
 }
 function getSmtpTransport() {
     if (!smtpTransport)
@@ -577,8 +689,27 @@ function getSmtpTransport() {
         });
     return smtpTransport;
 }
-async function sendSmtpEmail(subject, text) {
-    return getSmtpTransport().sendMail({ from: process.env.SMTP_FROM, to: process.env.ADMIN_EMAIL, subject, text });
+async function sendSmtpEmail(to, subject, text) {
+    return getSmtpTransport().sendMail({ from: process.env.SMTP_FROM, to, subject, text });
+}
+function resendIsConfigured() {
+    return Boolean(process.env.RESEND_API_KEY && process.env.NOTIFICATIONS_FROM_EMAIL);
+}
+async function sendTransactionalEmail(to, subject, text) {
+    if (smtpIsConfigured()) return sendSmtpEmail(to, subject, text);
+    if (resendIsConfigured()) {
+        const response = await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ from: process.env.NOTIFICATIONS_FROM_EMAIL, to: [to], subject, text }),
+        });
+        if (!response.ok) throw new Error('O serviço de e-mail não aceitou o envio.');
+        return;
+    }
+    throw new Error('O envio de e-mail não está configurado.');
+}
+function publicAppUrl(request) {
+    return String(process.env.APP_URL || `http://${request.headers.host || `localhost:${port}`}`).replace(/\/+$/, '');
 }
 function appointmentNotificationText(created) {
     const day = String(created.date).split('-').reverse().join('/');
@@ -588,8 +719,8 @@ async function notifyAdministrator(created) {
     const text = appointmentNotificationText(created);
     const subject = 'Novo agendamento - Studio Marcelly Freitas';
     const jobs = [];
-    if (smtpIsConfigured()) jobs.push(sendSmtpEmail(subject, text));
-    else if (process.env.RESEND_API_KEY && process.env.ADMIN_EMAIL && process.env.NOTIFICATIONS_FROM_EMAIL)
+    if (smtpIsConfigured() && process.env.ADMIN_EMAIL) jobs.push(sendSmtpEmail(process.env.ADMIN_EMAIL, subject, text));
+    else if (resendIsConfigured() && process.env.ADMIN_EMAIL)
         jobs.push(
             fetch('https://api.resend.com/emails', {
                 method: 'POST',
@@ -650,7 +781,7 @@ async function renderRoute(request, response, name) {
     const options = viewOptions[name];
     if (options.layout === 'admin') {
         try {
-            const user = await requireMaster(request);
+            const user = options.ownerOnly ? await requireOwner(request) : await requireMaster(request);
             return renderView(response, name, accountPayload(user));
         } catch (error) {
             if (error.status === 401) return redirectToLogin(response);
@@ -675,7 +806,7 @@ async function renderRoute(request, response, name) {
 
 function isMasterApi(path, query) {
     if (path.startsWith('/api/admin/')) return true;
-    if (path === '/api/billing' || path === '/api/maintenances') return true;
+    if (path === '/api/billing' || path === '/api/maintenances' || path === '/api/reports') return true;
     if (path === '/api/clients' || /^\/api\/clients\/\d+$/.test(path)) return true;
     return path === '/api/appointments' && !query.has('availability');
 }
@@ -781,14 +912,28 @@ async function handler(request, response) {
         const phone = phoneKey(data.phone);
         const email = data.email?.trim().toLowerCase() || null;
         const password = String(data.password || '');
-        if (!name || !phone || password.length < 6) fail(422, 'Informe nome, telefone e uma senha com ao menos 6 caracteres.');
-        if (email && !/^\S+@\S+\.\S+$/.test(email)) fail(422, 'Informe um e-mail válido.');
+        const fields = {};
+        if (!name || name.length < 2) fields.name = 'Informe seu nome completo.';
+        if (phone.length < 10 || phone.length > 11) fields.phone = 'Informe um telefone válido com DDD.';
+        if (!email) fields.email = 'Informe seu e-mail.';
+        else if (!/^\S+@\S+\.\S+$/.test(email)) fields.email = 'Informe um e-mail válido.';
+        if (password.length < 6) fields.password = 'A senha deve ter ao menos 6 caracteres.';
+        if (Object.keys(fields).length) fail(422, 'Revise os campos destacados.', fields);
         const [matches] = await pool.execute(
-            "SELECT id,password_hash FROM clients WHERE REPLACE(REPLACE(REPLACE(REPLACE(phone,' ',''),'-',''),'(',''),')','')=? OR (? IS NOT NULL AND LOWER(email)=?)",
-            [phone, email, email],
+            "SELECT id,password_hash,REPLACE(REPLACE(REPLACE(REPLACE(phone,' ',''),'-',''),'(',''),')','') AS phone_key,LOWER(email) AS email_key FROM clients WHERE REPLACE(REPLACE(REPLACE(REPLACE(phone,' ',''),'-',''),'(',''),')','')=? OR LOWER(email)=?",
+            [phone, email],
         );
+        const phoneMatch = matches.find((item) => item.phone_key === phone);
+        const emailMatch = matches.find((item) => item.email_key === email);
         const ids = [...new Set(matches.map((item) => item.id))];
-        if (ids.length > 1) fail(409, 'Encontramos mais de um cadastro. Use um e-mail exclusivo para acessar sua conta.');
+        const duplicateFields = {};
+        if (phoneMatch?.password_hash) duplicateFields.phone = 'Este telefone já está cadastrado em outra conta.';
+        if (emailMatch?.password_hash) duplicateFields.email = 'Este e-mail já está cadastrado em outra conta.';
+        if (ids.length > 1) {
+            if (phoneMatch) duplicateFields.phone = 'Este telefone já está cadastrado em outro perfil.';
+            if (emailMatch) duplicateFields.email = 'Este e-mail já está cadastrado em outro perfil.';
+        }
+        if (Object.keys(duplicateFields).length) fail(409, 'Já existe um cadastro com os dados destacados.', duplicateFields);
         let clientId;
         if (matches[0]) {
             if (matches[0].password_hash) fail(409, 'Esta cliente já possui uma conta. Faça login.');
@@ -816,13 +961,77 @@ async function handler(request, response) {
         const data = await body(request);
         const identifier = String(data.identifier || '').trim();
         const password = String(data.password || '');
+        const fields = {};
+        if (!identifier) fields.identifier = 'Informe seu telefone ou e-mail.';
+        if (!password) fields.password = 'Informe sua senha.';
+        if (Object.keys(fields).length) fail(422, 'Revise os campos destacados.', fields);
         const [rows] = await pool.execute("SELECT id,name,phone,email,password_hash,COALESCE(role,'user') AS role,COALESCE(is_owner,0) AS isOwner FROM clients WHERE phone=? OR LOWER(email)=? LIMIT 1", [
             phoneKey(identifier),
             identifier.toLowerCase(),
         ]);
-        if (!rows[0] || !(await passwordMatches(password, rows[0].password_hash))) fail(401, 'Dados de acesso inválidos.');
+        if (!rows[0]) fail(401, 'Não encontramos uma conta com este telefone ou e-mail.', { identifier: 'Telefone ou e-mail não encontrado.' });
+        if (!rows[0].password_hash)
+            fail(401, 'Esta cliente ainda não possui senha. Use a aba Cadastro para criar o acesso.', { identifier: 'Esta conta ainda não possui senha.' });
+        if (!(await passwordMatches(password, rows[0].password_hash))) fail(401, 'Senha incorreta.', { password: 'Senha incorreta.' });
         const token = await createSession(rows[0].id);
         return send(response, 200, { token, client: accountPayload(rows[0]) }, { 'Set-Cookie': sessionCookie(token) });
+    }
+    if (request.method === 'POST' && path === '/api/account/password-reset/request') {
+        const data = await body(request);
+        const email = String(data.email || '').trim().toLowerCase();
+        if (!/^\S+@\S+\.\S+$/.test(email)) fail(422, 'Informe um e-mail válido.', { email: 'Informe um e-mail válido.' });
+        const [rows] = await pool.execute('SELECT id,name,email FROM clients WHERE LOWER(email)=? AND password_hash IS NOT NULL LIMIT 1', [email]);
+        if (rows[0]) {
+            const token = crypto.randomBytes(32).toString('hex');
+            const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+            const client = rows[0];
+            await pool.execute('DELETE FROM password_reset_tokens WHERE client_id=? OR expires_at<NOW()', [client.id]);
+            await pool.execute('INSERT INTO password_reset_tokens (client_id,token_hash,expires_at) VALUES (?,?,DATE_ADD(NOW(), INTERVAL 1 HOUR))', [
+                client.id,
+                tokenHash,
+            ]);
+            const resetUrl = `${publicAppUrl(request)}/index.html?reset=${encodeURIComponent(token)}`;
+            try {
+                await sendTransactionalEmail(
+                    client.email,
+                    'Redefinição de senha — Studio Marcelly Freitas',
+                    `Olá, ${client.name}.\n\nRecebemos uma solicitação para redefinir sua senha. Use o link abaixo em até 1 hora:\n${resetUrl}\n\nSe você não fez esta solicitação, ignore este e-mail.`,
+                );
+            } catch (error) {
+                await pool.execute('DELETE FROM password_reset_tokens WHERE token_hash=?', [tokenHash]);
+                console.error('Falha ao enviar e-mail de redefinição de senha.', error);
+                fail(503, 'Não foi possível enviar o e-mail de recuperação. Tente novamente mais tarde.');
+            }
+        }
+        return send(response, 200, { message: 'Se houver uma conta com este e-mail, enviaremos as instruções de recuperação.' });
+    }
+    if (request.method === 'POST' && path === '/api/account/password-reset/confirm') {
+        const data = await body(request);
+        const token = String(data.token || '');
+        const password = String(data.password || '');
+        if (!/^[a-f0-9]{64}$/i.test(token)) fail(422, 'O link de recuperação é inválido ou expirou.');
+        if (password.length < 6) fail(422, 'A senha deve ter ao menos 6 caracteres.', { password: 'A senha deve ter ao menos 6 caracteres.' });
+        const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+        const connection = await pool.getConnection();
+        try {
+            await connection.beginTransaction();
+            const [rows] = await connection.execute(
+                'SELECT id,client_id FROM password_reset_tokens WHERE token_hash=? AND used_at IS NULL AND expires_at>NOW() FOR UPDATE',
+                [tokenHash],
+            );
+            if (!rows[0]) fail(422, 'O link de recuperação é inválido ou expirou. Solicite um novo e-mail.');
+            const clientId = rows[0].client_id;
+            await connection.execute('UPDATE clients SET password_hash=? WHERE id=?', [await passwordHash(password), clientId]);
+            await connection.execute('UPDATE password_reset_tokens SET used_at=NOW() WHERE id=?', [rows[0].id]);
+            await connection.execute('DELETE FROM client_sessions WHERE client_id=?', [clientId]);
+            await connection.commit();
+            return send(response, 200, { success: true });
+        } catch (error) {
+            await connection.rollback();
+            throw error;
+        } finally {
+            connection.release();
+        }
     }
     if (path === '/api/account/me') {
         const client = await authenticatedClient(request);
@@ -960,6 +1169,56 @@ async function handler(request, response) {
     }
     if (path === '/api/admin/dashboard' && request.method === 'GET') {
         return send(response, 200, await dashboardData(pool));
+    }
+    if (path === '/api/admin/administrators') {
+        await requireOwner(request);
+        const id = Number(query.get('id'));
+        if (request.method === 'GET') {
+            if (query.get('scope') === 'candidates') {
+                const search = String(query.get('q') || '').trim();
+                const term = `%${search}%`;
+                const [rows] = await pool.execute(
+                    `SELECT id,name,phone,email FROM clients
+                    WHERE role='user' AND password_hash IS NOT NULL
+                        AND (name LIKE ? OR phone LIKE ? OR email LIKE ?)
+                    ORDER BY name ASC LIMIT 50`,
+                    [term, term, term],
+                );
+                return send(response, 200, rows.map((row) => ({ ...row, id: String(row.id) })));
+            }
+            const [rows] = await pool.execute(
+                `SELECT id,name,phone,email,role,is_owner AS isOwner,created_at
+                FROM clients WHERE role='master' ORDER BY is_owner DESC,name ASC`,
+            );
+            return send(response, 200, rows.map((row) => ({ ...row, id: String(row.id), isOwner: Boolean(row.isOwner) })));
+        }
+        if (request.method === 'POST') {
+            const data = await body(request);
+            const clientId = Number(data.client_id);
+            if (!Number.isInteger(clientId) || clientId < 1) fail(422, 'Selecione uma cliente válida.');
+            const [rows] = await pool.execute('SELECT id,name,role,is_owner AS isOwner,password_hash FROM clients WHERE id=?', [clientId]);
+            if (!rows[0]) fail(404, 'Cliente não encontrada.');
+            if (rows[0].role === 'master') fail(409, 'Esta cliente já possui acesso administrativo.');
+            if (!rows[0].password_hash) fail(422, 'Esta cliente ainda não possui uma conta com senha para acessar o painel.');
+            await pool.execute("UPDATE clients SET role='master',is_owner=0 WHERE id=?", [clientId]);
+            return send(response, 200, { success: true, id: String(clientId) });
+        }
+        if (request.method === 'PATCH') {
+            if (!Number.isInteger(id) || id < 1) fail(422, 'Administradora inválida.');
+            const data = await body(request);
+            if (data.action !== 'remove_master') fail(422, 'Ação administrativa inválida.');
+            const [rows] = await pool.execute('SELECT id,role,is_owner AS isOwner FROM clients WHERE id=?', [id]);
+            if (!rows[0]) fail(404, 'Administradora não encontrada.');
+            if (rows[0].isOwner) fail(422, 'A proprietária não pode ter o próprio acesso administrativo removido.');
+            if (rows[0].role !== 'master') fail(422, 'Esta cliente não possui acesso administrativo.');
+            await pool.execute("UPDATE clients SET role='user',is_owner=0 WHERE id=?", [id]);
+            return send(response, 200, { success: true });
+        }
+        return fail(405, 'Método não permitido.');
+    }
+    if (path === '/api/reports') {
+        if (request.method === 'GET') return send(response, 200, await reportData(pool, query));
+        return fail(405, 'Método não permitido.');
     }
     if (path === '/api/admin/services') {
         const id = Number(query.get('id'));
@@ -1303,6 +1562,6 @@ async function handler(request, response) {
 http.createServer((request, response) =>
     handler(request, response).catch((error) => {
         console.error(error);
-        send(response, error.status || 500, { error: error.message || 'Erro interno do servidor.' });
+        send(response, error.status || 500, { error: error.message || 'Erro interno do servidor.', ...(error.fields ? { fields: error.fields } : {}) });
     }),
-).listen(port, () => console.log(`API administrativa em http://127.0.0.1:${port}`));
+).listen(port, serverHost, () => console.log(`API administrativa em http://${serverHost}:${port}`));

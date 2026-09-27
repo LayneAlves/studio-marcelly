@@ -7,6 +7,8 @@
     "nodemailer": "^10.0.2"
   },
   "scripts": {
-    "admin-api": "node server.js"
+    "start": "node server.js",
+    "admin-api": "node server.js",
+    "setup-owner": "node scripts/setupOwner.js"
   }
 }

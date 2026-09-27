@@ -1,0 +1,301 @@
+/* Gestão de acesso administrativo — disponível somente para a proprietária. */
+.administrators-module {
+    width: min(100%, 1180px);
+    margin-inline: auto;
+    padding: clamp(2rem, 5vw, 4.5rem) 0;
+}
+
+.administrators-module>.administrators-header {
+    padding: 0;
+}
+
+.administrators-module .admin-button {
+    margin-top: 0;
+}
+
+.administrators-panel {
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    box-shadow: var(--sombra);
+}
+
+.administrators-module .administrators-panel-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.1rem 1.15rem;
+    border-bottom: 1px solid var(--line);
+}
+
+.administrators-panel-heading h2 {
+    margin: 0;
+    color: var(--text);
+    font: 500 1rem 'Jost', sans-serif;
+}
+
+.administrators-panel-heading p {
+    margin: .22rem 0 0;
+    color: var(--text-faint);
+    font: 400 .72rem 'Jost', sans-serif;
+}
+
+.administrators-count,
+.administrator-role,
+.administrator-protected {
+    display: inline-flex;
+    align-items: center;
+    min-height: 28px;
+    padding: .3rem .55rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    color: var(--text-soft);
+    background: var(--surface-2);
+    font: 500 .68rem 'Jost', sans-serif;
+    white-space: nowrap;
+}
+
+.administrators-list {
+    display: grid;
+    gap: .75rem;
+    padding: 1rem;
+}
+
+.administrator-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(155px, .8fr) auto;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+}
+
+.administrator-card-profile {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    gap: .75rem;
+}
+
+.administrator-avatar {
+    display: grid;
+    flex: 0 0 auto;
+    width: 38px;
+    height: 38px;
+    place-items: center;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    color: var(--text);
+    background: var(--surface);
+    font: 500 .86rem 'Jost', sans-serif;
+}
+
+.administrator-card h3 {
+    margin: 0;
+    overflow-wrap: anywhere;
+    color: var(--text);
+    font: 500 .9rem 'Jost', sans-serif;
+}
+
+.administrator-card-profile p,
+.administrator-created {
+    margin: .16rem 0 0;
+    overflow-wrap: anywhere;
+    color: var(--text-soft);
+    font: 400 .74rem 'Jost', sans-serif;
+}
+
+.administrator-card-meta {
+    display: grid;
+    justify-items: start;
+    gap: .38rem;
+}
+
+.administrator-role--owner {
+    border-color: #d8cfb1;
+    color: #6e6134;
+    background: #fbf8ea;
+}
+
+.administrator-card-action {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.administrator-remove {
+    min-height: 34px;
+    padding: .42rem .65rem;
+    border: 1px solid #e6c5c5;
+    border-radius: var(--radius-pill);
+    color: #9a3838;
+    background: #fffafa;
+    font: 500 .72rem 'Jost', sans-serif;
+    cursor: pointer;
+    transition: background var(--transicao), border-color var(--transicao);
+}
+
+.administrator-remove:hover,
+.administrator-remove:focus-visible {
+    border-color: #bd7676;
+    outline: none;
+    background: #fff1f1;
+}
+
+.administrator-protected {
+    color: var(--text-faint);
+}
+
+.administrators-empty {
+    padding: 1.1rem 1.15rem;
+    margin: 0;
+    color: var(--text-soft);
+    font: 400 .78rem 'Jost', sans-serif;
+}
+
+.administrator-dialog-content {
+    max-width: 520px;
+}
+
+.administrator-dialog-content>h2 {
+    margin: 0;
+    color: var(--text);
+    font-family: 'Playfair Display', serif;
+}
+
+.administrator-dialog-content>p:not(.administrator-dialog-feedback) {
+    margin: .45rem 0 0;
+    color: var(--text-soft);
+    font: 400 .82rem 'Jost', sans-serif;
+}
+
+.administrator-search-label {
+    display: grid;
+    gap: .35rem;
+    margin-top: 1.2rem;
+    color: var(--text-soft);
+    font: 400 .78rem 'Jost', sans-serif;
+}
+
+.administrator-search-label input {
+    min-height: 42px;
+    padding: .65rem .75rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    outline: none;
+    color: var(--text);
+    background: var(--bg);
+    font: 400 .86rem 'Jost', sans-serif;
+}
+
+.administrator-search-label input:focus {
+    border-color: var(--text-soft);
+    box-shadow: 0 0 0 3px var(--ring);
+}
+
+.administrator-candidates {
+    display: grid;
+    gap: .5rem;
+    max-height: 250px;
+    margin-top: .7rem;
+    overflow-y: auto;
+}
+
+.administrator-candidate {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    gap: .65rem;
+    padding: .65rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    background: var(--bg);
+    text-align: left;
+    cursor: pointer;
+    transition: border-color var(--transicao), background var(--transicao);
+}
+
+.administrator-candidate:hover,
+.administrator-candidate:focus-visible,
+.administrator-candidate.is-selected {
+    border-color: var(--text-soft);
+    outline: none;
+    background: var(--surface);
+}
+
+.administrator-candidate>span:last-child {
+    display: grid;
+    min-width: 0;
+    gap: .12rem;
+}
+
+.administrator-candidate strong,
+.administrator-candidate small {
+    overflow-wrap: anywhere;
+}
+
+.administrator-candidate strong {
+    font: 500 .82rem 'Jost', sans-serif;
+}
+
+.administrator-candidate small {
+    color: var(--text-soft);
+    font: 400 .72rem 'Jost', sans-serif;
+}
+
+.administrators-search-empty,
+.administrator-selection,
+.administrator-dialog-feedback {
+    margin: .75rem 0 0;
+    color: var(--text-soft);
+    font: 400 .78rem 'Jost', sans-serif;
+}
+
+.administrator-dialog-feedback {
+    color: #a14747;
+}
+
+.administrator-promote {
+    max-width: none !important;
+    margin-top: 1rem !important;
+}
+
+.administrator-promote:disabled {
+    cursor: not-allowed;
+    opacity: .5;
+}
+
+@media (max-width: 700px) {
+    .administrators-module .administrators-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .administrators-module .administrators-header .admin-button {
+        max-width: none;
+    }
+
+    .administrator-card {
+        grid-template-columns: 1fr;
+        gap: .75rem;
+    }
+
+    .administrator-card-action {
+        justify-content: flex-start;
+    }
+}
+
+@media (max-width: 500px) {
+    .administrators-module {
+        padding: 2rem 0;
+    }
+
+    .administrators-panel-heading {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
