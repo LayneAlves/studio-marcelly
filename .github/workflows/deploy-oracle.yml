@@ -1,0 +1,97 @@
+name: Deploy na Oracle Cloud
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-oracle-production
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Publicar aplicação
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Baixar código versionado
+        uses: actions/checkout@v4
+
+      - name: Configurar conexão SSH segura
+        env:
+          ORACLE_HOST: ${{ secrets.ORACLE_HOST }}
+          ORACLE_KNOWN_HOSTS: ${{ secrets.ORACLE_KNOWN_HOSTS }}
+          ORACLE_SSH_PRIVATE_KEY: ${{ secrets.ORACLE_SSH_PRIVATE_KEY }}
+        run: |
+          set -eu
+          test -n "$ORACLE_HOST"
+          test -n "$ORACLE_KNOWN_HOSTS"
+          test -n "$ORACLE_SSH_PRIVATE_KEY"
+          mkdir -p ~/.ssh
+          printf '%s\n' "$ORACLE_SSH_PRIVATE_KEY" > ~/.ssh/id_oracle
+          printf '%s\n' "$ORACLE_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/id_oracle
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Criar pacote da aplicação
+        run: |
+          tar \
+            --exclude-vcs \
+            --exclude='.env' \
+            --exclude='node_modules' \
+            --exclude='*.log' \
+            -czf "$RUNNER_TEMP/studio-marcelly-${GITHUB_SHA}.tar.gz" .
+
+      - name: Enviar pacote à Oracle
+        env:
+          ORACLE_HOST: ${{ secrets.ORACLE_HOST }}
+          ORACLE_SSH_USER: ${{ secrets.ORACLE_SSH_USER || 'ubuntu' }}
+        run: |
+          scp -i ~/.ssh/id_oracle \
+            -o BatchMode=yes \
+            "$RUNNER_TEMP/studio-marcelly-${GITHUB_SHA}.tar.gz" \
+            "${ORACLE_SSH_USER}@${ORACLE_HOST}:/tmp/studio-marcelly-${GITHUB_SHA}.tar.gz"
+
+      - name: Instalar versão e reiniciar serviço
+        env:
+          ORACLE_HOST: ${{ secrets.ORACLE_HOST }}
+          ORACLE_SSH_USER: ${{ secrets.ORACLE_SSH_USER || 'ubuntu' }}
+          DEPLOY_ARCHIVE: /tmp/studio-marcelly-${{ github.sha }}.tar.gz
+        run: |
+          ssh -i ~/.ssh/id_oracle -o BatchMode=yes "${ORACLE_SSH_USER}@${ORACLE_HOST}" \
+            "bash -s -- '$DEPLOY_ARCHIVE'" <<'REMOTE_SCRIPT'
+          set -Eeuo pipefail
+
+          archive="$1"
+          app_dir='/opt/studio-marcelly'
+          release_dir="$(mktemp -d /tmp/studio-marcelly-release.XXXXXX)"
+
+          cleanup() {
+            sudo rm -rf "$release_dir" "$archive"
+          }
+          trap cleanup EXIT
+
+          test -f "$archive"
+          sudo test -f "$app_dir/.env"
+
+          tar -xzf "$archive" -C "$release_dir"
+          sudo chown -R studio:studio "$release_dir"
+          sudo -u studio rsync -a --delete \
+            --exclude='.env' \
+            --exclude='node_modules' \
+            "$release_dir/" "$app_dir/"
+          sudo -u studio npm --prefix "$app_dir" ci --omit=dev
+          sudo systemctl restart studio-marcelly
+          sudo systemctl is-active --quiet studio-marcelly
+          REMOTE_SCRIPT
+
+      - name: Verificar aplicação publicada
+        env:
+          ORACLE_HOST: ${{ secrets.ORACLE_HOST }}
+        run: curl --fail --silent --show-error --max-time 20 "http://${ORACLE_HOST}/"
