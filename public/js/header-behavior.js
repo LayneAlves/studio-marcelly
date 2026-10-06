@@ -47,6 +47,7 @@ function setSharedNavState(isOpen) {
     if (!sharedNavToggle || !sharedNavMenu) return;
     sharedNavToggle.classList.toggle('open', isOpen);
     sharedNavMenu.classList.toggle('open', isOpen);
+    document.body.classList.toggle('mobile-menu-open', isOpen);
     sharedNavToggle.setAttribute('aria-expanded', String(isOpen));
     sharedNavToggle.setAttribute('aria-label', isOpen ? 'Fechar menu' : 'Abrir menu');
 }

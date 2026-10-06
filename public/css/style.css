@@ -1794,6 +1794,33 @@ footer span {
         transform: translateX(0);
     }
 
+    body.mobile-menu-open {
+        overflow: hidden;
+    }
+
+    body.mobile-menu-open #siteHeader {
+        z-index: 1300;
+    }
+
+    body.mobile-menu-open #siteHeader::after {
+        content: '';
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        background: rgba(0, 0, 0, .42);
+        backdrop-filter: blur(7px);
+        -webkit-backdrop-filter: blur(7px);
+    }
+
+    body.mobile-menu-open #siteHeader nav {
+        position: relative;
+        z-index: 1;
+    }
+
+    body.mobile-menu-open #siteHeader .nav-menu {
+        z-index: 2;
+    }
+
     .nav-menu-profile {
         display: block;
         width: 100%;
