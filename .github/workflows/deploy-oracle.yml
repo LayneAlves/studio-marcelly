@@ -104,4 +104,4 @@ jobs:
       - name: Verificar aplicação publicada
         env:
           ORACLE_HOST: ${{ secrets.ORACLE_HOST }}
-        run: curl --fail --silent --show-error --max-time 20 "http://${ORACLE_HOST}/"
+        run: curl --fail --silent --show-error --max-time 20 --retry 8 --retry-all-errors --retry-delay 3 "http://${ORACLE_HOST}/"
