@@ -557,6 +557,10 @@ nav {
         width: calc(100vw - 1.5rem);
         max-height: calc(100dvh - 1.5rem);
     }
+
+    header {
+        padding: 0;
+    }
 }
 
 .nav-toggle span {
@@ -926,6 +930,7 @@ nav {
 }
 
 .brows-image img {
+    margin-top: 32px;
     width: 100%;
     height: 100%;
     max-height: 700px;
@@ -1711,11 +1716,13 @@ footer span {
     .retangulo--hero {
         display: block;
         position: absolute;
-        top: 5.75rem;
-        bottom: 0;
-        left: 0;
+        /* top: 5.75rem; */
+        bottom: 4rem;
+        left: -1rem;
         align-self: auto;
-        width: var(--hero-mobile-visual-width);
+        /* width: var(--hero-mobile-visual-width); */
+        width: 9rem;
+        opacity: .3;
         color: var(--accent);
         min-height: 0;
         height: auto;
@@ -1741,8 +1748,9 @@ footer span {
     }
 
     .retangulo-watermark {
-        right: 93px;
+        right: 70px;
         margin-top: 10px;
+        opacity: .3;
     }
 
     .container {
@@ -1797,7 +1805,7 @@ footer span {
         min-height: 100svh;
         height: 100svh;
         margin: 0;
-        padding: 8rem 0 1.2rem;
+        padding: 5rem 0 1.2rem;
         display: grid;
         grid-template-columns: calc(var(--hero-mobile-photo-left) + var(--hero-mobile-photo-width)) minmax(0, 1fr);
         column-gap: 0;
@@ -1809,13 +1817,14 @@ footer span {
         width: 100%;
         min-width: 0;
         height: 100%;
-        padding-right: 12px;
+        padding: 1.5rem;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: space-evenly;
         text-align: center;
         gap: clamp(.65rem, 2vh, 1.1rem);
+        font-size: clamp(12px, 10vw, 24px);
     }
 
     .hero-copy,
@@ -1942,6 +1951,7 @@ footer span {
 
     .booking-form {
         padding: 1.8rem;
+        max-height: 100%;
     }
 
     .calendar-card {
@@ -1950,13 +1960,13 @@ footer span {
 }
 
 /* 471–767px */
-@media (min-width: 302px) and (max-width: 767px) {
+/* @media (min-width: 302px) and (max-width: 767px) {
     .retangulo-watermark {
         right: clamp(50px, 12.8vw, 98px);
         margin-top: 10px;
     }
 
-}
+} */
 
 @media (max-width: 626px) {
     .hero-content .hero-copy>p {
@@ -2271,12 +2281,14 @@ footer span {
         z-index: 2;
         min-height: min(100svh, 1080px);
         height: min(100svh, 1080px);
-        grid-template-columns: var(--hero-mobile-visual-width) repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         padding-bottom: var(--hero-mobile-content-bottom);
     }
 
     #home.hero .hero-copy {
-        grid-column: 2 / span 2;
+        position: relative;
+        z-index: 2;
+        grid-column: 1 / -1;
         width: auto;
         max-width: none;
     }
@@ -2366,14 +2378,15 @@ footer span {
 
     .mobile-bottom-nav-menu {
         appearance: none;
-        font: inherit;
+        /* font: inherit; */
     }
 
     /* Impede que a marca d'água vertical alcance o header no Safari mobile. */
     #home.hero .retangulo-watermark {
-        font-size: clamp(2.2rem,
+        /* font-size: clamp(2.2rem,
                 min(18vw,
                     calc((100svh - 6.75rem - var(--mobile-bottom-nav-space)) / 4)),
-                6rem);
+                6rem); */
+        font-size: clamp(4.125rem, 18vw, 6rem);
     }
 }
