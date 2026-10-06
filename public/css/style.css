@@ -2253,26 +2253,38 @@ footer span {
     }
 
     #home.hero {
-        min-height: calc(100svh - var(--mobile-bottom-nav-space));
-        height: calc(100svh - var(--mobile-bottom-nav-space));
-        max-height: calc(1080px - var(--mobile-bottom-nav-space));
+        --hero-mobile-content-bottom: calc(var(--mobile-bottom-nav-space) + clamp(1rem, 3svh, 1.5rem));
+        min-height: min(100svh, 1080px);
+        height: min(100svh, 1080px);
+        max-height: min(100svh, 1080px);
+        isolation: isolate;
+    }
+
+    /* A arte é apenas plano de fundo; o conteúdo permanece sempre à frente. */
+    #home.hero .retangulo--hero {
+        z-index: 1;
+        pointer-events: none;
     }
 
     #home.hero .hero-content {
-        min-height: calc(100svh - var(--mobile-bottom-nav-space));
-        height: calc(100svh - var(--mobile-bottom-nav-space));
+        position: relative;
+        z-index: 2;
+        min-height: min(100svh, 1080px);
+        height: min(100svh, 1080px);
+        grid-template-columns: var(--hero-mobile-visual-width) repeat(2, minmax(0, 1fr));
+        padding-bottom: var(--hero-mobile-content-bottom);
     }
 
     #home.hero .hero-copy {
-        --mobile-hero-copy-width: calc(100vw - clamp(6rem, 24vw, 8.25rem));
-        width: var(--mobile-hero-copy-width);
-        max-width: var(--mobile-hero-copy-width);
+        grid-column: 2 / span 2;
+        width: auto;
+        max-width: none;
     }
 
     #home.hero .hero-stats {
         grid-template-columns: repeat(3, minmax(0, 1fr));
-        width: var(--mobile-hero-copy-width);
-        max-width: var(--mobile-hero-copy-width);
+        width: 100%;
+        max-width: none;
     }
 
     .mobile-bottom-nav {
