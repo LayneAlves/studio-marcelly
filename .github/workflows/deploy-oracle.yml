@@ -75,7 +75,7 @@ jobs:
             -o ServerAliveCountMax=15 \
             -o TCPKeepAlive=yes \
             "${ORACLE_SSH_USER}@${ORACLE_HOST}" \
-            "bash -s -- '$DEPLOY_ARCHIVE'" <<'REMOTE_SCRIPT' <<'REMOTE_SCRIPT'
+            "bash -s -- '$DEPLOY_ARCHIVE'" <<'REMOTE_SCRIPT'
           set -Eeuo pipefail
 
           archive="$1"
