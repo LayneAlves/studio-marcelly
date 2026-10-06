@@ -3,6 +3,9 @@ const sharedNavToggle = document.getElementById('navToggle');
 const sharedNavMenu = document.getElementById('navMenu');
 const sharedAccountLink = document.getElementById('accountHeaderLink');
 const sharedAccountName = document.getElementById('accountHeaderName');
+const sharedMobileAccountLink = document.getElementById('mobileMenuAccountLink');
+const sharedMobileAccountLabel = document.getElementById('mobileMenuAccountLabel');
+const sharedMobileAccountName = document.getElementById('mobileMenuAccountName');
 
 function sharedAccountSession() {
     try {
@@ -32,6 +35,12 @@ function updateSharedAccountLink() {
         sharedAccountName.hidden = !name;
     }
     if (icon) icon.hidden = Boolean(name);
+
+    if (sharedMobileAccountLink) {
+        sharedMobileAccountLink.setAttribute('aria-label', name ? `Olá, ${name}` : 'Minha conta');
+    }
+    if (sharedMobileAccountLabel) sharedMobileAccountLabel.textContent = name ? 'Minha conta' : 'Acesse sua conta';
+    if (sharedMobileAccountName) sharedMobileAccountName.textContent = name || 'Entre ou crie sua conta';
 }
 
 function setSharedNavState(isOpen) {
@@ -56,8 +65,7 @@ if (sharedHeader) {
     window.addEventListener('scroll', updateHeaderState, { passive: true });
 }
 
-if (sharedAccountLink) {
-    sharedAccountLink.addEventListener('click', (event) => {
+function handleSharedAccountClick(event) {
         if (hasSharedAccountSession()) return;
 
         event.preventDefault();
@@ -66,8 +74,10 @@ if (sharedAccountLink) {
         if (typeof window.openBookingAuthDialogForAccount === 'function' && window.openBookingAuthDialogForAccount()) return;
 
         window.location.href = '/index.html?auth=account';
-    });
 }
+
+sharedAccountLink?.addEventListener('click', handleSharedAccountClick);
+sharedMobileAccountLink?.addEventListener('click', handleSharedAccountClick);
 
 updateSharedAccountLink();
 window.addEventListener('pageshow', updateSharedAccountLink);

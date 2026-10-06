@@ -283,6 +283,10 @@ nav {
     gap: 2.4rem;
 }
 
+.nav-menu-profile {
+    display: none;
+}
+
 .nav-menu a {
     color: var(--on-ink);
     font-size: 0.94rem;
@@ -1762,14 +1766,15 @@ footer span {
         position: fixed;
         top: 0;
         right: 0;
-        height: 100vh;
+        height: 100dvh;
         width: min(78vw, 320px);
         background: var(--ink);
         flex-direction: column;
         align-items: flex-start;
-        justify-content: center;
-        gap: 2rem;
-        padding: 2rem;
+        justify-content: flex-start;
+        gap: 0;
+        padding: max(1.5rem, env(safe-area-inset-top, 0px)) 2rem 2rem;
+        overflow-y: auto;
         transform: translateX(100%);
         transition: transform var(--transicao);
         z-index: 1100;
@@ -1777,6 +1782,79 @@ footer span {
 
     .nav-menu.open {
         transform: translateX(0);
+    }
+
+    .nav-menu-profile {
+        display: block;
+        width: 100%;
+        margin-bottom: 1.25rem;
+        padding-bottom: 1.25rem;
+        border-bottom: 1px solid rgba(242, 241, 239, .16);
+    }
+
+    .nav-menu-profile-link {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        align-items: center;
+        gap: .8rem;
+        width: 100%;
+        padding: .3rem 0;
+        color: var(--on-ink);
+    }
+
+    .nav-menu-profile-link::after {
+        display: none;
+    }
+
+    .nav-menu-profile-icon {
+        display: grid;
+        width: 2.75rem;
+        height: 2.75rem;
+        place-items: center;
+        border: 1px solid rgba(242, 241, 239, .26);
+        border-radius: 50%;
+        color: var(--ink);
+        background: #e5ddd2;
+        font-size: 1rem;
+    }
+
+    .nav-menu-profile-copy {
+        display: grid;
+        min-width: 0;
+        gap: .16rem;
+    }
+
+    .nav-menu-profile-copy small {
+        color: var(--on-ink-faint);
+        font: 400 .7rem/1 'Jost', sans-serif;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+    }
+
+    .nav-menu-profile-copy strong {
+        overflow: hidden;
+        color: var(--on-ink);
+        font: 500 .95rem/1.25 'Jost', sans-serif;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .nav-menu-profile-arrow {
+        color: var(--on-ink-faint);
+        font-size: .72rem;
+    }
+
+    .nav-menu > li:not(.nav-menu-profile):not(.nav-menu-account) {
+        width: 100%;
+    }
+
+    .nav-menu > li:not(.nav-menu-profile):not(.nav-menu-account) > a {
+        display: block;
+        padding: .75rem 0;
+    }
+
+    .nav-menu-account {
+        display: none;
     }
 
     .nav-toggle {

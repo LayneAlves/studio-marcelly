@@ -14,6 +14,16 @@
             <a href="/index.html#index"><img src="/images/cilios-imagens/logos/logotipo.png" alt="Studio Marcelly Freitas"></a>
         </div>
         <ul class="nav-menu" id="navMenu">
+            <li class="nav-menu-profile">
+                <a class="nav-menu-profile-link" href="/minha-conta.html" id="mobileMenuAccountLink">
+                    <span class="nav-menu-profile-icon" aria-hidden="true"><i class="fa-regular fa-user"></i></span>
+                    <span class="nav-menu-profile-copy">
+                        <small id="mobileMenuAccountLabel">Minha conta</small>
+                        <strong id="mobileMenuAccountName">Entre ou crie sua conta</strong>
+                    </span>
+                    <i class="fa-solid fa-chevron-right nav-menu-profile-arrow" aria-hidden="true"></i>
+                </a>
+            </li>
             <li><a href="/index.html#index">Início</a></li>
             <li><a href="/index.html#sobre">Sobre</a></li>
             <li><a href="/index.html#galeria">Galeria</a></li>
@@ -23,7 +33,7 @@
             <% if (typeof user !== 'undefined' && user && user.role === 'master') { %>
             <li><a href="/admin/dashboard">Painel Administrativo</a></li>
             <% } %>
-            <li>
+            <li class="nav-menu-account">
                 <a href="/minha-conta.html" id="accountHeaderLink" aria-label="Minha Conta">
                     <i class="fa-regular fa-user" aria-hidden="true"></i>
                     <span id="accountHeaderName" hidden></span>
