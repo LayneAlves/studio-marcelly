@@ -1676,7 +1676,7 @@ footer span {
 }
 
 .site-footer-main {
-    margin-top: 32px;
+    /* margin-top: 32px; */
     padding: clamp(3rem, 5vw, 5rem) 0;
     border-top: 1px solid var(--ink-line);
     background: var(--ink);
@@ -2772,3 +2772,24 @@ footer span {
         font-size: clamp(4.125rem, 18vw, 6rem);
     }
 }
+/* Shared select controls for filters and appointment forms. */
+.standard-select-dropdown { min-width: 0; }
+.standard-select-dropdown .booking-service-dropdown-toggle {
+    min-height: 46px;
+    padding: .7rem .85rem;
+    color: var(--text);
+    background: var(--bg);
+    border-color: var(--line);
+    font-size: .94rem;
+}
+.standard-select-dropdown .booking-service-dropdown-toggle > i { color: var(--text-soft); }
+.standard-select-dropdown .booking-service-dropdown-toggle:hover,
+.standard-select-dropdown .booking-service-dropdown-toggle:focus-visible,
+.standard-select-dropdown.is-open .booking-service-dropdown-toggle {
+    border-color: var(--text-soft);
+    background: var(--surface);
+    box-shadow: 0 0 0 3px var(--ring);
+}
+.standard-select-dropdown .booking-service-dropdown-toggle[aria-invalid="true"] { border-color: #a14747; }
+.standard-select-label { display: block; }
+.standard-select-label > .standard-select-dropdown { margin-top: .45rem; }

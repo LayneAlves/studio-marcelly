@@ -84,7 +84,7 @@ const viewOptions = {
         pageStyles: ['css/admin-shared.css?v=20261015-menu-close-fix', 'css/dashboard.css?v=20260926-module-split'],
     },
     agendamentos: { title: 'Agendamentos | Studio Marcelly Freitas', description: '', layout: 'admin', adminPage: 'appointments', pageStyles: ['css/admin-shared.css?v=20261015-menu-close-fix', 'css/appointments.css?v=20260926-module-split'] },
-    servicos: { title: 'Serviços | Studio Marcelly Freitas', description: '', layout: 'admin', adminPage: 'services', pageStyles: ['css/admin-shared.css?v=20261015-menu-close-fix', 'css/services.css?v=20260926-module-split'] },
+    servicos: { title: 'Serviços | Studio Marcelly Freitas', description: '', layout: 'admin', adminPage: 'services', pageStyles: ['css/admin-shared.css?v=20261015-menu-close-fix', 'css/services.css?v=20261108-duration-dropdown'] },
     'configuracoes-agenda': { title: 'Configurações da Agenda | Studio Marcelly Freitas', description: '', layout: 'admin', adminPage: 'schedule-settings', pageStyles: ['css/admin-shared.css?v=20261015-menu-close-fix', 'css/schedule-settings.css?v=20260926-module-split'] },
     faturamento: { title: 'Faturamento | Studio Marcelly Freitas', description: '', layout: 'admin', adminPage: 'billing', pageStyles: ['css/admin-shared.css?v=20261015-menu-close-fix', 'css/billing.css?v=20260926-module-split'] },
     manutencoes: { title: 'Manutenções | Studio Marcelly Freitas', description: '', layout: 'admin', adminPage: 'maintenances', pageStyles: ['css/admin-shared.css?v=20261015-menu-close-fix', 'css/maintenances.css?v=20260926-module-split'] },

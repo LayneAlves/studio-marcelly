@@ -8,6 +8,71 @@
         title: document.getElementById('serviceFormTitle'), submit: document.getElementById('serviceSubmitButton'), cancel: document.getElementById('serviceCancelEdit'),
         list: document.getElementById('serviceList'), count: document.getElementById('serviceCount'), empty: document.getElementById('serviceEmptyState'), feedback: document.getElementById('serviceFeedback'),
     };
+    const durationDropdown = document.createElement('div');
+    durationDropdown.className = 'booking-service-dropdown service-duration-dropdown';
+    durationDropdown.innerHTML = '<button type="button" class="booking-service-dropdown-toggle" id="serviceDurationToggle" aria-label="Selecionar dura&#231;&#227;o do servi&#231;o" aria-haspopup="listbox" aria-expanded="false" aria-controls="serviceDurationMenu"><span></span><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></button><div class="booking-service-dropdown-menu" id="serviceDurationMenu" role="listbox" aria-label="Dura&#231;&#227;o do servi&#231;o"></div>';
+    fields.duration.before(durationDropdown);
+    const durationToggle = durationDropdown.querySelector('button');
+    const durationMenu = durationDropdown.querySelector('[role="listbox"]');
+    const durationLabel = document.querySelector('label[for="serviceDuration"]');
+    if (durationLabel) durationLabel.htmlFor = durationToggle.id;
+    fields.duration.classList.add('booking-service-native-select');
+    fields.duration.tabIndex = -1;
+    fields.duration.setAttribute('aria-hidden', 'true');
+
+    function closeDurationDropdown() {
+        durationDropdown.classList.remove('is-open');
+        durationToggle.setAttribute('aria-expanded', 'false');
+    }
+    function syncDurationDropdown() {
+        durationToggle.querySelector('span').textContent = fields.duration.selectedOptions[0]?.textContent || fields.duration.options[0].textContent;
+        durationToggle.removeAttribute('aria-invalid');
+        durationMenu.replaceChildren();
+        Array.from(fields.duration.options).filter(option => option.value && !option.disabled).forEach(option => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'booking-service-dropdown-item';
+            button.textContent = option.textContent;
+            button.setAttribute('role', 'option');
+            button.setAttribute('aria-selected', String(option.selected));
+            button.classList.toggle('is-active', option.selected);
+            button.addEventListener('click', () => {
+                fields.duration.value = option.value;
+                fields.duration.dispatchEvent(new Event('change', { bubbles: true }));
+                closeDurationDropdown();
+                durationToggle.focus();
+            });
+            durationMenu.append(button);
+        });
+    }
+    durationToggle.addEventListener('click', () => {
+        const open = !durationDropdown.classList.contains('is-open');
+        durationDropdown.classList.toggle('is-open', open);
+        durationToggle.setAttribute('aria-expanded', String(open));
+        if (open) (durationMenu.querySelector('.is-active') || durationMenu.firstElementChild)?.focus();
+    });
+    durationDropdown.addEventListener('keydown', event => {
+        if (event.key === 'Escape') {
+            closeDurationDropdown(); durationToggle.focus(); event.preventDefault();
+        } else if (['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) {
+            event.preventDefault();
+            durationDropdown.classList.add('is-open');
+            durationToggle.setAttribute('aria-expanded', 'true');
+            const options = Array.from(durationMenu.children);
+            const index = options.indexOf(document.activeElement);
+            const next = event.key === 'Home' ? 0 : event.key === 'End' ? options.length - 1 : event.key === 'ArrowDown' ? (index + 1) % options.length : (index - 1 + options.length) % options.length;
+            options[next]?.focus();
+        }
+    });
+    document.addEventListener('click', event => { if (!durationDropdown.contains(event.target)) closeDurationDropdown(); });
+    durationDropdown.addEventListener('focusout', event => { if (!durationDropdown.contains(event.relatedTarget)) closeDurationDropdown(); });
+    fields.duration.addEventListener('change', syncDurationDropdown);
+    fields.duration.addEventListener('invalid', event => {
+        event.preventDefault(); durationToggle.setAttribute('aria-invalid', 'true'); durationToggle.focus();
+    });
+    form.addEventListener('reset', () => { closeDurationDropdown(); queueMicrotask(syncDurationDropdown); });
+    syncDurationDropdown();
+
     let services = [];
     const request = (path = '', options = {}) => requestJson(`${apiUrl}${path}`, options);
     const feedback = (message = '', isError = false) => { fields.feedback.textContent = message; fields.feedback.classList.toggle('is-error', isError); };
@@ -90,7 +155,7 @@
     }
     async function load() { try { services = await request(); render(); feedback(); } catch (error) { services = []; render(); feedback(error.message, true); } }
     async function toggleStatus(id) { const service = services.find((item) => item.id === id); if (!service) return null; try { const updated = await request(`?id=${id}`, { method: 'PATCH', body: JSON.stringify({ active: !service.active }) }); services = services.map((item) => item.id === id ? updated : item); render(); feedback(`Serviço ${updated.active ? 'ativado' : 'desativado'} com sucesso.`); return updated; } catch (error) { render(); feedback(error.message, true); return null; } }
-    function editService(id) { const service = services.find((item) => item.id === id); if (!service) return; fields.id.value = service.id; fields.name.value = service.name; fields.value.value = formatCurrency(service.value); fields.duration.value = service.duration; fields.deposit.value = service.deposit == null ? '' : formatCurrency(service.deposit); fields.maintenanceDays.value = service.maintenance_days || ''; fields.title.textContent = 'Editar serviço'; fields.submit.textContent = 'Salvar alterações'; fields.cancel.hidden = false; fields.name.focus(); form.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+    function editService(id) { const service = services.find((item) => item.id === id); if (!service) return; fields.id.value = service.id; fields.name.value = service.name; fields.value.value = formatCurrency(service.value); fields.duration.value = service.duration; syncDurationDropdown(); fields.deposit.value = service.deposit == null ? '' : formatCurrency(service.deposit); fields.maintenanceDays.value = service.maintenance_days || ''; fields.title.textContent = 'Editar serviço'; fields.submit.textContent = 'Salvar alterações'; fields.cancel.hidden = false; fields.name.focus(); form.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
     async function removeService(id) { const service = services.find((item) => item.id === id); if (!service || !window.confirm(`Excluir o serviço “${service.name}”? Esta ação não pode ser desfeita.`)) return false; try { await request(`?id=${id}`, { method: 'DELETE' }); services = services.filter((item) => item.id !== id); if (fields.id.value === id) reset(); render(); feedback('Serviço excluído com sucesso.'); return true; } catch (error) { feedback(error.message, true); return false; } }
     form.addEventListener('submit', async (event) => { event.preventDefault(); const value = parseCurrency(fields.value.value); const deposit = fields.deposit.value.trim() ? parseCurrency(fields.deposit.value) : null; const maintenanceDays = fields.maintenanceDays.value.trim() ? Number(fields.maintenanceDays.value) : null; if (value === null || (fields.deposit.value.trim() && deposit === null)) return feedback('Informe valores válidos em reais.', true); if (maintenanceDays !== null && (!Number.isInteger(maintenanceDays) || maintenanceDays < 1 || maintenanceDays > 365)) return feedback('Informe uma manutenção entre 1 e 365 dias.', true); try { const editing = Boolean(fields.id.value); const saved = await request(editing ? `?id=${fields.id.value}` : '', { method: editing ? 'PUT' : 'POST', body: JSON.stringify({ name: fields.name.value.trim(), value, duration: fields.duration.value, deposit, maintenance_days: maintenanceDays }) }); services = editing ? services.map((item) => item.id === saved.id ? saved : item) : [saved, ...services]; reset(); render(); feedback(editing ? 'Alterações salvas com sucesso.' : 'Serviço cadastrado com sucesso.'); } catch (error) { feedback(error.message, true); } });
     fields.cancel.addEventListener('click', reset); [fields.value, fields.deposit].forEach((input) => input.addEventListener('input', () => formatCurrencyTyping(input))); load();
