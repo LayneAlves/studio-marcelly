@@ -38,7 +38,7 @@
 .admin-brand img,
 .admin-mobile-brand img {
     width: auto;
-    height: 100px;
+    height: 60px;
 }
 
 .admin-brand em,
@@ -1262,4 +1262,57 @@
     .admin-mobile-brand span {
         display: none;
     }
+}
+
+/* Compact desktop lists; full information remains in the detail dialogs. */
+@media (min-width: 769px) {
+    .appointment-list-card,
+    .maintenance-list-card { min-width: 0; }
+    .appointment-list-card .appointment-card-header,
+    .maintenance-list-card .appointment-card-header {
+        align-items: center;
+        gap: 1rem;
+        min-height: 88px;
+        padding: 1rem 1.25rem;
+    }
+    .appointment-list-card .appointment-card-client,
+    .maintenance-list-card .appointment-card-client {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+    .appointment-list-card .appointment-card-client > div,
+    .maintenance-list-card .appointment-card-client > div { min-width: 0; }
+    .appointment-list-card .appointment-card-client h3,
+    .maintenance-list-card .appointment-card-client h3 {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .appointment-list-card .appointment-card-preview,
+    .maintenance-list-card .appointment-card-preview { display: none; }
+    .appointment-list-card .appointment-card-mobile-eye,
+    .maintenance-list-card .appointment-card-mobile-eye {
+        display: inline-grid;
+        flex: 0 0 44px;
+        width: 44px;
+        height: 44px;
+        place-items: center;
+        border: 1px solid var(--line);
+        border-radius: 50%;
+        color: var(--text);
+        background: var(--surface-2);
+        cursor: pointer;
+        transition: background var(--transicao), color var(--transicao), border-color var(--transicao), transform var(--transicao);
+    }
+    .appointment-list-card .appointment-card-mobile-eye:hover,
+    .appointment-list-card .appointment-card-mobile-eye:focus-visible,
+    .maintenance-list-card .appointment-card-mobile-eye:hover,
+    .maintenance-list-card .appointment-card-mobile-eye:focus-visible {
+        outline: none;
+        border-color: var(--text);
+        color: var(--surface);
+        background: var(--text);
+        transform: translateY(-1px);
+    }
+    .client-card .appointment-card-header { min-height: 88px; padding: 1rem 1.25rem; }
 }

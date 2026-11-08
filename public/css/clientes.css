@@ -150,66 +150,64 @@
     }
 }
 
-/* Variação compacta exclusiva da listagem de clientes em telas mobile. */
-@media (max-width: 768px) {
-    .client-card {
-        min-width: 0;
-    }
+/* Compact client list for mobile and desktop. */
+.client-card {
+    min-width: 0;
+}
 
-    .client-card .appointment-card-header {
-        align-items: center;
-        gap: .75rem;
-        padding: .9rem 1rem;
-    }
+.client-card .appointment-card-header {
+    align-items: center;
+    gap: .75rem;
+    padding: .9rem 1rem;
+}
 
-    .client-card .appointment-card-client {
-        flex: 1 1 auto;
-        min-width: 0;
-    }
+.client-card .appointment-card-client {
+    flex: 1 1 auto;
+    min-width: 0;
+}
 
-    .client-card .appointment-card-client > div {
-        min-width: 0;
-    }
+.client-card .appointment-card-client > div {
+    min-width: 0;
+}
 
-    .client-card .appointment-card-client h3 {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
+.client-card .appointment-card-client h3 {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
 
-    .client-card-subtitle--desktop,
-    .client-card-summary,
-    /* Pré-visualização detalhada preservada no JS para desktop. */
-    .client-card-preview {
-        display: none;
-    }
+.client-card-subtitle--desktop,
+.client-card-summary,
+/* Full details are available in the profile dialog. */
+.client-card-preview {
+    display: none;
+}
 
-    .client-card-subtitle--mobile {
-        display: block;
-    }
+.client-card-subtitle--mobile {
+    display: block;
+}
 
-    .client-profile-eye {
-        display: inline-grid;
-        flex: 0 0 44px;
-        width: 44px;
-        height: 44px;
-        place-items: center;
-        border: 1px solid var(--line);
-        border-radius: 50%;
-        background: var(--surface-2);
-        color: var(--text);
-        cursor: pointer;
-        transition: background var(--transicao), color var(--transicao), border-color var(--transicao), transform var(--transicao);
-    }
+.client-profile-eye {
+    display: inline-grid;
+    flex: 0 0 44px;
+    width: 44px;
+    height: 44px;
+    place-items: center;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    background: var(--surface-2);
+    color: var(--text);
+    cursor: pointer;
+    transition: background var(--transicao), color var(--transicao), border-color var(--transicao), transform var(--transicao);
+}
 
-    .client-profile-eye:hover,
-    .client-profile-eye:focus-visible {
-        outline: none;
-        border-color: var(--text);
-        background: var(--text);
-        color: var(--surface);
-        transform: translateY(-1px);
-    }
+.client-profile-eye:hover,
+.client-profile-eye:focus-visible {
+    outline: none;
+    border-color: var(--text);
+    background: var(--text);
+    color: var(--surface);
+    transform: translateY(-1px);
 }
 
 @media (max-width: 560px) {
