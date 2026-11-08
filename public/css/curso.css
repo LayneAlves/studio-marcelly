@@ -1,9 +1,3 @@
-/*
-   Página Curso — estilos exclusivos
-   Todo o CSS específico da página Curso vive aqui.
-   Reaproveita os tokens de --ink / --bg / --text / <em> etc.
-   já definidos em style.css.
-*/
 
 /* Utilitários de tipografia reaproveitados nas 5 seções */
 .curso-heavy {
@@ -492,12 +486,13 @@
 }
 
 /*
-   5. INVESTIMENTO — CONVERSÃO
+   5. INSCRIÇÃO
 */
 .curso-cta {
     position: relative;
     overflow: hidden;
     padding: 7.5rem 0;
+    margin-top: 32px;
     background: var(--ink);
     color: var(--on-ink);
     text-align: center;
@@ -507,10 +502,10 @@
     content: '';
     position: absolute;
     inset: 0;
-    background:
+    /* background:
         radial-gradient(circle at 82% 18%, rgba(242, 241, 239, 0.10), transparent 42%),
         radial-gradient(circle at 12% 82%, rgba(242, 241, 239, 0.06), transparent 45%);
-    pointer-events: none;
+    pointer-events: none; */
 }
 
 .curso-cta .curso-watermark {
@@ -530,62 +525,139 @@
 .curso-cta-inner {
     position: relative;
     z-index: 2;
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
     align-items: center;
+    gap: clamp(2rem, 5vw, 5rem);
+    width: 100%;
+}
+
+.curso-cta-media {
+    position: relative;
+    min-width: 0;
+    align-self: stretch;
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    /* box-shadow: none; */
+}
+
+.curso-cta-media::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    box-shadow: inset 0px 0px 2rem 2rem var(--ink);
+    pointer-events: none;
+    z-index: 100;
+    height: 100%;
+    width: 100%;
+}
+
+.curso-cta-media img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.curso-cta-content {
+    min-width: 0;
+    padding-block: 2rem;
 }
 
 .curso-cta .eyebrow {
     color: var(--on-ink-soft);
 }
 
-.curso-price-old {
-    font-family: 'Playfair Display', serif;
-    font-size: 1.2rem;
-    color: var(--on-ink-faint);
-    text-decoration: line-through;
-    margin-bottom: 0.6rem;
-}
-
-.curso-price-label {
-    font-family: 'Jost', sans-serif;
-    font-size: 0.78rem;
+.curso-cta-title {
+    font-size: clamp(2.8rem, 5.5vw, 5rem);
     font-weight: 500;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--on-ink-soft);
-    margin-bottom: 0.8rem;
-}
-
-.curso-price {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.35rem;
-    line-height: 1;
-    margin-bottom: 1.5rem;
-}
-
-.curso-price-currency {
-    font-family: 'Playfair Display', serif;
-    font-style: italic;
-    font-weight: 500;
-    font-size: clamp(1.4rem, 3vw, 2rem);
-    color: var(--on-ink-soft);
-    margin-top: 0.4rem;
-}
-
-.curso-price-value {
-    font-family: 'Jost', sans-serif;
-    font-weight: 700;
-    font-size: clamp(4.2rem, 12vw, 7.5rem);
+    line-height: 1.12;
     color: var(--on-ink);
 }
 
 .curso-cta-desc {
-    max-width: 420px;
+    margin: 1.5rem 0 0;
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.2rem, 2.2vw, 1.8rem);
+    font-style: italic;
+    line-height: 1.5;
     color: var(--on-ink-soft);
-    font-size: 0.98rem;
-    margin-bottom: 2.2rem;
+}
+
+.curso-cta-desc strong {
+    display: block;
+    color: var(--on-ink);
+    font-weight: 600;
+}
+
+.curso-cta-benefits {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin: 2.8rem 0;
+}
+
+.curso-cta-benefits li {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: .9rem;
+    min-width: 0;
+    padding-inline: .8rem;
+    color: var(--on-ink-soft);
+    font-size: clamp(.78rem, 1.2vw, 1rem);
+    line-height: 1.4;
+}
+
+.curso-cta-benefits li + li {
+    border-left: 1px solid var(--ink-line);
+}
+
+.curso-cta-benefits i {
+    display: grid;
+    place-items: center;
+    height: 2.5rem;
+    color: var(--on-ink);
+    font-size: 2rem;
+}
+
+.curso-cta-contact {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    width: 100%;
+    padding: 1.15rem 1.5rem;
+    border-radius: var(--radius-pill);
+    background: var(--on-ink);
+    color: var(--ink);
+    text-align: center;
+    line-height: 1.4;
+    white-space: normal;
+}
+
+.curso-cta-contact span {
+    flex: 1;
+    min-width: 0;
+}
+
+.curso-cta-contact > i {
+    flex: 0 0 auto;
+}
+
+.curso-cta-contact > .fa-whatsapp {
+    font-size: 2rem;
+}
+
+.curso-cta-contact:hover,
+.curso-cta-contact:focus-visible {
+    background: var(--surface-2);
+    color: var(--ink);
 }
 
 
@@ -612,8 +684,12 @@
     }
 
     .curso-hero .curso-watermark {
-        max-width: 70vw;
-        font-size: clamp(5rem, 26vw, 9rem);
+        /* max-width: 70vw;
+        font-size: clamp(5rem, 26vw, 9rem); */
+        display:none;
+    }
+    .curso-hero-text{
+        font-size: 1rem;
     }
 
     .curso-topics .curso-watermark {
@@ -635,6 +711,10 @@
     .curso-included-photo {
         min-height: 320px;
     }
+
+    .curso-cta-inner {
+        gap: 1.5rem;
+    }
 }
 
 @media (max-width: 768px) {
@@ -646,7 +726,7 @@
     .curso-topics,
     .curso-included-section,
     .curso-cta {
-        padding: 5rem 0;
+        padding: 3rem 0;
     }
 
     .curso-topics-grid {
@@ -660,6 +740,18 @@
 
     .curso-included-cards {
         grid-template-columns: 1fr;
+    }
+
+    .curso-cta-inner {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .curso-cta-media {
+        display: none;
+    }
+
+    .curso-cta-content {
+        padding-block: 1.5rem;
     }
 }
 
@@ -675,7 +767,18 @@
         width: 100%;
     }
 
-    .curso-price-value {
-        font-size: clamp(3.2rem, 17vw, 4.6rem);
+    .curso-cta-benefits {
+        margin-block: 2rem;
+    }
+
+    .curso-cta-benefits li {
+        padding-inline: .4rem;
+        font-size: .75rem;
+    }
+
+    .curso-cta-contact {
+        gap: .75rem;
+        padding: 1rem;
+        font-size: .85rem;
     }
 }

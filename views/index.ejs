@@ -89,8 +89,8 @@
 
             <section id="sobre" class="about">
                 <div class="container about-grid">
-                    <div class="about-portrait reveal">
-                        <img src="/images/cilios-imagens/foto-perfil.jpg"
+                    <div class="about-portrait reveal" id="aboutIntro">
+                        <img src="/images/cilios-imagens/foto-perfil2.jpg"
                             alt="Ilustração assinatura do Studio Marcelly Freitas — olhar com extensão de cílios">
                     </div>
                     <div class="reveal">
@@ -188,7 +188,7 @@
                     </div>
 
                     <div class="booking-grid">
-                        <div class="calendar-card reveal">
+                        <div class="calendar-card reveal" id="calendarCard">
                             <div class="calendar-head">
                                 <div class="cal-nav"><button id="prevMonth" type="button" aria-label="Mês anterior"
                                         class="btn-cal-prev">‹</button></div>
@@ -214,7 +214,7 @@
 
                         <form class="booking-form reveal" id="bookingForm">
                             <h4>Seus dados</h4>
-                            <p>Preencha seus dados para confirmar o agendamento.</p>
+                            <p class="booking-description ">Preencha seus dados para confirmar o agendamento.</p>
 
                             <div class="selected-summary" id="bookingSummary">Nenhuma data selecionada ainda.</div>
 
@@ -261,7 +261,7 @@
                 </div>
             </section>
 
-            <section id="contato" class="contact">
+            <!-- <section id="contato" class="contact">
                 <div class="container contact-grid">
                     <div class="reveal">
                         <span class="eyebrow">Fale com a gente</span>
@@ -295,9 +295,9 @@
                             title="Mapa de localização"></iframe>
                     </div>
                 </div>
-            </section>
+            </section> -->
 
-            <section class="business-hours" aria-labelledby="businessHoursTitle">
+            <!-- <section class="business-hours" aria-labelledby="businessHoursTitle">
                 <div class="container business-hours-inner reveal">
                     <div class="business-hours-heading">
                         <span class="eyebrow">Atendimento</span>
@@ -308,7 +308,7 @@
                         <p class="business-hours-loading">Carregando horários de funcionamento...</p>
                     </div>
                 </div>
-            </section>
+            </section> -->
 
         </main>
 
@@ -417,7 +417,7 @@
         <%- include('../includes/footer') %>
 
             <script src="/js/phone-mask.js"></script>
-            <script src="/js/script.js?v=20260927-service-dropdown"></script>
+            <script src="/js/script.js?v=20261015-footer"></script>
 </body>
 
 </html>

@@ -120,12 +120,20 @@
         adminSidebar.classList.toggle('is-open', isOpen);
         adminMenuToggle.classList.toggle('is-open', isOpen);
         adminSidebarBackdrop.classList.toggle('is-visible', isOpen);
+        document.body.classList.toggle('admin-menu-open', isOpen);
         adminMenuToggle.setAttribute('aria-expanded', String(isOpen));
+        adminMenuToggle.setAttribute('aria-label', isOpen ? 'Fechar menu administrativo' : 'Abrir menu administrativo');
     }
 
     adminMenuToggle?.addEventListener('click', () => setAdminMenuState(!adminSidebar.classList.contains('is-open')));
     adminSidebarBackdrop?.addEventListener('click', () => setAdminMenuState(false));
     document.querySelectorAll('.admin-menu-link').forEach((link) => link.addEventListener('click', () => setAdminMenuState(false)));
+
+    document.addEventListener('click', (event) => {
+        if (!adminSidebar?.classList.contains('is-open')) return;
+        if (adminSidebar.contains(event.target) || adminMenuToggle?.contains(event.target)) return;
+        setAdminMenuState(false);
+    });
     document.getElementById('appointmentDialogClose')?.addEventListener('click', closeDialog);
 
     document.addEventListener('click', (event) => {

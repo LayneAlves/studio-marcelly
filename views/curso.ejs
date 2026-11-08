@@ -32,7 +32,7 @@
 
             <div class="curso-hero-media reveal in-view">
                 <div class="curso-hero-photo">
-                    <img src="/images/cilios-imagens/foto-perfil.jpg" alt="Marcelly Freitas, especialista em extensão de cílios">
+                    <img src="/images/cilios-imagens/curso.jpg" alt="Marcelly Freitas, especialista em extensão de cílios">
                     <div class="curso-hero-badge">
                         <svg viewBox="0 0 24 24"><path d="M12 3c.6 3.4 2.6 5.4 6 6-3.4.6-5.4 2.6-6 6-.6-3.4-2.6-5.4-6-6 3.4-.6 5.4-2.6 6-6Z"></path><path d="M19 3.5c.2 1.2.9 1.9 2.1 2.1-1.2.2-1.9.9-2.1 2.1-.2-1.2-.9-1.9-2.1-2.1 1.2-.2 1.9-.9 2.1-2.1Z"></path></svg>
                         <span>Curso Lash Design Iniciante</span>
@@ -109,7 +109,7 @@
 
             <div class="curso-included-grid reveal">
                 <div class="curso-included-photo">
-                    <img src="/images/cilios-imagens/foto-perfil.jpg" alt="Ambiente do Studio Marcelly Freitas preparado para o curso">
+                    <img src="/images/cilios-imagens/incluso.jpg" alt="Ambiente do Studio Marcelly Freitas preparado para o curso">
                     <div class="curso-included-photo-caption">
                         <span class="curso-heavy">Tudo pronto para você</span>
                         <p>Comece sem <em>investir</em> em<br>nada além do curso</p>
@@ -164,20 +164,41 @@
         </div>
     </section>
 
-    <!-- 5. Investimento e CTA -->
-    <section id="curso-cta" class="curso-cta">
+    <!-- 5. Inscrição -->
+    <section id="curso-cta" class="curso-cta" aria-labelledby="cursoCtaTitle">
         <span class="curso-watermark" aria-hidden="true">Inscrição</span>
 
         <div class="container curso-cta-inner reveal">
-            <span class="eyebrow">Investimento</span>
-            <div class="curso-price-old">R$ 1.200</div>
-            <span class="curso-price-label">Por apenas</span>
-            <div class="curso-price">
-                <span class="curso-price-currency">R$</span>
-                <span class="curso-price-value">800</span>
+            <div class="curso-cta-media" aria-hidden="true">
+                <img src="/images/cilios-imagens/ferramentas.jpg" alt="" loading="lazy">
             </div>
-            <p class="curso-cta-desc">Vagas limitadas para garantir acompanhamento próximo de cada aluna durante a prática.</p>
-            <a href="https://wa.me/5511940469798?text=Ol%C3%A1!%20Quero%20garantir%20a%20minha%20vaga%20no%20pr%C3%B3ximo%20Curso%20de%20Extens%C3%A3o%20de%20C%C3%ADlios" target="_blank" rel="noopener" class="btn btn-primary">Garanta sua vaga!</a>
+
+            <div class="curso-cta-content">
+                <span class="eyebrow">Curso profissional</span>
+                <h2 id="cursoCtaTitle" class="curso-cta-title"><em>Lash Designer</em></h2>
+                <p class="curso-cta-desc">Transforme sua paixão em uma <strong>carreira de sucesso.</strong></p>
+
+                <ul class="curso-cta-benefits" aria-label="Benefícios do curso">
+                    <li>
+                        <i class="fa-solid fa-graduation-cap" aria-hidden="true"></i>
+                        <span>Formação<br>completa</span>
+                    </li>
+                    <li>
+                        <i class="fa-regular fa-gem" aria-hidden="true"></i>
+                        <span>Técnicas<br>atualizadas</span>
+                    </li>
+                    <li>
+                        <i class="fa-solid fa-arrow-trend-up" aria-hidden="true"></i>
+                        <span>Suporte no seu<br>desenvolvimento</span>
+                    </li>
+                </ul>
+
+                <a href="https://wa.me/5511940469798?text=Ol%C3%A1!%20Quero%20garantir%20a%20minha%20vaga%20no%20pr%C3%B3ximo%20Curso%20de%20Extens%C3%A3o%20de%20C%C3%ADlios" target="_blank" rel="noopener" class="btn btn-primary curso-cta-contact">
+                    <i class="fa-brands fa-whatsapp" aria-hidden="true"></i>
+                    <span>Entre em contato e<br>saiba mais sobre o valor</span>
+                    <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                </a>
+            </div>
         </div>
     </section>
 
@@ -185,6 +206,6 @@
 
 <%- include('../includes/footer') %>
 
-<script src="/js/script.js"></script>
+<script src="/js/script.js?v=20261015-footer"></script>
 </body>
 </html>

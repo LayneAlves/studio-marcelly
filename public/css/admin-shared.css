@@ -38,7 +38,7 @@
 .admin-brand img,
 .admin-mobile-brand img {
     width: auto;
-    height: 84px;
+    height: 52px;
 }
 
 .admin-brand em,
@@ -453,6 +453,10 @@
 
 .appointment-card-status {
     flex: 0 0 auto;
+}
+
+.appointment-card-mobile-eye {
+    display: none;
 }
 
 .appointment-card-status .action-dropdown {
@@ -984,6 +988,10 @@
 }
 
 @media (max-width: 768px) {
+    body.admin-menu-open {
+        overflow: hidden;
+    }
+
     .admin-mobile-bar {
         position: fixed;
         inset: 0 0 auto;
@@ -996,6 +1004,23 @@
         color: var(--on-ink);
         background: var(--ink);
         border-bottom: 1px solid var(--ink-line);
+    }
+
+    body.admin-menu-open .admin-mobile-bar {
+        z-index: 21;
+        pointer-events: none;
+        background: transparent;
+        border-bottom-color: transparent;
+    }
+
+    body.admin-menu-open .admin-mobile-brand {
+        visibility: hidden;
+    }
+
+    body.admin-menu-open .admin-menu-toggle {
+        pointer-events: auto;
+        border-color: rgba(242, 241, 239, .22);
+        background: var(--ink);
     }
 
     .admin-mobile-brand {
@@ -1061,6 +1086,7 @@
         position: fixed;
         inset: 0;
         z-index: 18;
+        display: block;
         width: 100%;
         height: 100%;
         border: 0;
@@ -1084,6 +1110,68 @@
     .appointment-dialog {
         width: calc(100vw - 1.5rem);
         max-height: calc(100dvh - 1.5rem);
+    }
+
+    /* Versão compacta exclusiva das listagens de agendamentos e manutenções no mobile. */
+    .appointment-list-card,
+    .maintenance-list-card {
+        min-width: 0;
+    }
+
+    .appointment-list-card .appointment-card-header,
+    .maintenance-list-card .appointment-card-header {
+        align-items: center;
+        gap: .75rem;
+        padding: .9rem 1rem;
+    }
+
+    .appointment-list-card .appointment-card-client,
+    .maintenance-list-card .appointment-card-client {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .appointment-list-card .appointment-card-client > div,
+    .maintenance-list-card .appointment-card-client > div {
+        min-width: 0;
+    }
+
+    .appointment-list-card .appointment-card-client h3,
+    .maintenance-list-card .appointment-card-client h3 {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .appointment-list-card .appointment-card-status,
+    .maintenance-list-card .appointment-card-status,
+    /* Pré-visualização detalhada preservada no JavaScript para desktop. */
+    .appointment-list-card .appointment-card-preview,
+    .maintenance-list-card .appointment-card-preview {
+        display: none;
+    }
+
+    .appointment-card-mobile-eye {
+        display: inline-grid;
+        flex: 0 0 44px;
+        width: 44px;
+        height: 44px;
+        place-items: center;
+        border: 1px solid var(--line);
+        border-radius: 50%;
+        color: var(--text);
+        background: var(--surface-2);
+        cursor: pointer;
+        transition: background var(--transicao), color var(--transicao), border-color var(--transicao), transform var(--transicao);
+    }
+
+    .appointment-card-mobile-eye:hover,
+    .appointment-card-mobile-eye:focus-visible {
+        outline: none;
+        border-color: var(--text);
+        color: var(--surface);
+        background: var(--text);
+        transform: translateY(-1px);
     }
 }
 

@@ -50,7 +50,6 @@ if (galleryGrid) {
 const SERVICES_API_URL = '/api/services';
 const APPOINTMENTS_API_URL = '/api/appointments';
 const ACCOUNT_API_URL = '/api/account';
-const SCHEDULE_SETTINGS_API_URL = '/api/schedule-settings';
 const MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
 
 const calDaysEl = document.getElementById('calDays');
@@ -144,9 +143,7 @@ async function loadPublicBusinessHours() {
     if (!publicBusinessHours) return;
 
     try {
-        const response = await fetch(SCHEDULE_SETTINGS_API_URL, { cache: 'no-store' });
-        const settings = await response.json().catch(() => ({}));
-        if (!response.ok || !Array.isArray(settings.days)) throw new Error(settings.error || 'Não foi possível carregar os horários.');
+        const settings = await window.siteBusinessHoursPromise;
         scheduleDays = new Map(settings.days.map((day) => [Number(day.day_of_week), day]));
         renderPublicBusinessHours();
         renderCalendar();

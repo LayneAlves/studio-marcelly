@@ -241,6 +241,21 @@
     color: #a14747;
 }
 
+.service-table .service-mobile-cell {
+    display: none;
+}
+
+.service-detail-status {
+    margin-top: .65rem;
+}
+
+.service-detail-actions {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: .7rem;
+}
+
 @media (max-width: 768px) {
     .admin-services {
         padding: 2rem 0;
@@ -269,6 +284,7 @@
         align-items: stretch;
     }
 
+    /* Pré-visualização detalhada antiga, preservada caso volte a ser usada no mobile.
     .service-table thead {
         display: none;
     }
@@ -318,5 +334,101 @@
     .service-status,
     .service-actions {
         justify-content: flex-start;
+    }
+    */
+}
+
+/* Card compacto da listagem de serviços: somente no mobile. */
+@media (max-width: 768px) {
+    .service-table thead,
+    .service-table tbody tr > td:not(.service-mobile-cell) {
+        display: none;
+    }
+
+    .service-table,
+    .service-table tbody,
+    .service-table tbody tr {
+        display: block;
+        width: 100%;
+    }
+
+    .service-table tbody {
+        display: grid;
+        gap: .8rem;
+        padding: .8rem;
+    }
+
+    .service-table tbody tr {
+        min-width: 0;
+        border: 1px solid rgba(176, 176, 176, .622);
+        border-radius: 18px;
+        background: var(--surface);
+    }
+
+    .service-table tbody tr > .service-mobile-cell {
+        display: block;
+        width: 100%;
+        padding: 0;
+        border: 0;
+        color: var(--text);
+    }
+
+    .service-mobile-summary {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-width: 0;
+        gap: .75rem;
+        padding: .9rem 1rem;
+    }
+
+    .service-mobile-identity {
+        display: flex;
+        flex: 1 1 auto;
+        align-items: center;
+        min-width: 0;
+        gap: .75rem;
+    }
+
+    .service-mobile-identity > div {
+        min-width: 0;
+    }
+
+    .service-mobile-identity strong {
+        display: block;
+        overflow: hidden;
+        color: var(--text);
+        font: 500 1rem 'Jost', sans-serif;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .service-mobile-identity div > span {
+        display: block;
+        margin-top: .14rem;
+        color: var(--text-soft);
+        font: 400 .78rem 'Jost', sans-serif;
+    }
+
+    .service-mobile-eye {
+        display: inline-grid;
+        flex: 0 0 44px;
+        width: 44px;
+        height: 44px;
+        place-items: center;
+        border: 1px solid var(--line);
+        border-radius: 50%;
+        color: var(--text);
+        background: var(--surface-2);
+        cursor: pointer;
+        transition: background var(--transicao), color var(--transicao), border-color var(--transicao);
+    }
+
+    .service-mobile-eye:hover,
+    .service-mobile-eye:focus-visible {
+        outline: none;
+        border-color: var(--text);
+        color: var(--surface);
+        background: var(--text);
     }
 }

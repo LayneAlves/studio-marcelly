@@ -60,7 +60,38 @@ function renderClients(clients) {
         const next = client.next_appointment ? client.next_appointment.split('|') : null;
         const card = document.createElement('article');
         card.className = 'appointment-card client-card';
-        card.innerHTML = `<header class="appointment-card-header"><div class="appointment-card-client"><span class="appointment-card-avatar" aria-hidden="true">${esc(clientInitial(client.name))}</span><div><h3>${esc(client.name)}</h3><p>${next ? esc(next[2]) : 'Cliente cadastrada'}</p></div></div><span class="client-card-summary"><i class="fa-regular fa-user" aria-hidden="true"></i> Cliente</span></header><div class="appointment-card-divider" aria-hidden="true"></div><div class="appointment-card-body"><div class="appointment-card-data client-card-data"><div class="appointment-card-data-item"><span class="appointment-card-icon"><i class="fa-solid fa-phone" aria-hidden="true"></i></span><div><p>Telefone</p><strong>${esc(client.phone)}</strong></div></div><div class="appointment-card-data-item"><span class="appointment-card-icon"><i class="fa-regular fa-envelope" aria-hidden="true"></i></span><div><p>E-mail</p><strong>${esc(client.email || 'Não informado')}</strong></div></div><div class="appointment-card-data-item"><span class="appointment-card-icon"><i class="fa-regular fa-calendar" aria-hidden="true"></i></span><div><p>Próximo agendamento</p><strong>${nextAppointmentLabel(next)}</strong></div></div><div class="appointment-card-data-item"><span class="appointment-card-icon"><i class="fa-regular fa-clipboard" aria-hidden="true"></i></span><div><p>Histórico</p><strong><span class="client-card-counts">${client.cancellations} cancelamento${Number(client.cancellations) === 1 ? '' : 's'} · ${client.no_shows} falta${Number(client.no_shows) === 1 ? '' : 's'}</span></strong></div></div></div>${clientCardLashes()}</div><div class="appointment-card-divider" aria-hidden="true"></div><footer class="appointment-card-footer"><button class="appointment-card-details client-profile-action" type="button" data-client-id="${client.id}">Ver perfil <span aria-hidden="true">›</span></button></footer>`;
+        // A pré-visualização completa continua disponível no desktop e é ocultada somente no CSS mobile.
+        card.innerHTML = `
+            <header class="appointment-card-header">
+                <div class="appointment-card-client">
+                    <span class="appointment-card-avatar" aria-hidden="true">${esc(clientInitial(client.name))}</span>
+                    <div>
+                        <h3>${esc(client.name)}</h3>
+                        <p class="client-card-subtitle client-card-subtitle--desktop">${next ? esc(next[2]) : 'Cliente cadastrada'}</p>
+                        <p class="client-card-subtitle client-card-subtitle--mobile">Cliente cadastrada</p>
+                    </div>
+                </div>
+                <span class="client-card-summary"><i class="fa-regular fa-user" aria-hidden="true"></i> Cliente</span>
+                <button class="client-profile-eye" type="button" data-client-id="${client.id}" aria-label="${esc(`Ver perfil de ${client.name}`)}">
+                    <i class="fa-regular fa-eye" aria-hidden="true"></i>
+                </button>
+            </header>
+            <!-- Pré-visualização detalhada preservada para desktop; ocultada somente no card mobile. -->
+            <div class="client-card-preview">
+                <div class="appointment-card-divider" aria-hidden="true"></div>
+                <div class="appointment-card-body">
+                    <div class="appointment-card-data client-card-data">
+                        <div class="appointment-card-data-item"><span class="appointment-card-icon"><i class="fa-solid fa-phone" aria-hidden="true"></i></span><div><p>Telefone</p><strong>${esc(client.phone)}</strong></div></div>
+                        <div class="appointment-card-data-item"><span class="appointment-card-icon"><i class="fa-regular fa-envelope" aria-hidden="true"></i></span><div><p>E-mail</p><strong>${esc(client.email || 'Não informado')}</strong></div></div>
+                        <div class="appointment-card-data-item"><span class="appointment-card-icon"><i class="fa-regular fa-calendar" aria-hidden="true"></i></span><div><p>Próximo agendamento</p><strong>${nextAppointmentLabel(next)}</strong></div></div>
+                        <div class="appointment-card-data-item"><span class="appointment-card-icon"><i class="fa-regular fa-clipboard" aria-hidden="true"></i></span><div><p>Histórico</p><strong><span class="client-card-counts">${client.cancellations} cancelamento${Number(client.cancellations) === 1 ? '' : 's'} · ${client.no_shows} falta${Number(client.no_shows) === 1 ? '' : 's'}</span></strong></div></div>
+                    </div>
+                    ${clientCardLashes()}
+                </div>
+                <div class="appointment-card-divider" aria-hidden="true"></div>
+                <footer class="appointment-card-footer"><button class="appointment-card-details client-profile-action" type="button" data-client-id="${client.id}">Ver perfil <span aria-hidden="true">›</span></button></footer>
+            </div>
+            <!-- Fim da pré-visualização detalhada preservada para desktop. -->`;
         clientsList.append(card);
     });
 }
@@ -148,9 +179,21 @@ function menu(open) {
     sidebar.classList.toggle('is-open', open);
     toggle.classList.toggle('is-open', open);
     backdrop.classList.toggle('is-visible', open);
+    document.body.classList.toggle('admin-menu-open', open);
+    toggle.setAttribute('aria-expanded', String(open));
+    toggle.setAttribute('aria-label', open ? 'Fechar menu administrativo' : 'Abrir menu administrativo');
 }
 
 toggle.addEventListener('click', () => menu(!sidebar.classList.contains('is-open')));
 backdrop.addEventListener('click', () => menu(false));
+sidebar.querySelectorAll('.admin-menu-link').forEach((link) => link.addEventListener('click', () => menu(false)));
+document.addEventListener('click', (event) => {
+    if (!sidebar.classList.contains('is-open')) return;
+    if (sidebar.contains(event.target) || toggle.contains(event.target)) return;
+    menu(false);
+});
+document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') menu(false);
+});
 
 loadClients();

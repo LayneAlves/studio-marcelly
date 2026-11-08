@@ -1,5 +1,4 @@
-
-.account-page{
+.account-page {
     min-height: 100vh;
     padding: 2rem;
     display: grid;
@@ -10,7 +9,7 @@
     overflow: hidden;
 }
 
-.account-page::before{
+.account-page::before {
     content: '';
     position: absolute;
     inset: 0;
@@ -22,15 +21,20 @@
 
 .account-brand img {
     display: block;
-    height: 3rem;  
+    height: 3rem;
     width: auto;
 }
-.account-brand em{ color: var(--on-ink-soft); }
+
+.account-brand em {
+    color: var(--on-ink-soft);
+}
+
 .account-auth,
 .account-panel {
     position: relative;
     z-index: 1;
-    width: min(960px, 100%);
+    width: 100%;
+    max-width: 794px;
     border: 1px solid var(--line);
     border-radius: var(--radius-lg);
     background: var(--on-ink-soft);
@@ -85,7 +89,7 @@
 .account-form select {
     min-height: 42px;
     padding: .65rem .75rem;
-    border: 1px solid var(--line);
+    border: 1px solid var(--text-faint);
     border-radius: var(--radius-sm);
     background: var(--bg);
     color: var(--text);
@@ -94,7 +98,7 @@
 
 .account-button {
     min-height: 44px;
-    border: 1px solid var(--accent);
+    border: 1px solid var(--on-ink);
     border-radius: var(--radius-sm);
     background: var(--accent);
     color: var(--accent-contrast);
@@ -130,6 +134,25 @@
     color: var(--on-ink-soft)
 }
 
+.account-menu button,
+.account-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .6rem;
+}
+
+.account-menu button {
+    justify-content: flex-start;
+}
+
+.account-menu button i,
+.account-button i {
+    flex: 0 0 1.1em;
+    width: 1.1em;
+    text-align: center;
+}
+
 .account-menu button.is-active,
 .account-menu button:hover {
     background: rgba(242, 241, 239, .12);
@@ -137,11 +160,17 @@
 }
 
 .account-content {
-    padding: clamp(1.4rem, 4vw, 2.5rem)
+    padding: clamp(1.4rem, 4vw, 2.5rem);
+    background: var(--on-ink);
 }
 
 .account-content h2 {
-    margin-bottom: .4rem
+    margin-bottom: .4rem;
+    color: var(--text);
+}
+
+.account-content p {
+    color: var(--ink-softer);
 }
 
 .account-list {

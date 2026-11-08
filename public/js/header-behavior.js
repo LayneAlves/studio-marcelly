@@ -1,6 +1,8 @@
 const sharedHeader = document.getElementById('siteHeader');
 const sharedNavToggle = document.getElementById('navToggle');
 const sharedNavMenu = document.getElementById('navMenu');
+const sharedNavClose = document.getElementById('navMenuClose');
+const sharedNavBackdrop = document.getElementById('navMenuBackdrop');
 const sharedAccountLink = document.getElementById('accountHeaderLink');
 const sharedAccountName = document.getElementById('accountHeaderName');
 const sharedMobileAccountLink = document.getElementById('mobileMenuAccountLink');
@@ -47,6 +49,7 @@ function setSharedNavState(isOpen) {
     if (!sharedNavToggle || !sharedNavMenu) return;
     sharedNavToggle.classList.toggle('open', isOpen);
     sharedNavMenu.classList.toggle('open', isOpen);
+    sharedNavBackdrop?.classList.toggle('is-visible', isOpen);
     document.body.classList.toggle('mobile-menu-open', isOpen);
     sharedNavToggle.setAttribute('aria-expanded', String(isOpen));
     sharedNavToggle.setAttribute('aria-label', isOpen ? 'Fechar menu' : 'Abrir menu');
@@ -54,6 +57,8 @@ function setSharedNavState(isOpen) {
 
 if (sharedNavToggle && sharedNavMenu) {
     sharedNavToggle.addEventListener('click', () => setSharedNavState(!sharedNavMenu.classList.contains('open')));
+    sharedNavClose?.addEventListener('click', () => setSharedNavState(false));
+    sharedNavBackdrop?.addEventListener('click', () => setSharedNavState(false));
     sharedNavMenu.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => setSharedNavState(false)));
     document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape') setSharedNavState(false);

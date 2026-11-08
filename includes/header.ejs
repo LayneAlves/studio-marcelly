@@ -1,6 +1,6 @@
 <% if (layout === 'admin') { const clientsPage = adminPage === 'clients'; %>
 <header class="admin-mobile-bar">
-    <a class="admin-mobile-brand" href="/index.html" aria-label="Voltar para o site Studio Marcelly Freitas">Studio <span>Marcelly Freitas</span></a>
+    <a class="admin-mobile-brand" href="/index.html" aria-label="Voltar para o site Studio Marcelly Freitas"><img src="/images/cilios-imagens/logos/logotipo.png" alt=""></a>
     <div class="admin-mobile-actions">
         <button class="admin-menu-toggle" id="<%= clientsPage ? 'clientsMenuToggle' : 'adminMenuToggle' %>" type="button" aria-label="Abrir menu administrativo" aria-controls="<%= clientsPage ? 'clientsSidebar' : 'adminSidebar' %>" aria-expanded="false">
             <span></span><span></span><span></span>
@@ -14,6 +14,11 @@
             <a href="/index.html#index"><img src="/images/cilios-imagens/logos/logotipo.png" alt="Studio Marcelly Freitas"></a>
         </div>
         <ul class="nav-menu" id="navMenu">
+            <li class="nav-menu-close-row">
+                <button class="nav-menu-close" id="navMenuClose" type="button" aria-label="Fechar menu">
+                    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                </button>
+            </li>
             <li class="nav-menu-profile">
                 <a class="nav-menu-profile-link" href="/minha-conta.html" id="mobileMenuAccountLink">
                     <span class="nav-menu-profile-icon" aria-hidden="true"><i class="fa-regular fa-user"></i></span>
@@ -25,11 +30,11 @@
                 </a>
             </li>
             <li><a href="/index.html#index">Início</a></li>
-            <li><a href="/index.html#sobre">Sobre</a></li>
+            <li><a href="/index.html#aboutIntro">Sobre</a></li>
             <li><a href="/index.html#galeria">Galeria</a></li>
-            <li><a href="/index.html#agendamento">Agendamento</a></li>
+            <li><a href="/index.html#calendarCard">Agendamento</a></li>
             <li><a href="/curso.html">Curso</a></li>
-            <li><a href="/index.html#contato">Contato</a></li>
+            <li><a href="/index.html#siteFooterContact">Contato</a></li>
             <% if (typeof user !== 'undefined' && user && user.role === 'master') { %>
             <li><a href="/admin/dashboard">Painel Administrativo</a></li>
             <% } %>
@@ -42,16 +47,17 @@
         </ul>
     </nav>
 </header>
+<button class="nav-menu-backdrop" id="navMenuBackdrop" type="button" aria-label="Fechar menu" tabindex="-1"></button>
 <nav class="mobile-bottom-nav" aria-label="Navegação rápida">
     <a class="mobile-bottom-nav-item" href="/index.html#home">
         <i class="fa-solid fa-house" aria-hidden="true"></i>
         <span>Início</span>
     </a>
-    <a class="mobile-bottom-nav-item" href="/index.html#agendamento">
+    <a class="mobile-bottom-nav-item" href="/index.html#bookingForm">
         <i class="fa-regular fa-star" aria-hidden="true"></i>
         <span>Serviços</span>
     </a>
-    <a class="mobile-bottom-nav-item mobile-bottom-nav-item--primary" href="/index.html#agendamento">
+    <a class="mobile-bottom-nav-item mobile-bottom-nav-item--primary" href="/index.html#calendarCard">
         <i class="fa-regular fa-calendar-days" aria-hidden="true"></i>
         <span>Agendar</span>
     </a>

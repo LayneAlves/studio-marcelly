@@ -49,12 +49,12 @@ async function enter(data) {
 }
 
 function emptyState(message) {
-    content.innerHTML = `<div class="account-empty"><strong aria-hidden="true">📅</strong><p>${message}</p></div>`;
+    content.innerHTML = `<div class="account-empty"><strong aria-hidden="true"><i class="fa-solid fa-calendar-days" style="color: rgb(0, 0, 0);"></i></strong><p>${message}</p></div>`;
 }
 
 async function showSection(section) {
     if (section === 'logout') {
-        await request('/logout', { method: 'POST' }).catch(() => {});
+        await request('/logout', { method: 'POST' }).catch(() => { });
         localStorage.removeItem('smf-account');
         account = null;
         panel.hidden = true;
@@ -107,7 +107,7 @@ async function renderPersonal() {
             <label>Nome<input id="meName" value="${escapeHtml(client.name)}" required></label>
             <label>Telefone<input id="mePhone" type="tel" data-phone-mask value="${escapeHtml(client.phone)}" required></label>
             <label>E-mail<input id="meEmail" type="email" value="${escapeHtml(client.email || '')}"></label>
-            <button class="account-button" type="submit">Salvar alterações</button><p class="account-feedback" id="personalFeedback"></p>
+            <button class="account-button" type="submit"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Salvar alterações</button><p class="account-feedback" id="personalFeedback"></p>
         </form>`;
     document.getElementById('personalForm').addEventListener('submit', async (event) => {
         event.preventDefault();
@@ -125,7 +125,7 @@ function openReschedule(id, appointment) {
     dialogContent.innerHTML = `<h2>Remarcar</h2><form class="account-form" id="rescheduleForm">
         <label>Nova data<input id="newDate" type="date" min="${today()}" required></label>
         <label>Novo horário<select id="newTime" required disabled><option value="">Escolha uma data primeiro</option></select></label>
-        <button class="account-button" type="submit">Salvar alteração</button><p class="account-feedback" id="rescheduleFeedback"></p>
+        <button class="account-button" type="submit"><i class="fa-solid fa-calendar-check" aria-hidden="true"></i> Salvar alteração</button><p class="account-feedback" id="rescheduleFeedback"></p>
     </form>`;
     const dateInput = document.getElementById('newDate');
     const timeInput = document.getElementById('newTime');
