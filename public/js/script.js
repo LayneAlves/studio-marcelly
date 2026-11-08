@@ -91,6 +91,7 @@ let selectedDate = null;
 let selectedTime = null;
 let selectedService = null;
 let activeServices = [];
+let servicesLoading = false;
 let slotsRequestVersion = 0;
 let authModalContext = { source: 'booking', booking: null };
 
@@ -203,8 +204,9 @@ function syncBookingServiceDropdown() {
         ? `${selectedServiceItem.name} — ${formatCurrency(selectedServiceItem.value)}`
         : placeholder;
 
-    bookingServiceToggle.disabled = serviceSelect.disabled;
-    bookingServiceDropdown.classList.toggle('is-disabled', serviceSelect.disabled);
+    bookingServiceToggle.disabled = servicesLoading;
+    bookingServiceToggle.setAttribute('aria-busy', String(servicesLoading));
+    bookingServiceDropdown.classList.toggle('is-disabled', servicesLoading);
     bookingServiceMenu.replaceChildren();
 
     activeServices.forEach((service) => {
@@ -233,6 +235,10 @@ function initializeBookingServiceDropdown() {
 
     bookingServiceToggle.addEventListener('click', () => {
         if (bookingServiceToggle.disabled) return;
+        if (serviceSelect.disabled) {
+            loadActiveServices();
+            return;
+        }
         const willOpen = !bookingServiceDropdown.classList.contains('is-open');
         bookingServiceDropdown.classList.toggle('is-open', willOpen);
         bookingServiceToggle.setAttribute('aria-expanded', String(willOpen));
@@ -253,8 +259,13 @@ function initializeBookingServiceDropdown() {
 }
 
 async function loadActiveServices() {
+    if (servicesLoading) return;
+    servicesLoading = true;
+    closeBookingServiceDropdown();
+    syncBookingServiceDropdown();
+    formMsg.textContent = '';
     try {
-        const response = await fetch(SERVICES_API_URL, { cache: 'no-store' });
+        const response = await fetch(SERVICES_API_URL, { cache: 'no-store', signal: AbortSignal.timeout(15000) });
         const services = await response.json().catch(() => ({}));
         if (!response.ok || !Array.isArray(services)) {
             throw new Error(services.error || 'Não foi possível carregar os serviços.');
@@ -268,14 +279,19 @@ async function loadActiveServices() {
         serviceSelect.disabled = activeServices.length === 0;
         syncBookingServiceDropdown();
         if (activeServices.length === 0) {
-            serviceSelect.options[0].textContent = 'Nenhum serviço disponível';
+            serviceSelect.options[0].textContent = 'Nenhum servi\u00e7o dispon\u00edvel \u2014 tentar novamente';
             formMsg.textContent = 'Não há serviços ativos disponíveis para agendamento.';
         }
     } catch (error) {
-        serviceSelect.replaceChildren(new Option('Não foi possível carregar os serviços', ''));
+        serviceSelect.replaceChildren(new Option('Tentar carregar os servi\u00e7os novamente', ''));
         serviceSelect.disabled = true;
         syncBookingServiceDropdown();
-        formMsg.textContent = error.message;
+        formMsg.textContent = error.name === 'TimeoutError'
+            ? 'A consulta de servi?os demorou demais. Clique no campo Servi?o para tentar novamente.'
+            : error.message;
+    } finally {
+        servicesLoading = false;
+        syncBookingServiceDropdown();
     }
 }
 
